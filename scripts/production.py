@@ -107,6 +107,15 @@ def compile_project(base,doc,out,*,audio=None,listening=None,preview=False):
                 n=min(remaining,48000);w.writeframes(b'\0\0'*n);remaining-=n
     else:
         shutil.copy2(audio,out/'audio.wav')
+        # Carry the exact checked conclusion and its evidence with the timeline.
+        # The low-level renderer revalidates these against the staged WAV.
+        carried_record=copy.deepcopy(record)
+        evidence_source=Path(listening).resolve().parent/record['evidence']['path']
+        evidence_name='listening-evidence'+evidence_source.suffix
+        shutil.copyfile(evidence_source,out/evidence_name)
+        carried_record['evidence']['path']=evidence_name
+        write_json(out/'listening.json',carried_record)
+        timeline['audioReview']={'pronunciation':'pronunciation.json','listening':'listening.json'}
         from speech_motion import analyze
         timeline['speechMotion']=analyze(audio,timeline['fps'])
         timeline['characterClosed']='dragon-closed.png'

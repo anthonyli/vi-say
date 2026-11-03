@@ -88,7 +88,9 @@ node "$SKILL_DIR/assets/remotion/render.mjs" work/task/motion.json outputs/video
 node "$SKILL_DIR/assets/remotion/render.mjs" work/task/motion.json outputs/video-v1.mp4
 ```
 
-渲染器验证时间、素材存在性及基础内容，输出 MP4 与同名 SRT，拒绝覆盖；素材复制到临时目录供离屏渲染，结束后清理。依赖统一放在技能根 `.cache/remotion/`，首次按 package-lock.json 安装，后续复用，不给每个项目复制工程或重复安装。首次运行可能下载浏览器内核；已有兼容浏览器可通过 REMOTION_BROWSER_EXECUTABLE 指定，Mac 默认探测标准 Chrome 安装位置。
+渲染器验证时间、素材存在性及基础内容，输出 MP4 与同名 SRT，拒绝覆盖；素材复制到临时目录供离屏渲染，结束后清理。依赖统一放在技能根 `.cache/remotion/`，首次按 package-lock.json 安装，后续复用，不给每个项目复制工程或重复安装。默认下载并复用 Remotion 配套固定版本的 Chrome Headless Shell，Mac 也不自动使用系统桌面 Chrome；桌面版并发截帧可能产生偶发坏帧（[上游 #9473](https://github.com/remotion-dev/remotion/issues/9473)）。REMOTION_BROWSER_EXECUTABLE 只用于明确指定自定义浏览器。
+
+小龙 cartoonScenes 的有声输出另受 [完整听审门禁](production.md#底层有声小龙门禁) 约束：正式渲染需 timeline.audioReview 指向当前稿件计划、完整听审记录及证据，三项 pronunciation / term_fluency / voice_consistency 必须通过。未听审有声候选必须显式使用 --unreviewed-audio，且文件名含“候选/预览”或 candidate/preview；视频与旁车状态均标未听审。validate/audit/stills 仍可独立检查并报告听审状态。普通原视频 overlays/editorial 接口不因此更改。
 
 ## 验收
 

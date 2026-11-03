@@ -15,6 +15,39 @@ def digest(path):
     return h.hexdigest()
 
 
+def sentence_sample(text, lexicon, occurrences, used_terms):
+    """Cover actual source-term occurrences with whole, unfragmented sentences.
+
+    Track source spans rather than searching aliases in spoken text: two terms
+    can share a spoken form without sharing their original sentence/context.
+    """
+    candidates = []
+    for sentence in re.finditer(r'[^。！？!?\n]+[。！？!?]?', text):
+        matches = [row for row in occurrences
+                   if sentence.start() <= row['start'] and row['end'] <= sentence.end()]
+        parts, cursor = [], sentence.start()
+        for row in matches:
+            parts.extend((text[cursor:row['start']], lexicon[row['term']]['spoken']))
+            cursor = row['end']
+        parts.append(text[cursor:sentence.end()])
+        candidates.append({'text': ''.join(parts).strip(),
+                           'terms': {row['term'] for row in matches}})
+    remaining, selected = set(used_terms), []
+    while remaining:
+        best = max(range(len(candidates)),
+                   key=lambda i: len(candidates[i]['terms'] & remaining), default=None)
+        if best is None or not (candidates[best]['terms'] & remaining):
+            break
+        selected.append(best)
+        remaining -= candidates[best]['terms']
+    if not used_terms:
+        selected = list(range(min(2, len(candidates))))
+    return {'sample_text': '\n'.join(candidates[i]['text'] for i in sorted(selected)),
+            'sample_covered_terms': [term for term in used_terms if term not in remaining],
+            'sample_uncovered_terms': [term for term in used_terms if term in remaining],
+            'sample_coverage_complete': not remaining}
+
+
 def prepare(text, lexicon):
     if not isinstance(text, str) or not text.strip():
         raise ValueError('Narration must not be blank')
@@ -30,7 +63,7 @@ def prepare(text, lexicon):
         right = r'(?![A-Za-z0-9])' if t[-1].isascii() and t[-1].isalnum() else ''
         return left+re.escape(t)+right
     pattern = re.compile('|'.join(term_pattern(t) for t in terms)) if terms else None
-    used = []
+    used, occurrences = [], []
     def replace(match):
         term = match.group()
         # Do not replace AI inside MAIL or a shorter brand inside another brand.
@@ -39,6 +72,7 @@ def prepare(text, lexicon):
            (term[-1].isascii() and term[-1].isalnum() and b < len(text) and text[b].isascii() and text[b].isalnum()):
             return term
         used.append(term)
+        occurrences.append({'term': term, 'start': a, 'end': b})
         return lexicon[term]['spoken']
     spoken = pattern.sub(replace, text) if pattern else text
     covered = pattern.sub(lambda m: ' ' * len(m.group()) if m.group() in used else m.group(), text) if pattern else text
@@ -49,9 +83,12 @@ def prepare(text, lexicon):
     rows = [{'term': t, 'spoken': lexicon[t]['spoken'], 'notes': lexicon[t].get('notes', '')} for t in dict.fromkeys(used)]
     return {'spoken_text': spoken, 'terms': rows, 'unresolved_terms': unknown,
             'warnings': suspicious, 'ready_for_synthesis': not unknown,
+            'ready_for_synthesis_scope': 'text_coverage_only',
+            'notes_usage': 'documentation_only_not_tts_phoneme_or_ssml_control',
             'script_sha256': hashlib.sha256(text.encode()).hexdigest(),
             'spoken_sha256': hashlib.sha256(spoken.encode()).hexdigest(),
-            'listening_required': True, 'pronunciation_verified': False}
+            'listening_required': True, 'pronunciation_verified': False,
+            **sentence_sample(text, lexicon, occurrences, [row['term'] for row in rows])}
 
 
 def check_listening(plan, audio, record, base):
@@ -66,6 +103,10 @@ def check_listening(plan, audio, record, base):
     if record.get('method') not in ['human_direct_playback', 'direct_audio_inspection_interface'] or \
        record.get('scope') != 'full_final_track' or record.get('verdict') != 'no_unresolved_pronunciation_issue':
         errors.append('Full-track direct listening with a resolved pronunciation verdict required')
+    checks = record.get('checks')
+    for name in ('pronunciation', 'term_fluency', 'voice_consistency'):
+        if not isinstance(checks, dict) or checks.get(name) != 'passed':
+            errors.append(f'Listening check {name} must be passed')
     if not record.get('reviewer') or not record.get('performed_at'):
         errors.append('Listening reviewer/time missing')
     if set(record.get('reviewed_terms', [])) != {r['term'] for r in plan.get('terms', [])}:
@@ -89,12 +130,12 @@ def main():
     args.output_dir.mkdir(parents=True, exist_ok=False)
     (args.output_dir / 'spoken.txt').write_text(plan['spoken_text'])
     (args.output_dir / 'pronunciation.json').write_text(json.dumps(plan, ensure_ascii=False, indent=2)+'\n')
-    # A short test uses whole original sentences containing terms, not isolated phonemes.
-    sentences = re.findall(r'[^。！？!?\n]+[。！？!?]?', plan['spoken_text'])
-    sample = [s for s in sentences if any(row['spoken'] in s for row in plan['terms'])]
-    (args.output_dir / 'sample.txt').write_text('\n'.join((sample or sentences[:2])[:5]))
-    print(json.dumps({'ready_for_synthesis':plan['ready_for_synthesis'], 'unresolved_terms':plan['unresolved_terms'], 'warnings':plan['warnings']},ensure_ascii=False))
-    return 0 if plan['ready_for_synthesis'] else 1
+    (args.output_dir / 'sample.txt').write_text(plan['sample_text'])
+    fields = ('ready_for_synthesis', 'ready_for_synthesis_scope', 'unresolved_terms',
+              'warnings', 'pronunciation_verified', 'listening_required', 'notes_usage',
+              'sample_covered_terms', 'sample_uncovered_terms', 'sample_coverage_complete')
+    print(json.dumps({key: plan[key] for key in fields}, ensure_ascii=False))
+    return 0 if plan['ready_for_synthesis'] and plan['sample_coverage_complete'] else 1
 
 
 if __name__ == '__main__':

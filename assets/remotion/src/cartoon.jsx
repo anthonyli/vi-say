@@ -68,5 +68,6 @@ export function CartoonScenes({doc}) {
         {doc.characterClosed&&doc.speechMotion&&<Img src={staticFile(doc.characterClosed)} style={{position:'absolute',width:'100%',height:'100%',opacity:1-openness,maskImage:mouthMask,WebkitMaskImage:mouthMask}}/>}
       </div>
     </div>
+    {doc.unreviewedAudio&&<div style={{position:'absolute',right:28,top:20,padding:'10px 18px',borderRadius:12,background:'#fff3cf',border:'2px solid #b65f00',color:'#713b00',fontSize:26,fontWeight:800,zIndex:100}}>未听审候选 · 声音未验收</div>}
   </>;
 }

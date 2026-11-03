@@ -6,6 +6,7 @@ import {fileURLToPath} from 'node:url';
 import {auditEditorial, editorialStillPoints, mapEditorialAssets, validateEditorial} from './editorial-contract.mjs';
 import {validateCartoon, mapCartoonAssets, cartoonStillPoints} from './cartoon-contract.mjs';
 import {loadRuntime} from './runtime.mjs';
+import {inspectAudioReview, audioRenderDecision} from './audio-review.mjs';
 
 const types = new Set(['big-title', 'keyword', 'bullet-list', 'number', 'quote', 'comparison', 'browser', 'code', 'diagram', 'progress', 'chapter-label', 'info-card', 'input-bar']);
 const fail = message => {throw new Error(message);};
@@ -71,11 +72,13 @@ function stamp(t) {
 
 async function main() {
   const [timeline, output, ...flags] = process.argv.slice(2);
-  const usage = 'Usage: node render.mjs timeline.json output.mp4 [--validate-only | --audit-only | --stills directory]';
+  const usage = 'Usage: node render.mjs timeline.json output.mp4 [--unreviewed-audio] [--validate-only | --audit-only | --stills directory]';
   if (!timeline || !output) fail(usage);
   let mode = 'render';
   let stillDirectory;
+  let unreviewedAudio = false;
   for (let i = 0; i < flags.length; i++) {
+    if (flags[i] === '--unreviewed-audio' && !unreviewedAudio) { unreviewedAudio = true; continue; }
     if (mode !== 'render') fail(usage);
     if (flags[i] === '--validate-only') mode = 'validate';
     else if (flags[i] === '--audit-only') mode = 'audit';
@@ -90,6 +93,8 @@ async function main() {
   const subtitle = target.slice(0, -4) + '.srt';
   let doc;
   let warnings;
+  let audioReview;
+  let audioDecision;
   const assets = new Map();
   async function resolveAsset(value) {
     if (!hasText(value) || /^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(value)) fail('Stage media locally before rendering');
@@ -101,6 +106,7 @@ async function main() {
   }
   try {
     doc = validate(JSON.parse(await fs.readFile(input, 'utf8')));
+    audioReview = await inspectAudioReview(doc, {timelinePath: input});
     if (doc.speechMotion) {
       const bytes=await fs.readFile(path.resolve(path.dirname(input),doc.audio));
       if(createHash('sha256').update(bytes).digest('hex')!==doc.speechMotion.audio_sha256) fail('Mouth motion belongs to a different audio file; regenerate it');
@@ -117,14 +123,18 @@ async function main() {
     return;
   }
   if (doc.fontFile) doc.fontFamily = 'VideoFont, sans-serif';
-  if (mode === 'validate') { console.log('Timeline and local assets validated'); return; }
+  if (mode === 'validate') { console.log(JSON.stringify({valid: true, qualityAssessed: false, audioReview})); return; }
   if (mode === 'audit') {
     console.log(JSON.stringify({valid: true, errors: [], warnings, qualityAssessed: false,
-      localAssets: assets.size, stillPoints: cartoonStillPoints(doc) ?? editorialStillPoints(doc)}, null, 2));
+      localAssets: assets.size, audioReview, stillPoints: cartoonStillPoints(doc) ?? editorialStillPoints(doc)}, null, 2));
     return;
   }
   if (mode === 'render') {
-    for (const name of [target, subtitle]) {
+    audioDecision = audioRenderDecision(audioReview, {unreviewedAudio, output: target});
+    // The flag creates a visible candidate plus a machine-readable status; it
+    // never turns absent listening into a validated conclusion.
+    if (audioDecision.mode === 'unreviewed_audio_candidate') doc.unreviewedAudio = true;
+    for (const name of [target, subtitle, ...(audioReview.required ? [target.slice(0, -4) + '.audio-review.json'] : [])]) {
       const exists = await fs.access(name).then(() => true, () => false);
       if (exists) fail(`Output already exists: ${name}`);
     }
@@ -152,9 +162,9 @@ async function main() {
       webpackOverride: config => ({...config,
         resolve: {...config.resolve, modules: [runtime.nodeModules, ...(config.resolve?.modules ?? ['node_modules'])]},
         resolveLoader: {...config.resolveLoader, modules: [runtime.nodeModules, ...(config.resolveLoader?.modules ?? ['node_modules'])]}})});
-    const macChrome = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-    const browserExecutable = process.env.REMOTION_BROWSER_EXECUTABLE ||
-      (process.platform === 'darwin' && await fs.access(macChrome).then(() => true, () => false) ? macChrome : undefined);
+    // Use Remotion's pinned Headless Shell by default. Desktop Chrome can emit
+    // isolated tiled/corrupt frames during parallel capture (upstream #9473).
+    const browserExecutable = process.env.REMOTION_BROWSER_EXECUTABLE || undefined;
     const composition = await selectComposition({serveUrl, id: 'NarratedVideo', inputProps: doc, browserExecutable});
     if (mode === 'stills') {
       const points = cartoonStillPoints(doc) ?? editorialStillPoints(doc);
@@ -168,16 +178,21 @@ async function main() {
       }
       await fs.writeFile(path.join(stillDirectory, 'manifest.json'), JSON.stringify({timeline: input,
         fps: doc.fps, width: composition.width, height: composition.height, qualityAssessed: false,
-        warnings, frames: manifest}, null, 2) + '\n', {flag: 'wx'});
-      console.log(JSON.stringify({stills: stillDirectory, frames: manifest.length, warnings}));
+        warnings, audioReview, frames: manifest}, null, 2) + '\n', {flag: 'wx'});
+      console.log(JSON.stringify({stills: stillDirectory, frames: manifest.length, warnings, audioReview}));
       return;
     }
     await renderMedia({serveUrl, composition, inputProps: doc, codec: 'h264', audioCodec: 'aac',
       pixelFormat: 'yuv420p', colorSpace: 'bt709', imageFormat: 'png', audioBitrate: '192k', crf: 18, sampleRate: 48000,
       outputLocation: target, overwrite: false, concurrency: 2, browserExecutable});
     await fs.writeFile(subtitle, doc.captions.map((c,i) => `${i+1}\n${stamp(c.start)} --> ${stamp(c.end)}\n${c.text}\n`).join('\n'), {flag: 'wx'});
+    if (audioReview.required) await fs.writeFile(target.slice(0, -4) + '.audio-review.json', JSON.stringify({
+      schema_version: 1, output: target, video_sha256: createHash('sha256').update(await fs.readFile(target)).digest('hex'),
+      audio_sha256: audioReview.audioSha256, ...audioDecision, review: audioReview,
+      note: 'Record validation does not authenticate the listener or automatically certify sound quality.'
+    }, null, 2) + '\n', {flag: 'wx'});
     console.log(JSON.stringify({output: target, subtitles: subtitle, duration: composition.durationInFrames / doc.fps,
-      width: composition.width, height: composition.height, fps: doc.fps}));
+      width: composition.width, height: composition.height, fps: doc.fps, audioReview: audioDecision}));
   } finally { process.chdir(originalCwd); await fs.rm(tmp, {recursive: true, force: true}); }
 }
 

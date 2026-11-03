@@ -39,7 +39,7 @@ VOICE_CONFIG="$(.venv/bin/python "$SKILL_DIR/scripts/select_voice.py" --voice-ro
 .venv/bin/python "$SKILL_DIR/scripts/local_voice.py" --config "$VOICE_CONFIG" --text work/episode/spoken.txt --output work/episode/narration.wav
 ```
 
-`--voice male` 或 `--voice female` 可明确指定；其他音色使用自己的目录名。随机池只包含当前制作项目中已配置且已有授权的音色。正文、补录和片尾复用同一个选择文件；已有文件不会重新抽取，音色配置、参考音频或转写改变时会拒绝复用。新一期使用新的选择文件。选择文件只固定音色，不代表合成或听审已经通过。
+`--voice male` 或 `--voice female` 可明确指定；其他音色使用自己的目录名。随机池只包含当前制作项目中已配置且已有授权的音色。正文、补录和片尾复用同一个选择文件；已有文件不会重新抽取，音色配置、参考音频或转写改变时会拒绝复用。新一期使用新的选择文件。选择文件只固定参考配置，不锁定每次生成的实际音色，也不代表合成或听审通过。跨调用补录/择段时按 [声音节点](../stages/voice.md) 核对最终声线连续性。
 
 不指定 `--config` 时仍读取 `private/voice/voice-preferences.json`；多音色项目可将这个默认入口设为某个音色配置的项目内软链接。
 
@@ -63,6 +63,12 @@ python3 -m venv .venv
 ```
 
 `--check-only` 不导入推理后端、不合成。正式合成前强制 HF／Transformers 离线，只传本地模型与显式参考转写，关闭自动 ASR、播放和流式输出；整稿一次交给上游，不按字幕切句。默认语言 Chinese、原速 1.0、max-tokens 4096，token 上限不证明全文已读完。
+
+### mlx-audio 0.5.7 的 ICL 长度兼容
+
+该版本 Qwen3-TTS 的普通 `decode()` 按首码本中大于 0 的数量推算有效长度，但 0 也是合法语音码值；随后 ICL 再按参考占比裁切，可能残留参考尾音并截掉生成结尾。`local_voice.py` 仅在此版本、本地 Qwen3 Base、显式参考音频与转写、单字符串、非流式的 ICL 合成调用中，临时将 `[1, time, Q]` 解码交给同版 `batch_decode([codes])`，按实际时间步数返回完整波形与长度。
+
+兼容层不改 site-packages；调用结束即恢复原方法，CPU、其他模型／版本、流式及真正多样本批输入沿用原路径。接管后的解码异常或长度不完整会失败，不回退到已知有误的裁法；默认速度仍为 1.0。此修复只校正样本长度，不代表术语、音色、结尾或听感已通过检查。
 
 ## Linux CPU
 

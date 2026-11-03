@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from contextlib import redirect_stderr, redirect_stdout
 from dataclasses import dataclass, field
+from importlib.metadata import PackageNotFoundError, version as package_version
 import json
 import os
 from pathlib import Path
@@ -123,11 +124,83 @@ def prepare_plan(config_path, text_path, output_path, *, language="Chinese", max
     return VoicePlan(model, reference, text, reference_text, output, language, max_tokens, log, engine)
 
 
+def _generate_mlx_with_qwen_057_decode_fix(generate_audio, kwargs, *, backend_version, make_array):
+    """Correct only the known unpadded, single-utterance Qwen ICL decode path.
+
+    mlx-audio 0.5.7 counts positive codebook-0 values as valid frames, although
+    zero is a legitimate codec value. Its variable-length batch decoder instead
+    uses the actual sequence length. This local non-streaming ICL call creates
+    [1, reference_frames + generated_frames, Q] without padding, so decoding it
+    as one variable-length sequence preserves both the reference cut and tail.
+    """
+    model = kwargs.get("model")
+    tokenizer = getattr(model, "speech_tokenizer", None)
+    eligible = (
+        backend_version == "0.5.7"
+        and getattr(model, "model_type", None) == "qwen3_tts"
+        and getattr(getattr(model, "config", None), "tts_model_type", None) == "base"
+        and getattr(tokenizer, "has_encoder", False) is True
+        and isinstance(kwargs.get("text"), str)
+        and isinstance(kwargs.get("ref_audio"), str) and bool(kwargs["ref_audio"])
+        and isinstance(kwargs.get("ref_text"), str) and bool(kwargs["ref_text"].strip())
+        and kwargs.get("voice") is None and kwargs.get("stt_model") is None
+        and kwargs.get("stream", False) is False and kwargs.get("join_audio") is True
+    )
+    if not eligible:
+        return generate_audio(**kwargs)
+    original_decode = getattr(tokenizer, "decode", None)
+    batch_decode = getattr(tokenizer, "batch_decode", None)
+    if not callable(original_decode) or not callable(batch_decode) or not callable(make_array):
+        raise RuntimeError("Qwen3 ICL length-correct decoder is unavailable; refusing the known-bad decode path")
+    owned_decode = "decode" in vars(tokenizer)
+    previous_decode = vars(tokenizer).get("decode")
+
+    def decode_single_unpadded(audio_codes, *args, **decode_kwargs):
+        shape = tuple(getattr(audio_codes, "shape", ()))
+        # Real padded batches and other decode interfaces keep their own logic.
+        # Do not infer padding from code values: code 0 is valid speech data.
+        if args or decode_kwargs or len(shape) != 3 or shape[0] != 1:
+            return original_decode(audio_codes, *args, **decode_kwargs)
+        rate = getattr(tokenizer, "decode_upsample_rate", None)
+        if shape[1] <= 0 or shape[2] <= 0 or not isinstance(rate, int) or rate <= 0:
+            raise RuntimeError("Invalid single-sequence Qwen3 ICL decoder shape or upsample rate")
+        expected = shape[1] * rate
+        audios, lengths = batch_decode([audio_codes])
+        if len(audios) != 1 or len(lengths) != 1 or int(lengths[0]) != expected:
+            raise RuntimeError("Qwen3 ICL batch decoder did not preserve the complete codec sequence")
+        audio = audios[0]
+        if tuple(getattr(audio, "shape", ())) != (expected,):
+            raise RuntimeError("Qwen3 ICL decoder returned an incomplete waveform")
+        return audio[None, :], make_array([expected])
+
+    tokenizer.decode = decode_single_unpadded
+    try:
+        return generate_audio(**kwargs)
+    finally:
+        if owned_decode:
+            tokenizer.decode = previous_decode
+        else:
+            delattr(tokenizer, "decode")
+
+
 def load_backend():
     # Imported only after offline mode is set; --check-only never imports MLX.
     from mlx_audio.tts.generate import generate_audio
     from mlx_audio.tts.utils import load_model
-    return load_model, generate_audio
+    try:
+        backend_version = package_version("mlx-audio")
+    except PackageNotFoundError:
+        backend_version = None
+    # MLX stays a synthesis-only import. Unknown/future versions retain their
+    # native decoder and do not receive this version-specific compatibility fix.
+    make_array = None
+    if backend_version == "0.5.7":
+        from mlx import core as mx
+        make_array = mx.array
+    def generate_local(**kwargs):
+        return _generate_mlx_with_qwen_057_decode_fix(
+            generate_audio, kwargs, backend_version=backend_version, make_array=make_array)
+    return load_model, generate_local
 
 
 def load_cpu_backend():

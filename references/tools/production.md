@@ -34,7 +34,7 @@ python scripts/pronunciation.py --text PROJECT/narration.txt \
 python scripts/local_voice.py --help
 ```
 
-前一命令输出 `spoken.txt`、`sample.txt`、`pronunciation.json`。英文、数字存在未声明项时退出 1。短测取完整句子，不拼字。用已授权声音生成并听短测，修正发音表或重生成完整段落；满意后以 `spoken.txt` 正式合成。显示稿保留原术语，后续按真实音频重新对齐。脚本只固定输入和检查清单，不保证模型发音。
+前一命令输出 `spoken.txt`、`sample.txt`、`pronunciation.json`。英文、数字存在未声明项或短测未覆盖全部已用术语时退出 1；覆盖清单见 sample_covered_terms / sample_uncovered_terms。短测取完整句子，不拼字。ready_for_synthesis 只表示文字映射就绪，pronunciation_verified 仍为 false；notes 不会作为音素、SSML或连读指令传给 TTS。用已授权声音生成并实际听查短测的读法、缩写连贯性和音色，修正实际 spoken 或重生成完整段落；通过后以 `spoken.txt` 合成全文。显示稿保留原术语，后续按真实音频重新对齐。脚本只固定输入和检查清单，不保证模型发音。
 
 ## 真实听审记录
 
@@ -49,11 +49,14 @@ python scripts/local_voice.py --help
   "reviewer":"实际审听者",
   "performed_at":"实际审听时间",
   "verdict":"no_unresolved_pronunciation_issue",
+  "checks":{"pronunciation":"passed","term_fluency":"passed","voice_consistency":"passed"},
   "reviewed_terms":["PageOn","API","1.5倍"],
   "evidence":{"path":"listening-notes.txt","sha256":"该真实记录的SHA256"},
   "unresolved_items":[]
 }
 ```
+
+三项 checks 分别对应术语读法、缩写/词间衔接、整轨声线一致性，缺失、failed 或 not_checked 均不能放行正式有声片。不同生成版本补录/拼接后，须覆盖接点两侧和全片；相同参考哈希不证明同声线。
 
 也接受确有音频感知能力的 `direct_audio_inspection_interface`；ASR 或技术脚本不可冒充该方法。证据路径相对 REVIEW.json。改稿、换音轨、改声音处理后旧记录失效。用户拒绝过的版本另按 [audio-quality.md](audio-repair.md) 检查，不能只补一个新表绕过历史反馈。
 
@@ -77,11 +80,23 @@ python scripts/production.py render PROJECT/project.json --output-dir OUTPUT/fin
 
 前两条用于自动检查画面与运动。先看海报、入场中间帧和完成帧，再以原速观看短片；修复遮挡、溢出、拖沓或生硬接点后再扩展。程序拒绝无声样片被无标识地当成配音成片。正式输出仍需检查 AAC 编码后的音轨、操作真实性及音画对应。
 
+## 底层有声小龙门禁
+
+正式 compile/render 会将 pronunciation.json、listening.json 与真实证据一并携带，timeline.audioReview 引用这两份 JSON；底层渲染器再次校验当前 WAV、实际 spoken 哈希、全部术语、三项听审结论和证据。手写时间轴或绕过 production.py 也不能让未听审旁白直接变成正式输出。这里只验证记录与文件一致性，不认证审听者身份或自动判断音质。
+
+没有全轨听审时，独立画面仍可 validate/audit/stills；确需有声技术候选，必须显式指定并在文件名中标明候选：
+
+```sh
+node assets/remotion/render.mjs PROJECT/timeline.json OUTPUT/episode-未听审候选.mp4 --unreviewed-audio
+```
+
+此方式在画面显示“未听审候选”，并生成绑定音视频哈希的 .audio-review.json；状态保持未听审，不能作为正式声音通过或发布。无声 visualPreview 只豁免实际全零 PCM16 WAV，不能靠布尔字段把有声片标成无声样片。
+
 ## 共用 Remotion
 
 `node assets/remotion/runtime.mjs`：首次按锁文件安装，随后报告 `reused:true`。位置为技能根 `.cache/remotion/<锁文件+系统架构+Node主版本哈希>/`。不要移动或改写系统环境变量；可用任务专属 `NARRATED_VIDEO_CACHE` 指定其他目录。多个项目直接调用同一个技能入口，无需项目内 `npm install` 或复制 `node_modules`。并发首次安装通过目录锁协调，失败不会标记为就绪。
 
-`REMOTION_BROWSER_EXECUTABLE` 可指定已有 Chrome；Mac 默认探测标准安装位置。需要自动下载浏览器时，下载位置也在共用依赖目录下。版本相同的依赖复用，不共享项目输入、字幕、截图或输出。素材暂存与输出路径独立。依赖升级修改 package.json 与 lockfile 后才会建立新缓存；旧缓存可留作旧项目复现。
+默认使用 Remotion 配套固定版本的 Chrome Headless Shell，自动下载到共用依赖目录；Mac 也不自动改用系统桌面 Chrome。桌面 Chrome 在并发截帧时可能偶发整帧平铺、重复或缺字，参见 [上游问题 #9473](https://github.com/remotion-dev/remotion/issues/9473)。`REMOTION_BROWSER_EXECUTABLE` 仅在明确需要自定义浏览器时设置；遇到这类闪帧先取消该覆盖并用配套内核复核。版本相同的依赖复用，不共享项目输入、字幕、截图或输出。素材暂存与输出路径独立。依赖升级时所有 Remotion 包保持同版，并同步 package.json 与 lockfile；新版本建立新缓存，旧缓存可留作旧项目复现。
 
 ## 精简分发
 
