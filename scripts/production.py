@@ -128,7 +128,7 @@ def package_skill(output):
     """Ship runtime resources, not developer tests, reports, media outputs or caches."""
     output=Path(output).resolve()
     if output.exists():raise FileExistsError(output)
-    files=[ROOT/'SKILL.md']
+    files=[ROOT/'SKILL.md',ROOT/'LICENSE']
     excluded={'tests','__pycache__','node_modules','.cache','.remotion'}
     for folder in ['agents','references','scripts','assets']:
         for parent,dirs,names in os.walk(ROOT/folder):

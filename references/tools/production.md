@@ -87,7 +87,7 @@ python scripts/production.py render PROJECT/project.json --output-dir OUTPUT/fin
 
 每期交付的发布标题、正文与话题按 [publishing-copy.md](../stages/publishing-copy.md) 生成，独立保存为 `发布文案.txt` 或 `发布文案.md`。该文件统一维护默认口吻与示例。最终 ZIP 中的文案须与最新修订一致。
 
-`python scripts/production.py pack outputs/vi-say.skill` 打包 `SKILL.md/references/scripts/assets`；若另有 `agents/` 配置也会一并包含。排除测试、依赖、缓存、私有声音、模型、产物和历史审计文件。开发测试继续留在源码中。`.skill` 是 ZIP，解压后目录名为 `vi-say`，调用名为 `$vi-say`。
+`python scripts/production.py pack outputs/vi-say.skill` 打包 `SKILL.md/LICENSE/references/scripts/assets`；若另有 `agents/` 配置也会一并包含。排除测试、依赖、缓存、私有声音、模型、产物和历史审计文件。开发测试继续留在源码中。`.skill` 是 ZIP，解压后目录名为 `vi-say`，调用名为 `$vi-say`。
 
 ## 风格与共用能力的接入
 

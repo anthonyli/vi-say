@@ -1,5 +1,7 @@
 # vi-say
 
+简体中文 | [English](README_EN.md)
+
 **把内容讲给你看。**
 
 `vi-say` 取 **Visual + Say**：用画面展示，用声音讲述。它是一套面向 AI 编程助手的视频制作 skill，将 GitHub 项目、官网、文章链接、已录视频或知识主题整理成讲解视频，并制作配套海报与发布文案。
@@ -26,7 +28,7 @@ mkdir -p "$HOME/.agents/skills"
 ln -s "$PWD" "$HOME/.agents/skills/vi-say"
 ```
 
-也可以将完整技能目录复制为 `~/.agents/skills/vi-say/`；若已经取得 `vi-say.skill` 分发包，它是 ZIP，将包内的 `vi-say/` 解压到该技能目录即可。最终应能找到 `~/.agents/skills/vi-say/SKILL.md`，同时保留 `references/`、`scripts/` 和 `assets/`。
+也可以将完整技能目录复制为 `~/.agents/skills/vi-say/`；若已经取得 `vi-say.skill` 分发包，它是 ZIP，将包内的 `vi-say/` 解压到该技能目录即可。最终应能找到 `~/.agents/skills/vi-say/SKILL.md`，同时保留 `LICENSE`、`references/`、`scripts/` 和 `assets/`。
 
 Codex 的项目级技能也可放在制作项目的 `.agents/skills/vi-say/`。本地发现目录、软链接支持及显式调用方式见 [OpenAI 官方技能文档](https://learn.chatgpt.com/docs/build-skills)。其他 Agent 按各自的技能目录与调用方式安装，本仓库没有逐个平台完成验证。
 
@@ -152,6 +154,8 @@ Remotion 依赖按锁文件、系统架构和 Node 主版本缓存在 `.cache/re
 
 ```text
 SKILL.md                    Agent 入口、场景选择与必要约束
+LICENSE                     MIT 许可证
+README_EN.md                英文安装、使用与扩展说明
 references/workflow.md      共用制作流程与各场景的差异
 references/extensions.md    配置修改、新动画与新场景的扩展位置
 references/stages/          各流程节点的写法、风格与检查要求
@@ -219,6 +223,8 @@ python -m unittest discover -s scripts/tests -p 'test_*.py'
 python scripts/production.py pack outputs/vi-say.skill
 ```
 
-`.skill` 是 ZIP，解压后的目录名为 `vi-say`，安装到所用 Agent 的技能目录后通过 `$vi-say` 调用。包内的 `SKILL.md` 保留同一版本号，无需维护另一份包版本。打包包含运行所需规则、脚本和素材，排除测试、缓存、工作目录、产物和私人资料。全局已安装的旧技能不会随编辑本仓库自动更新；当前仓库目录与远程地址仍沿用原名，包名和调用名已改为 `vi-say`。
+`.skill` 是 ZIP，解压后的目录名为 `vi-say`，安装到所用 Agent 的技能目录后通过 `$vi-say` 调用。包内的 `SKILL.md` 保留同一版本号，无需维护另一份包版本。打包包含 `LICENSE` 和运行所需规则、脚本与素材，排除测试、缓存、工作目录、产物和私人资料。全局已安装的旧技能不会随编辑本仓库自动更新；当前仓库目录与远程地址仍沿用原名，包名和调用名已改为 `vi-say`。
 
-本项目尚未选定自身许可证。角色生成记录见 `assets/production/character.json`；依赖、参考素材、字体与声音各自遵循其实际许可。私人声音、模型、字体、密钥和依赖缓存不随技能分发。
+## 许可证
+
+本项目采用 [MIT 许可证](LICENSE)。角色生成记录见 `assets/production/character.json`；第三方依赖、参考素材、字体与声音各自遵循其实际许可。私人声音、模型、字体、密钥和依赖缓存不随技能分发。

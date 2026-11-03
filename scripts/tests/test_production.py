@@ -72,6 +72,7 @@ class Production(unittest.TestCase):
                 self.assertIn('vi-say/assets/remotion/package-lock.json',names)
                 self.assertEqual({Path(n).parts[0] for n in names},{'vi-say'})
                 self.assertIn('name: vi-say',z.read('vi-say/SKILL.md').decode())
+                self.assertEqual(z.read('vi-say/LICENSE'),(Path(__file__).resolve().parents[2]/'LICENSE').read_bytes())
                 self.assertIn('vi-say/references/workflow.md',names)
                 self.assertIn('vi-say/references/extensions.md',names)
                 self.assertIn('vi-say/assets/remotion/cartoon-transitions.mjs',names)
