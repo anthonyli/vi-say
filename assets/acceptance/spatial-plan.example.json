@@ -1,0 +1,79 @@
+{
+  "timebase": "seconds",
+  "scenes": [
+    {
+      "id": "files",
+      "start": 0,
+      "end": 5,
+      "understanding": "说明文件指导助手而非游戏源码",
+      "input": "项目说明",
+      "operation": "打开角色说明",
+      "result": "职责可见",
+      "carry_object": "my-game 根目录",
+      "reading_state": "动作结束后保留正文",
+      "layout": {
+        "topology": "directory-preview",
+        "dominant_box": [
+          0.04,
+          0.22,
+          0.96,
+          0.9
+        ]
+      },
+      "audio_anchors": [
+        {
+          "word": "角色文件",
+          "speech_at": 1,
+          "visible_at": 0.9,
+          "visible_result": "文件/命令可见",
+          "tolerance": 0.3
+        }
+      ]
+    },
+    {
+      "id": "session",
+      "start": 5,
+      "end": 11,
+      "understanding": "会话推荐下一步",
+      "input": "项目说明",
+      "operation": "输入 /start",
+      "result": "阶段问题与下一步建议",
+      "carry_object": "my-game 根目录",
+      "reading_state": "动作结束后保留正文",
+      "layout": {
+        "topology": "single-terminal",
+        "dominant_box": [
+          0.07,
+          0.23,
+          0.93,
+          0.84
+        ]
+      },
+      "audio_anchors": [
+        {
+          "word": "开始指令",
+          "speech_at": 6,
+          "visible_at": 5.9,
+          "visible_result": "文件/命令可见",
+          "tolerance": 0.3
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "from": "files",
+      "to": "session",
+      "kind": "slide",
+      "start": 5,
+      "duration": 0.62,
+      "text_stable_at": 5.72,
+      "outgoing_anchor": "my-game 根目录",
+      "incoming_anchor": "my-game 地址栏",
+      "direction": "left",
+      "occlusion": "shared anchor above both scenes; chrome drawn last",
+      "semantic_boundary": "进入助手会话",
+      "major": true
+    }
+  ]
+}

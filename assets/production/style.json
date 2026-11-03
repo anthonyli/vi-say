@@ -1,0 +1,84 @@
+{
+  "id": "colorful-dragon-v1",
+  "name": "标准五色 · 黑白 · 小龙",
+  "palette": {
+    "blue": "#2E90FA",
+    "green": "#07C790",
+    "yellow": "#F7B035",
+    "orange": "#F47345",
+    "lightBlue": "#81A5E9",
+    "black": "#000000",
+    "white": "#FFFFFF"
+  },
+  "motion": {
+    "enter": 0.65,
+    "emphasis": 0.28,
+    "exit": 0.22,
+    "stagger": 0.14,
+    "travel": 64,
+    "damping": 19,
+    "stiffness": 175,
+    "mass": 0.75,
+    "transition": 0.6,
+    "transitionKinds": [
+      "slide",
+      "radial",
+      "wipe",
+      "flip"
+    ]
+  },
+  "video": {
+    "aspect": "16:9",
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "safe": 80
+  },
+  "covers": {
+    "4:3": [
+      1440,
+      1080
+    ],
+    "3:4": [
+      1080,
+      1440
+    ],
+    "16:9": [
+      1920,
+      1080
+    ]
+  },
+  "character": {
+    "file": "dragon.png",
+    "material": "柔和哑光软胶，左上柔光",
+    "identity": "青绿色中国小龙、米白鹿角和肚皮、细鳞片、长卷尾、少量金饰，无翅膀",
+    "animation": "整层位移、左右镜像转向；口型为音量包络驱动的开闭嘴，不是音素口型或三维骨骼",
+    "closedFile": "dragon-closed.png",
+    "mouthMask": {
+      "center": [
+        0.69,
+        0.417
+      ],
+      "radii": [
+        0.1,
+        0.047
+      ],
+      "solid": 0.65
+    },
+    "imageSize": [
+      1134,
+      1387
+    ]
+  },
+  "revision": 2,
+  "poster": {
+    "theme": "yellow-comic",
+    "palette": {
+      "background": "#FFE600",
+      "accent": "#FF4B0A",
+      "tag": "#6200EA",
+      "black": "#000000",
+      "white": "#FFFFFF"
+    }
+  }
+}

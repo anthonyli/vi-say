@@ -1,0 +1,27 @@
+{
+  "id": "community-outro-v1",
+  "narration": "有想法，欢迎留言。想看更多，记得关注。觉得有用，记得点赞。我们下期见。",
+  "title": "一起探索更多好工具",
+  "subtitle": "有想法，欢迎交流",
+  "items": [
+    {
+      "text": "留言",
+      "detail": "分享想法与问题",
+      "anchor": "留言",
+      "icon": "comment"
+    },
+    {
+      "text": "关注",
+      "detail": "下期继续一起探索",
+      "anchor": "关注",
+      "icon": "follow"
+    },
+    {
+      "text": "点赞",
+      "detail": "觉得有用，点个赞",
+      "anchor": "点赞",
+      "icon": "like"
+    }
+  ],
+  "timing": "从实际片尾口播的词时间填写，禁止沿用其他声音的秒数"
+}

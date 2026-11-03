@@ -1,0 +1,14 @@
+{
+  "generator": "built-in imagegen",
+  "date": "2026-11-02",
+  "asset": "dragon.png",
+  "prompt": "Reference image is a STYLE AND SPECIES reference for an ORIGINAL reusable 3D cartoon Chinese dragon presenter; create a new character rendering, not a screenshot. One charming jade/mint-green little Chinese dragon, two short ivory deer-like antlers, jade dorsal fins, small pointed ears, large warm dark eyes, short rounded snout with tiny nostrils, a gentle open smile with tiny teeth, cream segmented belly, finely modeled overlapping green scales and softly rosy cheeks, four short paws, long gracefully curled tail visible beside body. One understated warm gold cuff on the tail, with simple original decorative grooves. No wings. No shoes, no backpack. No flower and no handheld objects: one front paw raised with open fingers in a friendly teaching gesture, other paw relaxed. Premium soft matte 3D animation character, soft cinematic studio key light from upper left, dimensional modeling, tactile detailed scales, gentle ambient occlusion, warm approachable personality. Whole body with all antlers, tail and feet completely in frame, centered inside generous transparent margins. Three-quarter view toward viewer. Transparent background, no ground plane, no ground shadow, no text, no title badge, no watermarks, no logos, no surrounding UI. Fresh original pose and facial details, coherent anatomy, exactly one character. Keep the gentle jade/cream/gold color language and Chinese-dragon character of the reference.",
+  "usage": "Use dragon.png as identity reference for new poses. Preserve jade-green Chinese dragon anatomy, ivory antlers, scales, long tail, restrained gold ornaments and soft upper-left lighting. No wings. Keep typography outside generated artwork.",
+  "closed_mouth": {
+    "file": "dragon-closed.png",
+    "source": "built-in imagegen precise mouth-only edit, 2026-11-02",
+    "original_generation": "exec-08f0ae88-6ce1-42a2-b064-ed5579a38e75.png",
+    "usage": "masked mouth overlay only; body stays original",
+    "prompt": "Only close the smiling mouth; preserve exact framing, pose, face, texture, lighting and transparent background."
+  }
+}

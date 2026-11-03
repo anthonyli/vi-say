@@ -1,7 +1,8 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {AbsoluteFill, Audio, Composition, Img, OffthreadVideo, Sequence, interpolate,
-  registerRoot, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+  registerRoot, spring, staticFile, useCurrentFrame, useVideoConfig, delayRender, continueRender, cancelRender} from 'remotion';
 import {EditorialScenes} from './editorial';
+import {CartoonScenes} from './cartoon';
 
 const sizes = {'16:9': [1920, 1080], '4:3': [1440, 1080], '3:4': [1080, 1440]};
 const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'};
@@ -344,15 +345,26 @@ function Captions({captions, accent}) {
 
 // ─── Root component ───────────────────────────────────────────────────────────
 function MotionVideo(doc) {
+  const [fontHandle] = useState(() => delayRender('Load video font before capturing any frame'));
+  useEffect(() => {
+    (async () => {
+      if (doc.fontFile) {
+        const face = new FontFace('VideoFont', `url("${staticFile(doc.fontFile)}")`);
+        await face.load();
+        document.fonts.add(face);
+        await document.fonts.ready;
+      }
+      continueRender(fontHandle);
+    })().catch(cancelRender);
+  }, [doc.fontFile, fontHandle]);
   const {fps} = useVideoConfig();
   const {bg, accent} = useTheme(doc);
   const editorial = Boolean(doc.scenes?.length);
   return (
     <AbsoluteFill style={{background: bg, color: '#17120a',
       fontFamily: doc.fontFamily ?? baseFont}}>
-      {doc.fontFile && <style>{`@font-face{font-family:"VideoFont";src:url("${staticFile(doc.fontFile)}")}`}</style>}
       <Audio src={staticFile(doc.audio)}/>
-      {editorial ? <EditorialScenes doc={doc}/> : <>
+      {doc.cartoonScenes ? <CartoonScenes doc={doc}/> : editorial ? <EditorialScenes doc={doc}/> : <>
       {(doc.video || doc.image) && <Footage doc={doc} accent={accent}/>}
       {(doc.overlays ?? []).map((cue, i) =>
         <Sequence key={i} from={Math.round(cue.start * fps)}

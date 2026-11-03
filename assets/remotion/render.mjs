@@ -1,8 +1,11 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
+import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import {auditEditorial, editorialStillPoints, mapEditorialAssets, validateEditorial} from './editorial-contract.mjs';
+import {validateCartoon, mapCartoonAssets, cartoonStillPoints} from './cartoon-contract.mjs';
+import {loadRuntime} from './runtime.mjs';
 
 const types = new Set(['big-title', 'keyword', 'bullet-list', 'number', 'quote', 'comparison', 'browser', 'code', 'diagram', 'progress', 'chapter-label', 'info-card', 'input-bar']);
 const fail = message => {throw new Error(message);};
@@ -58,7 +61,7 @@ export function validate(doc) {
     interval(cue);
     if (![cue.from ?? 1, cue.to ?? 1.025].every(n => finite(n) && n >= 1 && n <= 1.08)) fail('Use subtle zoom from 1 to at most 1.08');
   }
-  return validateEditorial(doc);
+  return validateCartoon(validateEditorial(doc));
 }
 
 function stamp(t) {
@@ -98,10 +101,15 @@ async function main() {
   }
   try {
     doc = validate(JSON.parse(await fs.readFile(input, 'utf8')));
-    warnings = auditEditorial(doc);
+    if (doc.speechMotion) {
+      const bytes=await fs.readFile(path.resolve(path.dirname(input),doc.audio));
+      if(createHash('sha256').update(bytes).digest('hex')!==doc.speechMotion.audio_sha256) fail('Mouth motion belongs to a different audio file; regenerate it');
+    }
+    warnings = doc.cartoonScenes ? [{code:'CARTOON_REVIEW',message:'Review real frames, word timing and original-speed playback; fixed styling does not certify visual quality.'}] : auditEditorial(doc);
     for (const key of ['audio', 'video', 'image', 'fontFile']) if (doc[key]) doc[key] = await resolveAsset(doc[key]);
     for (const cue of doc.overlays) if (cue.image) cue.image = await resolveAsset(cue.image);
     await mapEditorialAssets(doc, resolveAsset);
+    await mapCartoonAssets(doc, resolveAsset);
   } catch (error) {
     if (mode !== 'audit') throw error;
     console.log(JSON.stringify({valid: false, errors: [error.message], warnings: warnings ?? [], qualityAssessed: false}, null, 2));
@@ -112,7 +120,7 @@ async function main() {
   if (mode === 'validate') { console.log('Timeline and local assets validated'); return; }
   if (mode === 'audit') {
     console.log(JSON.stringify({valid: true, errors: [], warnings, qualityAssessed: false,
-      localAssets: assets.size, stillPoints: editorialStillPoints(doc)}, null, 2));
+      localAssets: assets.size, stillPoints: cartoonStillPoints(doc) ?? editorialStillPoints(doc)}, null, 2));
     return;
   }
   if (mode === 'render') {
@@ -127,19 +135,29 @@ async function main() {
     await fs.mkdir(stillDirectory);
   }
   const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'narrated-motion-'));
+  const originalCwd = process.cwd();
   try {
-    const [{bundle}, {renderMedia, renderStill, selectComposition}] = await Promise.all([
-      import('@remotion/bundler'), import('@remotion/renderer'),
-    ]);
+    const runtime = await loadRuntime();
+    // Remotion locates downloaded Chrome relative to cwd's package.json.
+    // Keep that browser in the same shared cache, not each video project.
+    process.chdir(runtime.dir);
+    const {bundle} = runtime.bundler;
+    const {renderMedia, renderStill, selectComposition} = runtime.renderer;
     const publicDir = path.join(tmp, 'public');
     await fs.mkdir(publicDir);
     for (const [source, name] of assets) await fs.copyFile(source, path.join(publicDir, name));
     const root = path.dirname(fileURLToPath(import.meta.url));
-    const serveUrl = await bundle({entryPoint: path.join(root, 'src/index.jsx'), publicDir, outDir: path.join(tmp, 'bundle')});
-    const browserExecutable = process.env.REMOTION_BROWSER_EXECUTABLE || undefined;
+    const serveUrl = await bundle({entryPoint: path.join(root, 'src/index.jsx'), publicDir, outDir: path.join(tmp, 'bundle'),
+      rootDir: runtime.dir,
+      webpackOverride: config => ({...config,
+        resolve: {...config.resolve, modules: [runtime.nodeModules, ...(config.resolve?.modules ?? ['node_modules'])]},
+        resolveLoader: {...config.resolveLoader, modules: [runtime.nodeModules, ...(config.resolveLoader?.modules ?? ['node_modules'])]}})});
+    const macChrome = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+    const browserExecutable = process.env.REMOTION_BROWSER_EXECUTABLE ||
+      (process.platform === 'darwin' && await fs.access(macChrome).then(() => true, () => false) ? macChrome : undefined);
     const composition = await selectComposition({serveUrl, id: 'NarratedVideo', inputProps: doc, browserExecutable});
     if (mode === 'stills') {
-      const points = editorialStillPoints(doc);
+      const points = cartoonStillPoints(doc) ?? editorialStillPoints(doc);
       const manifest = [];
       for (const [index, point] of points.entries()) {
         const name = `${String(index + 1).padStart(3, '0')}-frame-${String(point.frame).padStart(6, '0')}.png`;
@@ -160,7 +178,7 @@ async function main() {
     await fs.writeFile(subtitle, doc.captions.map((c,i) => `${i+1}\n${stamp(c.start)} --> ${stamp(c.end)}\n${c.text}\n`).join('\n'), {flag: 'wx'});
     console.log(JSON.stringify({output: target, subtitles: subtitle, duration: composition.durationInFrames / doc.fps,
       width: composition.width, height: composition.height, fps: doc.fps}));
-  } finally { await fs.rm(tmp, {recursive: true, force: true}); }
+  } finally { process.chdir(originalCwd); await fs.rm(tmp, {recursive: true, force: true}); }
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

@@ -48,18 +48,31 @@ def map_time(seconds, mapping):
     return max(0.0, (seconds - removed) / mapping['speed'])
 
 
-def main():
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('input')
     parser.add_argument('--output', required=True)
     parser.add_argument('--map', required=True)
-    parser.add_argument('--speed', type=float, default=1.12)
+    parser.add_argument('--speed', type=float, default=1.0)
     parser.add_argument('--keep-pause', type=float, default=0.28)
-    args = parser.parse_args()
+    parser.add_argument('--speed-authorization', help='Current-task explicit speed-change authorization summary')
+    parser.add_argument('--listening-evidence', type=Path, help='Actual listening record, not ASR/statistics')
+    return parser.parse_args(argv)
+
+
+def validate_options(args):
+    if args.speed != 1.0:
+        if not args.speed_authorization or not args.listening_evidence or not args.listening_evidence.is_file():
+            raise ValueError('Non-1.0 tempo requires current-task authorization and actual listening evidence file; no automatic whole-track speedup.')
     if not 0.85 <= args.speed <= 1.25:
         raise ValueError('Use a modest speed from 0.85 to 1.25; unusually fast speech needs a new script.')
     if not 0.18 <= args.keep_pause <= 0.55:
         raise ValueError('keep-pause must preserve natural breathing: 0.18–0.55 seconds.')
+    return args
+
+
+def main():
+    args = validate_options(parse_args())
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     if output.resolve() == Path(args.input).resolve():
@@ -101,7 +114,7 @@ def main():
     with wave.open(str(output)) as w:
         final_duration = w.getnframes() / w.getframerate()
     mapping = {'input_duration': duration, 'output_duration': final_duration,
-        'speed': args.speed, 'cuts': cuts, 'detected_long_pauses': pauses,
+        'speed': args.speed, 'speed_authorization': args.speed_authorization, 'listening_evidence': str(args.listening_evidence) if args.listening_evidence else None, 'cuts': cuts, 'detected_long_pauses': pauses,
         'post_long_pauses': probe(output)}
     map_path = Path(args.map)
     map_path.parent.mkdir(parents=True, exist_ok=True)

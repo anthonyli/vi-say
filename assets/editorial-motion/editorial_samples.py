@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 W,H=1920,1080
 ROOT=Path(__file__).resolve().parents[1]
 # Bundled next to shared-motion, or found from a project inside self-media.
-_candidates=[Path(__file__).resolve().parent.parent/'shared-motion']+[a/'skills/narrated-product-video/assets/shared-motion' for a in Path(__file__).resolve().parents]
+_candidates=[Path(__file__).resolve().parent.parent/'shared-motion']+[a/f'skills/{name}/assets/shared-motion' for a in Path(__file__).resolve().parents for name in ('vi-say','narrated-product-video')]
 SHARED=next((a for a in _candidates if (a/'transitions.py').is_file()),None)
 if SHARED is None:raise RuntimeError('Place renderer beside shared-motion or in a self-media project.')
 sys.path.insert(0,str(SHARED))
