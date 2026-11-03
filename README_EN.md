@@ -212,7 +212,7 @@ python scripts/production.py pack outputs/vi-say.skill
 
 A `.skill` file is a ZIP archive whose top-level directory is `vi-say`. Its `SKILL.md` carries the same version, and its `LICENSE` carries the MIT notice. The package includes runtime instructions, scripts, and assets while excluding tests, caches, working directories, outputs, and private material.
 
-Editing this repository does not update separately copied skill installations. The repository directory and remote still use the original `narrated-product-video` name; the skill name and invocation are `vi-say` and `$vi-say`.
+Editing this repository does not update separately copied skill installations. The repository is [anthonyli/vi-say](https://github.com/anthonyli/vi-say); the skill name and invocation are `vi-say` and `$vi-say`.
 
 ## License
 

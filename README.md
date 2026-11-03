@@ -223,7 +223,7 @@ python -m unittest discover -s scripts/tests -p 'test_*.py'
 python scripts/production.py pack outputs/vi-say.skill
 ```
 
-`.skill` 是 ZIP，解压后的目录名为 `vi-say`，安装到所用 Agent 的技能目录后通过 `$vi-say` 调用。包内的 `SKILL.md` 保留同一版本号，无需维护另一份包版本。打包包含 `LICENSE` 和运行所需规则、脚本与素材，排除测试、缓存、工作目录、产物和私人资料。全局已安装的旧技能不会随编辑本仓库自动更新；当前仓库目录与远程地址仍沿用原名，包名和调用名已改为 `vi-say`。
+`.skill` 是 ZIP，解压后的目录名为 `vi-say`，安装到所用 Agent 的技能目录后通过 `$vi-say` 调用。包内的 `SKILL.md` 保留同一版本号，无需维护另一份包版本。打包包含 `LICENSE` 和运行所需规则、脚本与素材，排除测试、缓存、工作目录、产物和私人资料。全局已安装的旧技能不会随编辑本仓库自动更新。仓库地址为 [anthonyli/vi-say](https://github.com/anthonyli/vi-say)，包名和调用名为 `vi-say`。
 
 ## 许可证
 
