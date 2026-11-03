@@ -6,6 +6,15 @@
 
 随包提供小龙立体卡通示例风格；角色、配色、音色、海报和动画可以分别调整。Agent 入口是 [SKILL.md](SKILL.md)，调用名称为 `$vi-say`。
 
+## 作品示例
+
+完整视频可在自媒体平台搜索账号 **ABCD伐木雷** 观看。
+
+| 宠物系统实战 | Handy 工具分享 |
+|:---:|:---:|
+| <img src="docs/examples/pet-system/poster-3x4.png" alt="宠物系统实战海报：Claude Code 接上 GPT，impeccable 实战" width="320"> | <img src="docs/examples/handy/poster-3x4.png" alt="Handy 工具分享海报：开口就能写" width="320"> |
+| [3:4 原图](docs/examples/pet-system/poster-3x4.png) · [4:3 原图](docs/examples/pet-system/poster-4x3.png) · [宽版原图](docs/examples/pet-system/poster-wide.png) | [3:4 原图](docs/examples/handy/poster-3x4.png) · [4:3 原图](docs/examples/handy/poster-4x3.png) · [宽版原图](docs/examples/handy/poster-wide.png) |
+
 ## 安装与直接使用
 
 ### 1. 安装到 Agent
@@ -17,13 +26,13 @@ mkdir -p "$HOME/.agents/skills"
 ln -s "$PWD" "$HOME/.agents/skills/vi-say"
 ```
 
-也可以将完整技能目录复制为 `~/.agents/skills/vi-say/`；若已经取得 `vi-say.skill` 分发包，它是 ZIP，将包内的 `vi-say/` 解压到该技能目录即可。最终应能找到 `~/.agents/skills/vi-say/SKILL.md`，同时保留 `agents/`、`references/`、`scripts/` 和 `assets/`。
+也可以将完整技能目录复制为 `~/.agents/skills/vi-say/`；若已经取得 `vi-say.skill` 分发包，它是 ZIP，将包内的 `vi-say/` 解压到该技能目录即可。最终应能找到 `~/.agents/skills/vi-say/SKILL.md`，同时保留 `references/`、`scripts/` 和 `assets/`。
 
 Codex 的项目级技能也可放在制作项目的 `.agents/skills/vi-say/`。本地发现目录、软链接支持及显式调用方式见 [OpenAI 官方技能文档](https://learn.chatgpt.com/docs/build-skills)。其他 Agent 按各自的技能目录与调用方式安装，本仓库没有逐个平台完成验证。
 
 ### 2. 显式调用 `$vi-say`
 
-安装后，在制作项目中向 Agent 发送需求。当前技能配置为显式调用，在提示词中写上 `$vi-say`。Codex CLI／IDE 扩展可用 `/skills` 或输入 `$` 查找；若安装后尚未发现，重启 Codex 再试。
+安装后，在制作项目中向 Agent 发送需求，推荐在提示词中写上 `$vi-say` 明确选用本技能。Codex CLI／IDE 扩展可用 `/skills` 或输入 `$` 查找；若安装后尚未发现，重启 Codex 再试。
 
 可以直接复制下面的模板，替换方括号中的内容：
 
@@ -50,6 +59,10 @@ Codex 的项目级技能也可放在制作项目的 `.agents/skills/vi-say/`。�
 ### 4. 准备所需能力并逐步调整
 
 Agent 按任务检查运行条件。剪辑和渲染需要 Python、Node/npm、FFmpeg、中文字体及对应依赖；生成配音还需本地模型和授权参考声音，配置见 [本地配音](references/tools/local-tts.md)。声音样本、准确转写和配置放在制作项目 `private/voice/`，不随公共技能分发。缺少配音条件时可以先明确要求无声样片。
+
+配音模型默认下载到**当前制作项目的 `private/models/`**，随项目保存、迁移和清理。用户也可自行选择共享模型，通过配置文件的相对路径或项目内软链接引用已有权重。安装或移除 skill 不会自动下载或删除这些模型。
+
+多种授权音色可分别放在 `private/voice/female/`、`private/voice/male/` 等目录。可以指定一种，也可以每期随机选择一次；正文、补录与片尾保持同一音色，配置方法见 [多音色与每期选择](references/tools/local-tts.md#多音色与每期选择)。
 
 默认最终海报需要 Agent 环境中可用的图像生成工具；脚本封面是可选排版草稿。链接取材依赖 Agent 可用的浏览器或连接器，本地素材应提供它能访问的路径。
 
@@ -139,7 +152,6 @@ Remotion 依赖按锁文件、系统架构和 Node 主版本缓存在 `.cache/re
 
 ```text
 SKILL.md                    Agent 入口、场景选择与必要约束
-agents/                     skill 名称、提示词与调用策略
 references/workflow.md      共用制作流程与各场景的差异
 references/extensions.md    配置修改、新动画与新场景的扩展位置
 references/stages/          各流程节点的写法、风格与检查要求
@@ -147,11 +159,31 @@ references/tools/           配音、剪辑、渲染和修复工具的接口
 references/styles/          可替换的角色和视频色板
 references/runtime/         CPU 环境的固定依赖与模型来源记录
 scripts/                    项目、配音、剪辑、字幕、海报草稿与检查工具
+scripts/tests/              Python 回归测试，不随 skill 分发
 assets/production/          默认角色、色板、动作参数、互动片尾与海报参考
 assets/remotion/            默认场景、信息层、知识动画、转场注册表与渲染
 assets/shared-motion/       共享元素及空间迁移专项工具
 assets/editorial-motion/    六类编辑式视觉布局及无声示例
 assets/anatomy-video/       时间驱动的 SVG 原理解说渲染接口
+```
+
+### 脚本分工
+
+`scripts/` 顶层保留运行入口与内部模块，按制作路线或待解决的问题调用：
+
+| 用途 | 脚本 |
+|---|---|
+| 默认制作、海报草稿与口型 | `production.py`、`production_design.py`、`speech_motion.py` |
+| 音色选择、本地配音与语速／术语处理 | `select_voice.py`、`local_voice.py`、`local_voice_segments.py`、`run_cpu_voice.sh`、`audio_timing.py`、`pronunciation.py` |
+| 原声剪辑与字幕 | `prepare_recording.py`、`align_captions.py`、`render_captions.py` |
+| 简单图片时间轴视频 | `render_video.py` |
+| 动画／空间计划、画面变化与交付记录检查 | `audit_motion.py`、`scan_visual_holds.py`、`check_spatial_plan.py`、`check_visual_plan.py`、`check_acceptance.py` |
+| 音频修订记录、能量变化与降噪效果证据复核 | `audio_acceptance_candidate.py`、`audio_revision_audit.py`、`check_audio_energy_regression.py`、`check_background_utility.py` |
+
+Python 回归测试统一放在 `scripts/tests/`。安装上述 Python 依赖后运行：
+
+```sh
+python -m unittest discover -s scripts/tests -p 'test_*.py'
 ```
 
 固定流程与具体表现分开维护。后续某项效果不满意，可以先调整参数、替换该项实现，或增加新效果。已实现的转场集中在 `assets/remotion/cartoon-transitions.mjs`；自动选择哪些效果由 `style.json.motion.transitionKinds` 决定。新增动画的接入与验证见 [扩展说明](references/extensions.md)。
@@ -181,10 +213,12 @@ assets/anatomy-video/       时间驱动的 SVG 原理解说渲染接口
 
 ## 分发
 
+版本号统一维护在 [SKILL.md](SKILL.md) 的 `metadata.version`，使用 [Agent Skills 规范支持的元数据字段](https://agentskills.io/specification#metadata-field)。开发版本带 `-dev` 后缀；正式发布时更新为不带该后缀的版本号，再创建对应 Git 标签。已有 `0.0.1` 标签保留为此前的主分支基线。
+
 ```sh
 python scripts/production.py pack outputs/vi-say.skill
 ```
 
-`.skill` 是 ZIP，解压后的目录名为 `vi-say`，安装到所用 Agent 的技能目录后通过 `$vi-say` 调用。打包包含运行所需规则、脚本和素材，排除测试、缓存、工作目录、产物和私人资料。全局已安装的旧技能不会随编辑本仓库自动更新；当前仓库目录与远程地址仍沿用原名，包名和调用名已改为 `vi-say`。
+`.skill` 是 ZIP，解压后的目录名为 `vi-say`，安装到所用 Agent 的技能目录后通过 `$vi-say` 调用。包内的 `SKILL.md` 保留同一版本号，无需维护另一份包版本。打包包含运行所需规则、脚本和素材，排除测试、缓存、工作目录、产物和私人资料。全局已安装的旧技能不会随编辑本仓库自动更新；当前仓库目录与远程地址仍沿用原名，包名和调用名已改为 `vi-say`。
 
 本项目尚未选定自身许可证。角色生成记录见 `assets/production/character.json`；依赖、参考素材、字体与声音各自遵循其实际许可。私人声音、模型、字体、密钥和依赖缓存不随技能分发。

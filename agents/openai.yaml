@@ -1,7 +1,0 @@
-interface:
-  display_name: "vi-say · 把内容讲给你看"
-  short_description: "将项目链接、录屏或知识主题做成讲解视频，先看海报，再组织口播、演示和动画"
-  default_prompt: "使用 $vi-say 根据我的链接、主题或录屏制作讲解视频，先展示代表海报，再完成口播、画面、互动片尾与配套发布文案。"
-
-policy:
-  allow_implicit_invocation: false

@@ -9,7 +9,7 @@
 | Apple Silicon Mac | mlx（默认） | mlx-audio 0.5.7、Qwen3-TTS Base 4-bit 本地目录 |
 | Linux x86_64 CPU | qwen-pytorch-cpu | Python 3.12、匹配的 CPU PyTorch／torchaudio、官方 Qwen Base |
 
-这些是当前实现的参考环境，不保证其他平台无需适配。模型、依赖和声音放在制作项目，不放技能分发目录。首次安装与下载按当前任务授权准备；已有资源优先复用。
+这些是当前实现的参考环境，不保证其他平台无需适配。配音模型默认下载到当前制作项目的 `private/models/`，与项目一起迁移或清理；依赖和声音也在制作项目准备，不进入技能分发包。首次安装与下载按当前任务授权准备；用户明确选择共享已有模型时，通过配置文件的相对路径或项目内软链接引用，不强制复制或重新下载。
 
 ## 授权声音与配置
 
@@ -28,9 +28,24 @@
 
 `authorized: false` 是待填写示例，只有实际已有本人或声音权利人的授权才能据实设为 true。当前会话已有授权可直接记录，不重复询问。参考风格不等于声音复刻授权。模型目录须有配置与实际权重，参考文件须为完整 PCM WAV；不接受 URL、绝对路径或未展开的 `~`。
 
+## 多音色与每期选择
+
+多个音色分别放在 `private/voice/female/`、`private/voice/male/` 等目录中，每个目录各有 `voice-preferences.json`、参考 WAV、准确转写和授权记录。子目录中的模型相对路径相应改为 `../../models/...`，共用项目内同一份权重。单音色的原有目录结构仍可使用。
+
+随机选择只在一期开始时执行一次，结果保存到该期的工作目录。例如：
+
+```sh
+VOICE_CONFIG="$(.venv/bin/python "$SKILL_DIR/scripts/select_voice.py" --voice-root private/voice --voice random --output work/episode/voice-selection.json --print-config)"
+.venv/bin/python "$SKILL_DIR/scripts/local_voice.py" --config "$VOICE_CONFIG" --text work/episode/spoken.txt --output work/episode/narration.wav
+```
+
+`--voice male` 或 `--voice female` 可明确指定；其他音色使用自己的目录名。随机池只包含当前制作项目中已配置且已有授权的音色。正文、补录和片尾复用同一个选择文件；已有文件不会重新抽取，音色配置、参考音频或转写改变时会拒绝复用。新一期使用新的选择文件。选择文件只固定音色，不代表合成或听审已经通过。
+
+不指定 `--config` 时仍读取 `private/voice/voice-preferences.json`；多音色项目可将这个默认入口设为某个音色配置的项目内软链接。
+
 ## Mac MLX
 
-在制作项目准备隔离环境和本地权重：
+先进入当前制作项目根目录，再准备隔离环境和本地权重。以下下载命令显式指定项目内目录：
 
 ```sh
 python3 -m venv .venv
@@ -38,7 +53,7 @@ python3 -m venv .venv
 .venv/bin/hf download mlx-community/Qwen3-TTS-12Hz-1.7B-Base-4bit --local-dir private/models/Qwen3-TTS-12Hz-1.7B-Base-4bit
 ```
 
-根据当前环境选择 Python 3.10+。权重及分词器、音频资源需完整下载；4-bit 不表示任意机器都能流畅合成长稿。示例中的模型路径相对 `private/voice/`，实际按自己的目录调整。
+根据当前环境选择 Python 3.10+。权重及分词器、音频资源需完整下载；4-bit 不表示任意机器都能流畅合成长稿。示例中的模型路径相对 `private/voice/`，实际按自己的目录调整。安装或移除技能不会自动下载或删除模型；采用默认目录时，模型随制作项目保留，删除该项目才会一起移除。
 
 从制作项目调用已安装技能的脚本（`SKILL_DIR` 是实际技能目录）：
 

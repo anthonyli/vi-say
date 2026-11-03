@@ -2,6 +2,9 @@
 import unittest
 import copy
 import hashlib
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from test_audio_acceptance_candidate import GateTests
 from audio_revision_audit import audit
 
