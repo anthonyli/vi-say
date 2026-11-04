@@ -2,8 +2,6 @@
 
 [简体中文](README.md) | English
 
-Author: **Anthony Li** · License: [Apache-2.0](LICENSE)
-
 **Explain it with visuals and voice.**
 
 `vi-say` combines **Visual + Say**. It is an Agent Skill for AI coding assistants that turns GitHub projects, websites, articles, recorded footage, and knowledge topics into explainer videos, with matching posters and publishing copy.

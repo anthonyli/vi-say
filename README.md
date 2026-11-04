@@ -2,8 +2,6 @@
 
 简体中文 | [English](README_EN.md)
 
-作者：**Anthony Li** · 许可证：[Apache-2.0](LICENSE)
-
 **把内容讲给你看。**
 
 `vi-say` 取 **Visual + Say**：用画面展示，用声音讲述。它是一套面向 AI 编程助手的视频制作 skill，将 GitHub 项目、官网、文章链接、已录视频或知识主题整理成讲解视频，并制作配套海报与发布文案。
