@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 """Derive deterministic mouth openness from a real PCM WAV; not phoneme lip sync."""
 import argparse, hashlib, json, math, wave
 from pathlib import Path

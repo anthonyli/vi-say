@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 """Find low-change MAIN-PICTURE spans in a video; advisory, never aesthetic approval.
 Uses existing FFmpeg/FFprobe only. Does not install dependencies or alter input.
 Default normalized ROI excludes header and subtitle band; inspect/override it for

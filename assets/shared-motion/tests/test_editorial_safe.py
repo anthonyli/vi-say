@@ -1,3 +1,6 @@
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 """Full-canvas safe layout regressions for the optional subtitle/CTA route."""
 import importlib.util
 import json

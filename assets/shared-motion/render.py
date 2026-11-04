@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 """Render trusted local Python adapters (including during --validate-only).
 
 Does not install or download. Only use adapter source you have reviewed.

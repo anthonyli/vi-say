@@ -2,6 +2,8 @@
 
 简体中文 | [English](README_EN.md)
 
+作者：**Anthony Li** · 许可证：[Apache-2.0](LICENSE)
+
 **把内容讲给你看。**
 
 `vi-say` 取 **Visual + Say**：用画面展示，用声音讲述。它是一套面向 AI 编程助手的视频制作 skill，将 GitHub 项目、官网、文章链接、已录视频或知识主题整理成讲解视频，并制作配套海报与发布文案。
@@ -158,7 +160,8 @@ Remotion 依赖按锁文件、系统架构和 Node 主版本缓存在 `.cache/re
 
 ```text
 SKILL.md                    Agent 入口、场景选择与必要约束
-LICENSE                     MIT 许可证
+LICENSE                     Apache-2.0 许可证全文
+NOTICE                      Anthony Li 版权与署名声明
 README_EN.md                英文安装、使用与扩展说明
 references/workflow.md      共用制作流程与各场景的差异
 references/extensions.md    配置修改、新动画与新场景的扩展位置
@@ -227,8 +230,10 @@ python -m unittest discover -s scripts/tests -p 'test_*.py'
 python scripts/production.py pack outputs/vi-say.skill
 ```
 
-`.skill` 是 ZIP，解压后的目录名为 `vi-say`，安装到所用 Agent 的技能目录后通过 `$vi-say` 调用。包内的 `SKILL.md` 保留同一版本号，无需维护另一份包版本。打包包含 `LICENSE` 和运行所需规则、脚本与素材，排除测试、缓存、工作目录、产物和私人资料。全局已安装的旧技能不会随编辑本仓库自动更新。仓库地址为 [anthonyli/vi-say](https://github.com/anthonyli/vi-say)，包名和调用名为 `vi-say`。
+`.skill` 是 ZIP，解压后的目录名为 `vi-say`，安装到所用 Agent 的技能目录后通过 `$vi-say` 调用。包内的 `SKILL.md` 保留同一版本号，无需维护另一份包版本。打包包含 `LICENSE`、`NOTICE` 和运行所需规则、脚本与素材，排除测试、缓存、工作目录、产物和私人资料。全局已安装的旧技能不会随编辑本仓库自动更新。仓库地址为 [anthonyli/vi-say](https://github.com/anthonyli/vi-say)，包名和调用名为 `vi-say`。
 
 ## 许可证
 
-本项目采用 [MIT 许可证](LICENSE)。角色生成记录见 `assets/production/character.json`；第三方依赖、参考素材、字体与声音各自遵循其实际许可。私人声音、模型、字体、密钥和依赖缓存不随技能分发。
+本仓库的原创代码与 skill 文档采用 [Apache License 2.0](LICENSE)，作者为 **Anthony Li**，版权与署名声明见 [NOTICE](NOTICE)。源码文件使用 `SPDX-License-Identifier: Apache-2.0` 标识许可证。再分发时须遵守许可证第 4 条，包括附带许可证、保留适用的版权与署名声明，以及在修改过的文件中标明修改。
+
+角色生成记录见 `assets/production/character.json`；第三方依赖、参考素材、字体与声音各自遵循其实际许可，不因本仓库更换许可证而改变。私人声音、模型、字体、密钥和依赖缓存不随技能分发。

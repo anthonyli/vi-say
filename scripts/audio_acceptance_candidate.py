@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 """Project-isolated audio evidence gate. Validates records, never hears audio."""
 import argparse
 import hashlib

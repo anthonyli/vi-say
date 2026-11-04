@@ -1,3 +1,6 @@
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 """Behavior checks for deterministic time mapping and safe local delivery.
 
 These tests use scalar frame callbacks, so the core contract is independent of

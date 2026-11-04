@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 """Validate an authored editorial visual plan and its inspected keyframe evidence.
 Checks completeness and hashes, not whether a layout is beautiful or a claim true.
 """

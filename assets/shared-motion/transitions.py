@@ -1,3 +1,6 @@
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 """Deterministic editorial transitions on two equally sized PIL frames.
 
 No animation clock, network, font, or renderer side effects. The caller supplies

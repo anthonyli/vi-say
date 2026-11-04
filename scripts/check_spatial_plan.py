@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 """Validate declared spatial/timing evidence; cannot infer visual or listening quality."""
 import argparse,json,math
 from pathlib import Path

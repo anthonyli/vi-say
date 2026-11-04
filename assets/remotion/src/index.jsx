@@ -1,3 +1,6 @@
+// Copyright 2026 Anthony Li
+// SPDX-License-Identifier: Apache-2.0
+
 import React, {useEffect, useState} from 'react';
 import {AbsoluteFill, Audio, Composition, Img, OffthreadVideo, Sequence, interpolate,
   registerRoot, spring, staticFile, useCurrentFrame, useVideoConfig, delayRender, continueRender, cancelRender} from 'remotion';

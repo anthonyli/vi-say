@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 """Add reviewed captions to a local MP4, preserving audio and the full picture.
 
 Burn mode overlays the original skill's rounded dark caption box on the full

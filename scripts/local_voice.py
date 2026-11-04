@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 """Generate a continuous narration with an explicitly authorized local voice."""
 from __future__ import annotations
 

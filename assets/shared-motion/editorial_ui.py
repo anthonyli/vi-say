@@ -1,3 +1,6 @@
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 """Reviewed v3 UI geometry, with episode text externalized in JSON. No TTS or network."""
 from PIL import Image,ImageDraw,ImageFont,ImageFilter
 import math, os

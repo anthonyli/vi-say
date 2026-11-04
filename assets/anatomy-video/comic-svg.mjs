@@ -1,3 +1,6 @@
+// Copyright 2026 Anthony Li
+// SPDX-License-Identifier: Apache-2.0
+
 // SVG comic panels and dialogue bubbles; no timers or browser dependencies.
 export function createComicSvg({fontFamily="sans-serif",palette={}}={}) {
 const c={ink:'#102b51',navy:'#112e62',blue:'#2059d8',cyan:'#57e6ff',ice:'#d7f3ff',orange:'#ff934f',cream:'#fff5db',muted:'#426a90',...palette};

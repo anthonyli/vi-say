@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 """One production entry: project, posters, pronunciation, timeline and shared Remotion."""
 import argparse
 import copy
@@ -137,7 +140,7 @@ def package_skill(output):
     """Ship runtime resources, not developer tests, reports, media outputs or caches."""
     output=Path(output).resolve()
     if output.exists():raise FileExistsError(output)
-    files=[ROOT/'SKILL.md',ROOT/'LICENSE']
+    files=[ROOT/'SKILL.md',ROOT/'LICENSE',ROOT/'NOTICE']
     excluded={'tests','__pycache__','node_modules','.cache','.remotion'}
     for folder in ['agents','references','scripts','assets']:
         for parent,dirs,names in os.walk(ROOT/folder):

@@ -1,3 +1,6 @@
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 """Different explanation structure: the same objects change route topology.
 
 This is a structural illustration, not a performance simulation or benchmark.

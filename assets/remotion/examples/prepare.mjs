@@ -1,3 +1,6 @@
+// Copyright 2026 Anthony Li
+// SPDX-License-Identifier: Apache-2.0
+
 // Stage the public visual examples with an explicitly silent preview soundtrack.
 // This is not speech synthesis or a test of narration alignment.
 import fs from 'node:fs/promises';

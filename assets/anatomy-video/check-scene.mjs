@@ -1,3 +1,6 @@
+// Copyright 2026 Anthony Li
+// SPDX-License-Identifier: Apache-2.0
+
 import assert from 'node:assert/strict';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';

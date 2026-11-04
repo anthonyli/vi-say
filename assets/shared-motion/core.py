@@ -1,3 +1,6 @@
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 """Deterministic scene timing and local encoding; no model, network or installer.
 
 Adapters are trusted Python source selected explicitly by the author. A JSON

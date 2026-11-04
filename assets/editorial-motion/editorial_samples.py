@@ -1,3 +1,6 @@
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 """Original editorial validation designs. No third-party artwork or private data.
 All visible product operations are conceptual, not captures of executed software.
 """

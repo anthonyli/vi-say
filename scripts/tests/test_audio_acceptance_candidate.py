@@ -1,3 +1,6 @@
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 """Synthetic fixtures only: no audio generation/listening and no claim of real quality."""
 import copy
 import hashlib

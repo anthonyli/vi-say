@@ -1,3 +1,6 @@
+// Copyright 2026 Anthony Li
+// SPDX-License-Identifier: Apache-2.0
+
 // Add implemented effects here. The default rotation pool lives in style.json.
 // Each effect receives eased progress; timing and completion are owned by motion.
 export const CARTOON_TRANSITIONS = Object.freeze({

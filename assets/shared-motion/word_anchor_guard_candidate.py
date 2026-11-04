@@ -1,3 +1,6 @@
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 """Validate causal completion, not merely increasing word-anchor order."""
 def require_completed(anchors,links,tolerance=1e-9):
     """links = [(earlier_key, fixed_seconds, later_key), ...].

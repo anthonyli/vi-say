@@ -1,3 +1,6 @@
+// Copyright 2026 Anthony Li
+// SPDX-License-Identifier: Apache-2.0
+
 import style from '../production/style.json' with {type:'json'};
 import {CARTOON_TRANSITIONS, hasCartoonTransition, validateTransitionPool} from './cartoon-transitions.mjs';
 export const clamp = x => Math.max(0, Math.min(1,x));

@@ -1,4 +1,7 @@
 #!/usr/bin/env sh
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 # Official process-start ONNX Runtime telemetry opt-out; no network-policy changes.
 set -eu
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)

@@ -1,3 +1,6 @@
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 import sys,tempfile,wave,unittest
 from pathlib import Path
 import numpy as np

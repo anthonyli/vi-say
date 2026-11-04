@@ -1,3 +1,6 @@
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 import copy, importlib.util, json, sys, unittest
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parent))

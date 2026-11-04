@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 """Offline CPU narration in paragraph-sized resumable pieces (no ASR/API/upload)."""
 import argparse
 import hashlib

@@ -1,3 +1,6 @@
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 """Candidate spatial compositor. Times are actual seconds, never scene-normalized.
 Caller draws each scene WITHOUT the migrating anchor, then composites one anchor.
 Pillow needed; v4 flip/radial lazy-load their original NumPy implementation.

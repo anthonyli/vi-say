@@ -2,6 +2,8 @@
 
 [简体中文](README.md) | English
 
+Author: **Anthony Li** · License: [Apache-2.0](LICENSE)
+
 **Explain it with visuals and voice.**
 
 `vi-say` combines **Visual + Say**. It is an Agent Skill for AI coding assistants that turns GitHub projects, websites, articles, recorded footage, and knowledge topics into explainer videos, with matching posters and publishing copy.
@@ -147,7 +149,8 @@ Remotion dependencies are cached in `.cache/remotion/` by lockfile, architecture
 
 ```text
 SKILL.md                    Agent entry point, constraints, version, and license
-LICENSE                     MIT license
+LICENSE                     Full Apache-2.0 license text
+NOTICE                      Anthony Li copyright and attribution notice
 references/workflow.md      Shared workflow and scenario routing
 references/extensions.md    Configuration, animation, and scene extension points
 references/stages/          Individual workflow stages and review requirements
@@ -212,10 +215,12 @@ The single version source is `metadata.version` in [SKILL.md](SKILL.md), using t
 python scripts/production.py pack outputs/vi-say.skill
 ```
 
-A `.skill` file is a ZIP archive whose top-level directory is `vi-say`. Its `SKILL.md` carries the same version, and its `LICENSE` carries the MIT notice. The package includes runtime instructions, scripts, and assets while excluding tests, caches, working directories, outputs, and private material.
+A `.skill` file is a ZIP archive whose top-level directory is `vi-say`. Its `SKILL.md` carries the same version. The package includes the Apache-2.0 `LICENSE`, the attribution `NOTICE`, runtime instructions, scripts, and assets while excluding tests, caches, working directories, outputs, and private material.
 
 Editing this repository does not update separately copied skill installations. The repository is [anthonyli/vi-say](https://github.com/anthonyli/vi-say); the skill name and invocation are `vi-say` and `$vi-say`.
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE). Character-generation provenance is recorded in `assets/production/character.json`. Third-party dependencies, reference materials, fonts, and voices remain subject to their respective licenses. Private voices, models, fonts, credentials, and dependency caches are not distributed with the skill.
+The original code and skill documentation in this repository are licensed under the [Apache License 2.0](LICENSE). The author is **Anthony Li**; copyright and attribution are recorded in [NOTICE](NOTICE). Source files use `SPDX-License-Identifier: Apache-2.0`. Redistribution must comply with Section 4 of the license, including providing the license, retaining applicable copyright and attribution notices, and identifying changes in modified files.
+
+Character-generation provenance is recorded in `assets/production/character.json`. Third-party dependencies, reference materials, fonts, and voices retain their respective licenses, regardless of this repository's license change. Private voices, models, fonts, credentials, and dependency caches are not distributed with the skill.

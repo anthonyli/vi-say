@@ -1,3 +1,6 @@
+// Copyright 2026 Anthony Li
+// SPDX-License-Identifier: Apache-2.0
+
 // Two small silent engineering fixtures, not polished marketing deliverables.
 // Set ANATOMY_KIT to an installed Anatomy kit/iso-kit.mjs file.
 import { pathToFileURL } from 'node:url';

@@ -1,3 +1,6 @@
+// Copyright 2026 Anthony Li
+// SPDX-License-Identifier: Apache-2.0
+
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';

@@ -1,3 +1,6 @@
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 import hashlib
 import json
 from pathlib import Path
@@ -144,6 +147,7 @@ class Production(unittest.TestCase):
                 self.assertEqual({Path(n).parts[0] for n in names},{'vi-say'})
                 self.assertIn('name: vi-say',z.read('vi-say/SKILL.md').decode())
                 self.assertEqual(z.read('vi-say/LICENSE'),(Path(__file__).resolve().parents[2]/'LICENSE').read_bytes())
+                self.assertEqual(z.read('vi-say/NOTICE'),(Path(__file__).resolve().parents[2]/'NOTICE').read_bytes())
                 self.assertIn('vi-say/references/workflow.md',names)
                 self.assertIn('vi-say/references/extensions.md',names)
                 self.assertIn('vi-say/assets/remotion/cartoon-transitions.mjs',names)

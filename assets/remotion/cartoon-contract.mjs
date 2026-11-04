@@ -1,3 +1,6 @@
+// Copyright 2026 Anthony Li
+// SPDX-License-Identifier: Apache-2.0
+
 import fs from 'node:fs';
 import {hasCartoonTransition, validateTransitionPool} from './cartoon-transitions.mjs';
 export const style = JSON.parse(fs.readFileSync(new URL('../production/style.json', import.meta.url), 'utf8'));

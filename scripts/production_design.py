@@ -1,3 +1,6 @@
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 """Shared style, font checks and deterministic poster composition."""
 from functools import lru_cache
 import json

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 """Clean long silent pauses, preserve speech, change tempo without changing pitch."""
 import argparse
 import json

@@ -1,8 +1,9 @@
 ---
 name: vi-say
 description: 将 GitHub 项目、官网、文章链接、已录视频或知识主题制作成讲解视频、动态演示和三比例海报。先用海报呈现内容方向，再组织口播与画面；支持原声剪辑、授权本地配音和可扩展的角色、图解与动画。
-license: MIT
+license: Apache-2.0
 metadata:
+  author: Anthony Li
   version: "0.0.4"
 ---
 
@@ -54,3 +55,5 @@ GitHub 项目介绍默认核对并说明当期 Star 数，采集可用的真实�
 从技能根目录调用脚本；制作项目数据放自己的 `work/`、`outputs/` 和 `private/`。本地配音模型默认下载到当前制作项目的 `private/models/`；用户选择共享模型时，按其指定的本地路径配置，不重复下载。Remotion 共用技能根 `.cache/remotion/`，不逐项目复制依赖。安装、模型与浏览器按当前环境和任务授权准备。
 
 分发用 `python scripts/production.py pack outputs/vi-say.skill`，排除测试、缓存、产物、私人声音、模型与密钥。私有音色配置只从当前制作项目读取，不自动查其他项目。全局安装副本不会随源码编辑自动更新。
+
+本技能的原创代码与文档作者为 Anthony Li，采用 [Apache-2.0 许可证](LICENSE)，版权声明见 [NOTICE](NOTICE)。分发包须携带这两个文件；第三方依赖与素材保留各自许可及声明。

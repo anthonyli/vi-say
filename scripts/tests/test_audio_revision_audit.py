@@ -1,3 +1,6 @@
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 """Synthetic structure-only tests. No fake fixture is a real listening record."""
 import unittest
 import copy

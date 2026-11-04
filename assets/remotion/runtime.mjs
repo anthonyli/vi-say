@@ -1,3 +1,6 @@
+// Copyright 2026 Anthony Li
+// SPDX-License-Identifier: Apache-2.0
+
 // Shared, lockfile-addressed dependencies. No npm install in project copies.
 import fs from 'node:fs/promises';
 import path from 'node:path';

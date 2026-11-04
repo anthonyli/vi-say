@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright 2026 Anthony Li
+# SPDX-License-Identifier: Apache-2.0
+
 """Check authored text against ASR and map word timing to processed narration."""
 import argparse
 import difflib
