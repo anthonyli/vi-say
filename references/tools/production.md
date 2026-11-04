@@ -90,13 +90,15 @@ python scripts/production.py render PROJECT/project.json --output-dir OUTPUT/fin
 node assets/remotion/render.mjs PROJECT/timeline.json OUTPUT/episode-未听审候选.mp4 --unreviewed-audio
 ```
 
-此方式在画面显示“未听审候选”，并生成绑定音视频哈希的 .audio-review.json；状态保持未听审，不能作为正式声音通过或发布。无声 visualPreview 只豁免实际全零 PCM16 WAV，不能靠布尔字段把有声片标成无声样片。
+此方式生成绑定音视频哈希的 .audio-review.json，候选状态默认只保留在文件名、交付说明和检查记录，不自动烧录到视频画面。用户明确要求画面显示审阅状态时，才额外传入 --show-review-badge。去掉画面提示不改变未听审状态，不能作为正式声音通过或发布。无声 visualPreview 只豁免实际全零 PCM16 WAV，不能靠布尔字段把有声片标成无声样片。
 
 ## 共用 Remotion
 
 `node assets/remotion/runtime.mjs`：首次按锁文件安装，随后报告 `reused:true`。位置为技能根 `.cache/remotion/<锁文件+系统架构+Node主版本哈希>/`。不要移动或改写系统环境变量；可用任务专属 `NARRATED_VIDEO_CACHE` 指定其他目录。多个项目直接调用同一个技能入口，无需项目内 `npm install` 或复制 `node_modules`。并发首次安装通过目录锁协调，失败不会标记为就绪。
 
-默认使用 Remotion 配套固定版本的 Chrome Headless Shell，自动下载到共用依赖目录；Mac 也不自动改用系统桌面 Chrome。桌面 Chrome 在并发截帧时可能偶发整帧平铺、重复或缺字，参见 [上游问题 #9473](https://github.com/remotion-dev/remotion/issues/9473)。`REMOTION_BROWSER_EXECUTABLE` 仅在明确需要自定义浏览器时设置；遇到这类闪帧先取消该覆盖并用配套内核复核。版本相同的依赖复用，不共享项目输入、字幕、截图或输出。素材暂存与输出路径独立。依赖升级时所有 Remotion 包保持同版，并同步 package.json 与 lockfile；新版本建立新缓存，旧缓存可留作旧项目复现。
+默认使用 Remotion 配套固定版本的 Chrome Headless Shell，自动下载到共用依赖目录；Mac 也不自动改用系统桌面 Chrome。桌面 Chrome 在并发截帧时可能偶发整帧平铺、重复或缺字，参见 [上游问题 #9473](https://github.com/remotion-dev/remotion/issues/9473)。`REMOTION_BROWSER_EXECUTABLE` 仅在明确需要自定义浏览器时设置；遇到这类闪帧先取消该覆盖并用配套内核复核。版本相同的依赖复用，不共享项目输入、字幕、截图或输出。素材暂存与输出路径独立。发现可用新版时自主更新并验证；升级时所有 Remotion 包保持同版，并同步 package.json 与 lockfile。新版最小实渲验证通过后，清理无活动任务引用的旧缓存。浏览器操作从共用缓存环境执行，避免在仓库根目录另建 `.remotion/` 下载；中断下载残留确认无活动进程后清除。
+
+根目录 `.remotion/` 是工具运行时缓存，不属于技能源码或交付。每次更新、安装或下载结束后，检查共用浏览器可用且无活动下载，再删除根目录多余的 `.remotion/`；若其中是唯一完整的新浏览器，先迁入当前版本共用缓存并验证。不要删除共用缓存内仍在使用的同名浏览器目录。
 
 ## 精简分发
 

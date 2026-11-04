@@ -60,7 +60,21 @@ test('missing review blocks final even when filename says candidate', async t =>
     assert.equal(decision.mode, 'unreviewed_audio_candidate');
     assert.equal(decision.listeningRecordValidated, false);
     assert.equal(decision.audioQualityAutomaticallyCertified, false);
+    assert.equal(decision.reviewBadgeVisible, false);
   }
+});
+
+test('a review badge is opt-in and never changes the listening verdict', async t => {
+  const f = await fixture(t); delete f.doc.audioReview;
+  const gate = await f.inspect();
+  const options = {unreviewedAudio: true, output: 'candidate.mp4'};
+  const plain = audioRenderDecision(gate, options);
+  const badged = audioRenderDecision(gate, {...options, showReviewBadge: true});
+  assert.equal(plain.reviewBadgeVisible, false);
+  assert.equal(badged.reviewBadgeVisible, true);
+  assert.deepEqual({...badged, reviewBadgeVisible: false}, plain);
+  assert.equal(badged.listeningRecordValidated, false);
+  assert.throws(() => audioRenderDecision(gate, {showReviewBadge: true, output: 'final.mp4'}), /requires --unreviewed-audio/);
 });
 
 test('stale WAV, script, method, partial scope, verdict, terms and unresolved issues fail', async t => {
@@ -153,4 +167,8 @@ test('CLI independently reports gate status and blocks missing review before bro
   assert.doesNotMatch(render.stdout + render.stderr, /shared runtime|Downloading/);
   const badCandidate = run(['--unreviewed-audio']);
   assert.equal(badCandidate.status, 1); assert.match(badCandidate.stderr, /filename/);
+  const badgeWithoutCandidate = run(['--show-review-badge']);
+  assert.equal(badgeWithoutCandidate.status, 1);
+  assert.match(badgeWithoutCandidate.stderr, /requires --unreviewed-audio/);
+  assert.doesNotMatch(badgeWithoutCandidate.stdout + badgeWithoutCandidate.stderr, /shared runtime|Downloading/);
 });

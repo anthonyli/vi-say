@@ -10,7 +10,7 @@ function Icon({name}) {
   const path=name==='comment'?'M5 5h22v16H14l-7 6v-6H5Z':name==='follow'?'M16 4v24M4 16h24':'M10 14l6-10c4 0 2 9 2 9h8l-3 15H10Zm-6 0h6v14H4Z';
   return <svg width="58" height="58" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round"><path d={path}/></svg>;
 }
-function Scene({scene:s,preview}) {
+function Scene({scene:s}) {
   const frame=useCurrentFrame(),{fps}=useVideoConfig(),t=frame/fps;
   const hero=s.kind==='hero',demo=s.kind==='demo',right=sideOf(s)==='right';
   const contentLeft=hero?(right?90:960):(right?90:700);
@@ -38,7 +38,7 @@ function Scene({scene:s,preview}) {
         {s.kind==='cta'&&active&&<span style={{position:'absolute',right:26,top:30,fontSize:32}}>✓</span>}
       </div>;
     })}
-    <div style={{position:'absolute',left:90,bottom:42,fontSize:21,color:`${C.black}99`}}>{preview?'无声视觉样片 · 未进行声音验收':s.kind==='cta'?'互动动画示意':s.kind==='demo'?'官方界面素材展示':'小龙带你看'}</div>
+    <div style={{position:'absolute',left:90,bottom:42,fontSize:21,color:`${C.black}99`}}>{s.kind==='cta'?'互动动画示意':s.kind==='demo'?'官方界面素材展示':'小龙带你看'}</div>
   </AbsoluteFill>;
 }
 function SceneLayer({scene,index,doc}) {
@@ -46,7 +46,7 @@ function SceneLayer({scene,index,doc}) {
   const transition=scene.transition??transitionFor(index,doc.transitionSeed??doc.cartoonScenes[0].title);
   const duration=Math.round(scene.end*fps)-Math.round(scene.start*fps);
   return <AbsoluteFill style={index?transitionStyle(transition,frame/(M.transition*fps)):{}}>
-    <Freeze frame={Math.min(frame,duration-1)}><Scene scene={scene} preview={doc.visualPreview}/></Freeze>
+    <Freeze frame={Math.min(frame,duration-1)}><Scene scene={scene}/></Freeze>
   </AbsoluteFill>;
 }
 export function CartoonScenes({doc}) {
@@ -68,6 +68,6 @@ export function CartoonScenes({doc}) {
         {doc.characterClosed&&doc.speechMotion&&<Img src={staticFile(doc.characterClosed)} style={{position:'absolute',width:'100%',height:'100%',opacity:1-openness,maskImage:mouthMask,WebkitMaskImage:mouthMask}}/>}
       </div>
     </div>
-    {doc.unreviewedAudio&&<div style={{position:'absolute',right:28,top:20,padding:'10px 18px',borderRadius:12,background:'#fff3cf',border:'2px solid #b65f00',color:'#713b00',fontSize:26,fontWeight:800,zIndex:100}}>未听审候选 · 声音未验收</div>}
+    {doc.reviewBadgeVisible===true&&<div style={{position:'absolute',right:28,top:20,padding:'10px 18px',borderRadius:12,background:'#fff3cf',border:'2px solid #b65f00',color:'#713b00',fontSize:26,fontWeight:800,zIndex:100}}>未听审候选 · 声音未验收</div>}
   </>;
 }

@@ -72,13 +72,15 @@ function stamp(t) {
 
 async function main() {
   const [timeline, output, ...flags] = process.argv.slice(2);
-  const usage = 'Usage: node render.mjs timeline.json output.mp4 [--unreviewed-audio] [--validate-only | --audit-only | --stills directory]';
+  const usage = 'Usage: node render.mjs timeline.json output.mp4 [--unreviewed-audio] [--show-review-badge] [--validate-only | --audit-only | --stills directory]';
   if (!timeline || !output) fail(usage);
   let mode = 'render';
   let stillDirectory;
   let unreviewedAudio = false;
+  let showReviewBadge = false;
   for (let i = 0; i < flags.length; i++) {
     if (flags[i] === '--unreviewed-audio' && !unreviewedAudio) { unreviewedAudio = true; continue; }
+    if (flags[i] === '--show-review-badge' && !showReviewBadge) { showReviewBadge = true; continue; }
     if (mode !== 'render') fail(usage);
     if (flags[i] === '--validate-only') mode = 'validate';
     else if (flags[i] === '--audit-only') mode = 'audit';
@@ -130,10 +132,10 @@ async function main() {
     return;
   }
   if (mode === 'render') {
-    audioDecision = audioRenderDecision(audioReview, {unreviewedAudio, output: target});
-    // The flag creates a visible candidate plus a machine-readable status; it
-    // never turns absent listening into a validated conclusion.
-    if (audioDecision.mode === 'unreviewed_audio_candidate') doc.unreviewedAudio = true;
+    audioDecision = audioRenderDecision(audioReview, {unreviewedAudio, showReviewBadge, output: target});
+    // Review status belongs in the sidecar by default. Burning a production
+    // status into the viewer's picture requires a separate explicit choice.
+    doc.reviewBadgeVisible = audioDecision.reviewBadgeVisible;
     for (const name of [target, subtitle, ...(audioReview.required ? [target.slice(0, -4) + '.audio-review.json'] : [])]) {
       const exists = await fs.access(name).then(() => true, () => false);
       if (exists) fail(`Output already exists: ${name}`);
