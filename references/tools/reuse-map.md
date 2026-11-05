@@ -15,6 +15,7 @@
 | 结构与运动检查 | `check_visual_plan.py`、`check_spatial_plan.py`、`audit_motion.py`、`scan_visual_holds.py` | 检查计划、空间、运动记录与静止区段；静止检测只是线索，不能直接判定镜头无效 |
 | 声音与验收记录 | `check_audio_energy_regression.py`、`audio_revision_audit.py`、`check_acceptance.py` | 检查技术变化、版本绑定与记录完整性；不能自动补造真人听审、真实体验或发布状态 |
 | 技能分发 | `production.py pack` | 打包实际实现与通用素材，验证模板，排除项目产物、私人声音、模型与缓存 |
+| 交付产物归档 | `production.py archive`、`scripts/archive_project.py` | 本期清单驱动成品保留、哈希去重、ZIP 重建、资源转存和验证后清理；支持失败重试，说明见 [归档工具](archiving.md) |
 
 发布文案的语气、真实体验与事实判断继续由 [发布文案流程](../stages/publishing-copy.md) 引导。代码可以核对字段、来源引用或文件一致性，不能仅凭填写了一个字段就证明使用体验真实。新增自动化优先针对实际重复步骤，不另建一个只有空字段的全流程系统。
 

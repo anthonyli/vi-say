@@ -210,6 +210,9 @@ def package_skill(output):
 
 
 def main():
+    if sys.argv[1:2] == ['archive']:
+        from archive_project import main as archive_main
+        return archive_main(sys.argv[2:], prog=f'{Path(sys.argv[0]).name} archive')
     ap=argparse.ArgumentParser(description=__doc__);sub=ap.add_subparsers(dest='command',required=True)
     a=sub.add_parser('init');a.add_argument('directory',type=Path);a.add_argument('--title',required=True);a.add_argument('--subtitle',required=True);a.add_argument('--series',default='小龙实战');a.add_argument('--preset',choices=PRESETS,default='glass');a.add_argument('--template',choices=TEMPLATES,default='story')
     for name in ['covers','compile','render']:
@@ -218,6 +221,7 @@ def main():
             a.add_argument('--audio',type=Path);a.add_argument('--listening',type=Path);a.add_argument('--preview',action='store_true')
         if name=='render':a.add_argument('--stills',action='store_true')
     a=sub.add_parser('pack');a.add_argument('output',type=Path)
+    sub.add_parser('archive',help='Archive deliverables from a reusable manifest; see archive --help')
     a=sub.add_parser('catalog',help='List implemented effects, parameters and validated templates');a.add_argument('--json',action='store_true')
     args=ap.parse_args()
     if args.command=='catalog':
@@ -236,5 +240,5 @@ def main():
 
 if __name__=='__main__':
     try:main()
-    except (ValueError,OSError,KeyError,subprocess.CalledProcessError) as error:
+    except (ValueError,OSError,KeyError,TypeError,zipfile.BadZipFile,subprocess.CalledProcessError) as error:
         print(str(error),file=sys.stderr);raise SystemExit(1)
