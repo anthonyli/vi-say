@@ -1,0 +1,841 @@
+{
+  "scenes": [
+    {
+      "kind": "hero",
+      "start": 0,
+      "end": 3,
+      "title": "让信息动起来",
+      "effects": [
+        {
+          "type": "platform",
+          "position": [
+            980,
+            790
+          ],
+          "width": 760,
+          "label": "小龙带你看"
+        },
+        {
+          "type": "text",
+          "position": [
+            100,
+            510
+          ],
+          "text": "外观  动作  时间  分开选择",
+          "fontSize": 34,
+          "at": 0.35,
+          "enter": "rise"
+        },
+        {
+          "type": "tag",
+          "position": [
+            100,
+            640
+          ],
+          "text": "可调用的动画模块",
+          "at": 0.7,
+          "enter": "pop"
+        },
+        {
+          "type": "counter",
+          "box": [
+            100,
+            740,
+            330,
+            150
+          ],
+          "value": 5,
+          "label": "可选 Bot 造型",
+          "seconds": 1.2,
+          "at": 0.3
+        },
+        {
+          "type": "bot",
+          "id": "sun",
+          "variant": "pentagon",
+          "position": [
+            540,
+            810
+          ],
+          "action": "look",
+          "size": 90,
+          "at": 0.15
+        },
+        {
+          "type": "bot",
+          "id": "pink",
+          "variant": "blob",
+          "position": [
+            740,
+            810
+          ],
+          "action": "look",
+          "size": 90,
+          "at": 0.27
+        },
+        {
+          "type": "bot",
+          "id": "ember",
+          "variant": "hexagon",
+          "position": [
+            940,
+            810
+          ],
+          "action": "look",
+          "size": 90,
+          "at": 0.39
+        },
+        {
+          "type": "bot",
+          "id": "blue",
+          "variant": "triangle",
+          "position": [
+            1140,
+            810
+          ],
+          "action": "look",
+          "size": 90,
+          "at": 0.51
+        },
+        {
+          "type": "bot",
+          "id": "green",
+          "variant": "square",
+          "position": [
+            1340,
+            810
+          ],
+          "action": "look",
+          "size": 90,
+          "at": 0.63
+        }
+      ],
+      "characterPose": {
+        "left": 1110,
+        "top": 255,
+        "width": 430,
+        "height": 530,
+        "turn": 0
+      },
+      "characterSide": "right",
+      "subtitle": "样式与内容分开  动作按实际时间触发"
+    },
+    {
+      "kind": "stage",
+      "start": 3,
+      "end": 7,
+      "title": "五种造型  八种动作",
+      "effects": [
+        {
+          "type": "bot",
+          "id": "sun",
+          "variant": "pentagon",
+          "position": [
+            350,
+            530
+          ],
+          "action": "peek",
+          "size": 170,
+          "label": "探头"
+        },
+        {
+          "type": "bot",
+          "id": "pink",
+          "variant": "blob",
+          "position": [
+            660,
+            530
+          ],
+          "action": "hop",
+          "size": 170,
+          "label": "弹跳"
+        },
+        {
+          "type": "bot",
+          "id": "ember",
+          "variant": "hexagon",
+          "position": [
+            970,
+            530
+          ],
+          "action": "look",
+          "size": 170,
+          "label": "碰撞与挤压",
+          "actions": [
+            {
+              "at": 0.95,
+              "duration": 0.7,
+              "name": "nudge",
+              "hideLabel": true
+            }
+          ],
+          "keyframes": [
+            {
+              "at": 0.35,
+              "position": [
+                970,
+                530
+              ]
+            },
+            {
+              "at": 0.95,
+              "position": [
+                1170,
+                530
+              ],
+              "compression": 0.7
+            },
+            {
+              "at": 1.65,
+              "position": [
+                970,
+                530
+              ],
+              "compression": 0
+            }
+          ]
+        },
+        {
+          "type": "bot",
+          "id": "blue",
+          "variant": "triangle",
+          "position": [
+            1280,
+            530
+          ],
+          "action": "look",
+          "size": 170,
+          "label": "旋转",
+          "actions": [
+            {
+              "at": 1,
+              "duration": 1.3,
+              "name": "spin",
+              "hideLabel": true
+            }
+          ],
+          "keyframes": [
+            {
+              "at": 0.95,
+              "position": [
+                1280,
+                530
+              ],
+              "compression": 0.5
+            },
+            {
+              "at": 1.65,
+              "position": [
+                1280,
+                530
+              ],
+              "compression": 0
+            }
+          ]
+        },
+        {
+          "type": "bot",
+          "id": "green",
+          "variant": "square",
+          "position": [
+            1590,
+            530
+          ],
+          "action": "work",
+          "size": 170,
+          "label": "工作与庆祝",
+          "actions": [
+            {
+              "at": 2.2,
+              "duration": 1.4,
+              "name": "celebrate"
+            }
+          ]
+        },
+        {
+          "type": "platform",
+          "position": [
+            300,
+            775
+          ],
+          "width": 1450
+        },
+        {
+          "type": "tag",
+          "position": [
+            650,
+            370
+          ],
+          "text": "起跳拉伸  落地压扁  形变回弹",
+          "at": 0.6
+        }
+      ],
+      "characterPose": {
+        "left": 30,
+        "top": 650,
+        "width": 210,
+        "height": 260,
+        "turn": 0
+      },
+      "transition": "slide"
+    },
+    {
+      "kind": "stage",
+      "start": 7,
+      "end": 10,
+      "title": "对象连接与状态反馈",
+      "effects": [
+        {
+          "type": "platform",
+          "position": [
+            330,
+            730
+          ],
+          "width": 480,
+          "label": "输入"
+        },
+        {
+          "type": "platform",
+          "position": [
+            1270,
+            730
+          ],
+          "width": 480,
+          "label": "输出"
+        },
+        {
+          "type": "paths",
+          "paths": [
+            "M550 700C730 570 1050 790 1500 680"
+          ],
+          "color": "#8670B9"
+        },
+        {
+          "type": "connection",
+          "position": [
+            790,
+            430
+          ],
+          "at": 0.4,
+          "seconds": 1.4,
+          "label": "LINK",
+          "waiting": "正在连接",
+          "complete": "✓ 连接完成"
+        },
+        {
+          "type": "bot",
+          "id": "ember",
+          "variant": "hexagon",
+          "position": [
+            1450,
+            470
+          ],
+          "action": "peek",
+          "size": 100
+        }
+      ],
+      "characterPose": {
+        "left": 30,
+        "top": 650,
+        "width": 210,
+        "height": 260,
+        "turn": 0
+      },
+      "transition": "radial"
+    },
+    {
+      "kind": "stage",
+      "start": 10,
+      "end": 16,
+      "title": "多份输入汇聚成摘要再分发",
+      "effects": [
+        {
+          "type": "flow",
+          "box": [
+            350,
+            325,
+            1430,
+            560
+          ],
+          "sources": [
+            {
+              "title": "观察记录",
+              "label": "输入素材",
+              "status": "就绪",
+              "color": "#287FA3"
+            },
+            {
+              "title": "数据图表",
+              "label": "输入素材",
+              "status": "就绪",
+              "color": "#BC657B"
+            },
+            {
+              "title": "结论说明",
+              "label": "输入素材",
+              "status": "就绪",
+              "color": "#8670B9"
+            }
+          ],
+          "summary": {
+            "title": "整理后的摘要",
+            "sections": [
+              {
+                "label": "保留重点",
+                "text": "共同结论与关键差异",
+                "color": "#8670B9"
+              },
+              {
+                "label": "安排后续",
+                "text": "核对来源与完善说明",
+                "color": "#287FA3"
+              }
+            ]
+          },
+          "targets": [
+            {
+              "title": "核对来源",
+              "label": "后续任务",
+              "status": "开始处理"
+            },
+            {
+              "title": "完善说明",
+              "label": "后续任务",
+              "status": "开始处理"
+            }
+          ],
+          "gatherAt": 0.85,
+          "gatherSeconds": 0.9,
+          "summaryAt": 2.15,
+          "summarySeconds": 0.6,
+          "sendAt": 3.8,
+          "sendSeconds": 1
+        },
+        {
+          "type": "bot",
+          "id": "ember",
+          "variant": "hexagon",
+          "position": [
+            1720,
+            270
+          ],
+          "action": "peek",
+          "size": 70
+        }
+      ],
+      "characterPose": {
+        "left": 30,
+        "top": 650,
+        "width": 210,
+        "height": 260,
+        "turn": 0
+      },
+      "transition": "wipe"
+    },
+    {
+      "kind": "stage",
+      "start": 16,
+      "end": 19,
+      "title": "同一个对象沿路径传递",
+      "effects": [
+        {
+          "type": "route",
+          "points": [
+            [
+              420,
+              610
+            ],
+            [
+              1000,
+              650
+            ],
+            [
+              1590,
+              610
+            ]
+          ],
+          "labels": [
+            "来源",
+            "处理",
+            "结果"
+          ],
+          "label": "内容",
+          "seconds": 2.1,
+          "loop": false,
+          "at": 0.65,
+          "enter": "none"
+        },
+        {
+          "type": "platform",
+          "position": [
+            230,
+            760
+          ],
+          "width": 380
+        },
+        {
+          "type": "platform",
+          "position": [
+            810,
+            760
+          ],
+          "width": 380
+        },
+        {
+          "type": "platform",
+          "position": [
+            1400,
+            760
+          ],
+          "width": 380
+        },
+        {
+          "type": "bot",
+          "id": "ember",
+          "variant": "hexagon",
+          "position": [
+            1710,
+            470
+          ],
+          "action": "hop",
+          "size": 80
+        }
+      ],
+      "characterPose": {
+        "left": 30,
+        "top": 650,
+        "width": 210,
+        "height": 260,
+        "turn": 0
+      },
+      "transition": "flip"
+    },
+    {
+      "kind": "demo",
+      "start": 19,
+      "end": 22,
+      "title": "按讲解聚焦关键区域",
+      "effects": [
+        {
+          "type": "focus",
+          "events": [
+            {
+              "at": 0.65,
+              "region": [
+                0.045,
+                0.18,
+                0.22,
+                0.7
+              ],
+              "label": "查看来源"
+            },
+            {
+              "at": 1.4,
+              "region": [
+                0.28,
+                0.18,
+                0.42,
+                0.7
+              ],
+              "label": "聚焦处理",
+              "zoom": 1.05,
+              "pan": [
+                -25,
+                0
+              ]
+            },
+            {
+              "at": 2.15,
+              "region": [
+                0.725,
+                0.18,
+                0.22,
+                0.7
+              ],
+              "label": "查看结果",
+              "color": "#6E963D",
+              "zoom": 1,
+              "pan": [
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        {
+          "type": "bot",
+          "id": "ember",
+          "variant": "hexagon",
+          "position": [
+            1760,
+            820
+          ],
+          "action": "peek",
+          "size": 80
+        }
+      ],
+      "characterPose": {
+        "left": 30,
+        "top": 650,
+        "width": 210,
+        "height": 260,
+        "turn": 0
+      },
+      "image": "board.svg",
+      "mediaSize": [
+        1440,
+        900
+      ],
+      "sourceLabel": "示意素材 · 聚焦与平移演示",
+      "transition": "slide",
+      "mediaBox": [
+        280,
+        320,
+        1440,
+        620
+      ]
+    },
+    {
+      "kind": "stage",
+      "start": 22,
+      "end": 25,
+      "title": "卡片迁移与指针跟随",
+      "effects": [
+        {
+          "type": "card",
+          "id": "moving-card",
+          "position": [
+            350,
+            400
+          ],
+          "width": 350,
+          "title": "同一份材料",
+          "label": "身份保持一致",
+          "status": "等待处理",
+          "enter": "pop",
+          "keyframes": [
+            {
+              "at": 0.4,
+              "position": [
+                350,
+                400
+              ]
+            },
+            {
+              "at": 1.5,
+              "position": [
+                940,
+                440
+              ]
+            }
+          ],
+          "changes": [
+            {
+              "at": 1.6,
+              "status": "已归位"
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "position": [
+            1370,
+            440
+          ],
+          "width": 360,
+          "title": "下一步",
+          "label": "新的落点",
+          "status": "接收完成",
+          "detail": "对象移到哪里 状态就在哪里更新",
+          "at": 1.1,
+          "enter": "rise"
+        },
+        {
+          "type": "pointer",
+          "points": [
+            {
+              "at": 0.15,
+              "position": [
+                580,
+                620
+              ],
+              "click": true
+            },
+            {
+              "at": 1.6,
+              "position": [
+                1160,
+                640
+              ],
+              "click": true
+            },
+            {
+              "at": 2.4,
+              "position": [
+                1560,
+                640
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "position": [
+            600,
+            775
+          ],
+          "text": "文字与图形使用同一条时间轴",
+          "fontSize": 30,
+          "at": 0.7,
+          "enter": "rise"
+        },
+        {
+          "type": "list",
+          "box": [
+            1320,
+            730,
+            400,
+            170
+          ],
+          "items": [
+            {
+              "at": 1.6,
+              "text": "结果归位",
+              "detail": "状态与对象同步更新"
+            }
+          ]
+        }
+      ],
+      "characterPose": {
+        "left": 30,
+        "top": 650,
+        "width": 210,
+        "height": 260,
+        "turn": 0
+      },
+      "transition": "radial"
+    },
+    {
+      "kind": "cta",
+      "start": 25,
+      "end": 29,
+      "title": "一起探索更多好工具",
+      "subtitle": "有想法，欢迎交流",
+      "outroId": "community-outro-v1",
+      "items": [
+        {
+          "text": "留言",
+          "detail": "分享想法与问题",
+          "anchor": "留言",
+          "icon": "comment",
+          "at": 0.4
+        },
+        {
+          "text": "关注",
+          "detail": "下期继续一起探索",
+          "anchor": "关注",
+          "icon": "follow",
+          "at": 1.2
+        },
+        {
+          "text": "点赞",
+          "detail": "觉得有用，点个赞",
+          "anchor": "点赞",
+          "icon": "like",
+          "at": 2.0
+        }
+      ],
+      "characterSide": "right",
+      "characterPose": {
+        "left": 1200,
+        "top": 300,
+        "width": 500,
+        "height": 620,
+        "turn": 0
+      },
+      "effects": [
+        {
+          "type": "platform",
+          "position": [
+            1050,
+            820
+          ],
+          "width": 760
+        },
+        {
+          "type": "bot",
+          "id": "ember",
+          "variant": "hexagon",
+          "position": [
+            1760,
+            780
+          ],
+          "action": "celebrate",
+          "size": 85
+        }
+      ],
+      "transition": "wipe"
+    }
+  ],
+  "captions": [
+    {
+      "start": 0.4,
+      "end": 2.6,
+      "text": "样式、动作和内容，分别选择。"
+    },
+    {
+      "start": 3.4,
+      "end": 6.6,
+      "text": "跳跃、探头、挤压和回弹。"
+    },
+    {
+      "start": 7.3,
+      "end": 9.8,
+      "text": "连接完成，状态跟着更新。"
+    },
+    {
+      "start": 10.6,
+      "end": 11.9,
+      "text": "多份输入，先汇聚。"
+    },
+    {
+      "start": 12.1,
+      "end": 13.4,
+      "text": "形成摘要，保留重点。"
+    },
+    {
+      "start": 13.8,
+      "end": 15.7,
+      "text": "再分发到不同的落点。"
+    },
+    {
+      "start": 16.3,
+      "end": 18.7,
+      "text": "同一个对象，沿路径传递。"
+    },
+    {
+      "start": 19.3,
+      "end": 21.7,
+      "text": "按当前讲解，聚焦关键区域。"
+    },
+    {
+      "start": 22.3,
+      "end": 24.7,
+      "text": "卡片迁移，指针跟随。"
+    },
+    {
+      "start": 25.4,
+      "end": 28.7,
+      "text": "字幕去标点，核心词高亮。"
+    }
+  ],
+  "keywords": [
+    "样式",
+    "动作",
+    "汇聚",
+    "摘要",
+    "分发",
+    "连接",
+    "高亮"
+  ]
+}

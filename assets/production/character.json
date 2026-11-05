@@ -10,5 +10,16 @@
     "original_generation": "exec-08f0ae88-6ce1-42a2-b064-ed5579a38e75.png",
     "usage": "masked mouth overlay only; body stays original",
     "prompt": "Only close the smiling mouth; preserve exact framing, pose, face, texture, lighting and transparent background."
+  },
+  "rounded_mouth": {
+    "id": "xiaolong-rounded-mouth-v3",
+    "date": "2026-11-05",
+    "identity_base": "dragon-closed.png",
+    "neutral_plate": "dragon-neutral.png",
+    "neutral_sha256": "c7dca599828828f139a42d41bf19d22b0e4bd283db4c8abe4798cdfbe6c619ab",
+    "geometry": "dragon-mouth-shapes.json",
+    "png_states": "dragon-mouth/",
+    "renderer": "../remotion/src/dragon-mouth.jsx",
+    "usage": "Reusable rounded Xiaolong mouth for dialogue. Generate new cues from each final PCM. PNG states are deterministic renderer exports from shared geometry. Keep reusable assets when cleaning episode work."
   }
 }

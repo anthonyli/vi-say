@@ -1,0 +1,773 @@
+{
+  "keywords": [
+    "统一工作台",
+    "工作流",
+    "关系",
+    "报告"
+  ],
+  "scenes": [
+    {
+      "kind": "stage",
+      "start": 0,
+      "end": 5,
+      "title": "从分散窗口到统一工作台",
+      "subtitle": "Product visualization · Sample data",
+      "transition": "converge",
+      "effects": [
+        {
+          "type": "panel-merge",
+          "box": [
+            160,
+            220,
+            1600,
+            740
+          ],
+          "sources": [
+            "Input records",
+            "Task activity",
+            "Case context",
+            "Report drafts"
+          ],
+          "title": "Your connected workspace",
+          "detail": "Retain context at every handoff",
+          "mergeAt": 1.1,
+          "seconds": 1.6,
+          "ui": {
+            "brand": "WORKSPACE",
+            "title": "Operations overview",
+            "workspace": "Sample project",
+            "activeNav": 0,
+            "stats": [
+              {
+                "value": "128",
+                "label": "Input records"
+              },
+              {
+                "value": "24",
+                "label": "Open tasks"
+              },
+              {
+                "value": "08",
+                "label": "Drafts ready"
+              }
+            ],
+            "trend": [
+              12,
+              18,
+              16,
+              25,
+              22,
+              31,
+              28,
+              40,
+              37,
+              45
+            ],
+            "columns": [
+              "Task",
+              "Source",
+              "Status",
+              "Owner"
+            ],
+            "rows": [
+              [
+                "TASK-001",
+                "Input record",
+                "Ready for review",
+                "Team A"
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "stage",
+      "start": 5,
+      "end": 9,
+      "title": "输入 检索 返回结果",
+      "subtitle": "Product visualization · Sample data",
+      "transition": "focus",
+      "effects": [
+        {
+          "type": "scan",
+          "box": [
+            160,
+            220,
+            1600,
+            740
+          ],
+          "query": "SAMPLE RECORD 001",
+          "rows": [
+            "Exact",
+            "Related",
+            "Linked"
+          ],
+          "scanAt": 0.7,
+          "seconds": 1.7,
+          "result": "Keep the source and review together",
+          "ui": {
+            "title": "Record screening",
+            "subtitle": "Search every record. Keep every context.",
+            "methods": "Exact · Related · Linked records",
+            "action": "Screen records",
+            "columns": [
+              "Related record",
+              "Method",
+              "Category",
+              "Review"
+            ],
+            "resultRow": [
+              "RECORD-001",
+              "Related",
+              "Reference",
+              "Review queue"
+            ],
+            "footer": "The source, matching method and decision stay with the task.",
+            "steps": [
+              "Collect",
+              "Screen",
+              "Review",
+              "Investigate",
+              "Report",
+              "Retain"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "stage",
+      "start": 9,
+      "end": 14,
+      "title": "拖入节点 连通工作流",
+      "subtitle": "Product visualization · Sample data",
+      "transition": "handoff",
+      "effects": [
+        {
+          "type": "node-editor",
+          "box": [
+            160,
+            220,
+            1600,
+            740
+          ],
+          "nodes": [
+            "Input event",
+            "Decision rule",
+            "Create task"
+          ],
+          "moving": 1,
+          "from": [
+            0.161875,
+            0.22297297297297297
+          ],
+          "dragAt": 0.8,
+          "dragSeconds": 1,
+          "testAt": 2.25,
+          "testSeconds": 0.85,
+          "result": "Sample back-test complete",
+          "dropSeconds": 0.4,
+          "metricsAt": 3.3,
+          "bars": [
+            12,
+            18,
+            15,
+            16,
+            21,
+            20,
+            25,
+            24,
+            28,
+            22,
+            26,
+            30,
+            34,
+            32,
+            36,
+            40
+          ],
+          "metrics": [
+            {
+              "value": "128",
+              "unit": "rows",
+              "label": "Sample input records"
+            },
+            {
+              "value": "24",
+              "unit": "tasks",
+              "label": "Example output tasks"
+            },
+            {
+              "value": "08",
+              "unit": "drafts",
+              "label": "Ready for review"
+            }
+          ],
+          "ui": {
+            "brand": "WORKSPACE",
+            "title": "Workflow studio / Decision builder",
+            "workspace": "Sample project",
+            "paletteTitle": "Scenario tools",
+            "history": "Sample history",
+            "runLabel": "Run back-test",
+            "nodeDetails": [
+              "Amount · Region · Time",
+              "Aggregate → Compare → Route",
+              "Route to the review queue"
+            ],
+            "resultDetail": "Sample results traced to source records · Ready for review"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "stage",
+      "start": 14,
+      "end": 18,
+      "title": "图表绘制与数值停稳",
+      "subtitle": "Product visualization · Sample data",
+      "transition": "zoom",
+      "effects": [
+        {
+          "type": "chart",
+          "box": [
+            160,
+            220,
+            1600,
+            740
+          ],
+          "title": "Sample activity over time",
+          "values": [
+            12,
+            28,
+            24,
+            42,
+            38,
+            65
+          ],
+          "labels": [
+            "Mon",
+            "Tue",
+            "Wed",
+            "Thu",
+            "Fri",
+            "Sat"
+          ],
+          "seconds": 2.2,
+          "ui": {
+            "brand": "WORKSPACE",
+            "title": "Activity overview",
+            "workspace": "Sample project",
+            "activeNav": 0,
+            "detail": "One shared context",
+            "stats": [
+              {
+                "value": "128",
+                "label": "Sample records"
+              },
+              {
+                "value": "24",
+                "label": "Example tasks"
+              },
+              {
+                "value": "08",
+                "label": "Drafts ready"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "stage",
+      "start": 18,
+      "end": 28,
+      "title": "展开关系 再带入证据栏",
+      "subtitle": "Product visualization · Sample data",
+      "transition": "evidence",
+      "effects": [
+        {
+          "type": "document",
+          "at": 3.6,
+          "box": [
+            100,
+            225,
+            1720,
+            738
+          ],
+          "sources": [
+            "Source records",
+            "Relationship paths",
+            "Recorded decisions"
+          ],
+          "title": "Investigation summary",
+          "rows": [
+            {
+              "label": "Context",
+              "text": "Connected records keep the same subject."
+            },
+            {
+              "label": "Evidence",
+              "text": "Related entities and return paths attached."
+            },
+            {
+              "label": "Review",
+              "text": "Prepared for human review."
+            }
+          ],
+          "gatherAt": 4.3,
+          "gatherSeconds": 0.6,
+          "writeAt": 5,
+          "writeSeconds": 1.3,
+          "reviewAt": 6.6,
+          "reviewLabel": "Review & approve",
+          "variant": "case",
+          "ui": {
+            "title": "Task investigation / SAMPLE-001",
+            "detail": "Draft for review",
+            "sourceLabel": "Evidence collected",
+            "recordValue": "Subject 001",
+            "recordLabel": "Source records, relationships and decisions stay with this subject.",
+            "reviewTitle": "Operator in control",
+            "attachmentLabel": "Evidence-linked draft",
+            "footer": "Prepare from the source. Review before the next step."
+          }
+        },
+        {
+          "type": "network",
+          "id": "evidence-network",
+          "box": [
+            100,
+            215,
+            1720,
+            748
+          ],
+          "nodes": [
+            {
+              "id": "center",
+              "label": "Subject 001",
+              "position": [
+                0.3680555555555556,
+                0.4782608695652174
+              ],
+              "at": 0.1,
+              "main": true,
+              "icon": "user",
+              "color": "#12B455"
+            },
+            {
+              "id": "a",
+              "label": "Account 018",
+              "position": [
+                0.19444444444444445,
+                0.2246376811594203
+              ],
+              "at": 0.18,
+              "main": false,
+              "icon": "user",
+              "color": "#2E90FA"
+            },
+            {
+              "id": "b",
+              "label": "Account 027",
+              "position": [
+                0.19444444444444445,
+                0.717391304347826
+              ],
+              "at": 0.26,
+              "main": false,
+              "icon": "user",
+              "color": "#2E90FA"
+            },
+            {
+              "id": "c",
+              "label": "Entity 04",
+              "position": [
+                0.5347222222222222,
+                0.21014492753623187
+              ],
+              "at": 0.33999999999999997,
+              "main": false,
+              "icon": "case",
+              "color": "#F47345"
+            },
+            {
+              "id": "d",
+              "label": "Entity 07",
+              "position": [
+                0.5555555555555556,
+                0.5869565217391305
+              ],
+              "at": 0.42000000000000004,
+              "main": false,
+              "icon": "case",
+              "color": "#F47345"
+            },
+            {
+              "id": "e",
+              "label": "Holding 12",
+              "position": [
+                0.7291666666666666,
+                0.3695652173913043
+              ],
+              "at": 0.5,
+              "main": false,
+              "icon": "case",
+              "color": "#F47345"
+            },
+            {
+              "id": "owner",
+              "label": "Linked owner",
+              "position": [
+                0.8715277777777778,
+                0.1956521739130435
+              ],
+              "at": 0.58,
+              "main": false,
+              "icon": "user",
+              "color": "#F7B035",
+              "badge": "Related ownership"
+            },
+            {
+              "id": "f",
+              "label": "Account 052",
+              "position": [
+                0.7361111111111112,
+                0.7391304347826086
+              ],
+              "at": 0.66,
+              "main": false,
+              "icon": "user",
+              "color": "#2E90FA"
+            },
+            {
+              "id": "g",
+              "label": "Device 09",
+              "position": [
+                0.3576388888888889,
+                0.8478260869565217
+              ],
+              "at": 0.74,
+              "main": false,
+              "icon": "scan",
+              "color": "#81A5E9"
+            },
+            {
+              "id": "h",
+              "label": "Account 006",
+              "position": [
+                0.059027777777777776,
+                0.4782608695652174
+              ],
+              "at": 0.82,
+              "main": false,
+              "icon": "user",
+              "color": "#2E90FA"
+            }
+          ],
+          "edges": [
+            {
+              "from": "h",
+              "to": "a",
+              "at": 1.0
+            },
+            {
+              "from": "h",
+              "to": "b",
+              "at": 1.1
+            },
+            {
+              "from": "a",
+              "to": "center",
+              "at": 1.2
+            },
+            {
+              "from": "b",
+              "to": "center",
+              "at": 1.3
+            },
+            {
+              "from": "center",
+              "to": "c",
+              "at": 1.4
+            },
+            {
+              "from": "center",
+              "to": "d",
+              "at": 1.5
+            },
+            {
+              "from": "c",
+              "to": "e",
+              "at": 1.6
+            },
+            {
+              "from": "d",
+              "to": "e",
+              "at": 1.7000000000000002
+            },
+            {
+              "from": "e",
+              "to": "owner",
+              "at": 1.8
+            },
+            {
+              "from": "d",
+              "to": "f",
+              "at": 1.9
+            },
+            {
+              "from": "f",
+              "to": "b",
+              "at": 2.0
+            },
+            {
+              "from": "b",
+              "to": "g",
+              "at": 2.1
+            },
+            {
+              "from": "g",
+              "to": "center",
+              "at": 2.2
+            }
+          ],
+          "seconds": 0.8,
+          "boxFrames": [
+            {
+              "at": 3.6,
+              "box": [
+                100,
+                215,
+                1720,
+                748
+              ]
+            },
+            {
+              "at": 4.4,
+              "box": [
+                527,
+                319,
+                350,
+                220
+              ]
+            }
+          ],
+          "ui": {
+            "title": "Relationship graph",
+            "legend": [
+              {
+                "label": "Accounts",
+                "color": "#2E90FA"
+              },
+              {
+                "label": "Entities",
+                "color": "#F47345"
+              },
+              {
+                "label": "Ownership",
+                "color": "#F7B035"
+              },
+              {
+                "label": "Devices",
+                "color": "#81A5E9"
+              }
+            ],
+            "insights": [
+              {
+                "title": "Connected inputs",
+                "detail": "Trace the origin",
+                "color": "#2E90FA"
+              },
+              {
+                "title": "Multiple hops",
+                "detail": "Follow linked records",
+                "color": "#12B455"
+              },
+              {
+                "title": "Return paths",
+                "detail": "Keep the full context",
+                "color": "#F47345"
+              },
+              {
+                "title": "Related ownership",
+                "detail": "Preserve supporting links",
+                "color": "#F7B035"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "stage",
+      "start": 28,
+      "end": 35,
+      "title": "从资料到摘要 再生成报告",
+      "subtitle": "Product visualization · Sample data",
+      "transition": "report",
+      "effects": [
+        {
+          "type": "document",
+          "box": [
+            100,
+            220,
+            1720,
+            742
+          ],
+          "sources": [
+            "Matched record",
+            "Task activity",
+            "Investigation case",
+            "Report draft"
+          ],
+          "title": "Investigation case file",
+          "rows": [
+            {
+              "label": "Subject",
+              "text": "Subject 001"
+            },
+            {
+              "label": "Source case",
+              "text": "SAMPLE-001"
+            },
+            {
+              "label": "Supporting evidence",
+              "text": "Records · Relationships"
+            },
+            {
+              "label": "Narrative",
+              "text": "Reviewed investigation summary"
+            }
+          ],
+          "gatherAt": 0.5,
+          "gatherSeconds": 1,
+          "writeAt": 1.7,
+          "writeSeconds": 1.4,
+          "reviewAt": 3.3,
+          "reviewLabel": "Evidence attached",
+          "reportAt": 4.4,
+          "reportTitle": "Prepared review report",
+          "ui": {
+            "title": "Evidence and reporting",
+            "sourceLabel": "The complete evidence chain",
+            "sourceDetails": [
+              "Source record & review decision",
+              "Triggered action & record history",
+              "Graph paths & reviewer assessment",
+              "Version & approval record"
+            ],
+            "recordValue": "Source preserved",
+            "recordLabel": "Keep the original evidence attached",
+            "detail": "Generate directly from the case",
+            "attachmentLabel": "Source-linked report",
+            "reviewTitle": "Review and approval",
+            "footer": "Evidence attached · Review recorded"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "stage",
+      "start": 35,
+      "end": 39,
+      "title": "不同信号 汇成共同视图",
+      "subtitle": "Product visualization · Sample data",
+      "transition": "merge",
+      "effects": [
+        {
+          "type": "panel-merge",
+          "box": [
+            130,
+            245,
+            1660,
+            660
+          ],
+          "sources": [
+            "Process signals",
+            "Result signals"
+          ],
+          "title": "One connected task profile",
+          "detail": "Every signal. Shared context. Coordinated action.",
+          "mergeAt": 0.5,
+          "seconds": 1.4,
+          "ui": {
+            "tags": [
+              "Input",
+              "Activity",
+              "Evidence",
+              "Decision"
+            ],
+            "followups": [
+              "Shared tasks",
+              "Shared reports"
+            ],
+            "note": "Sample data · Illustrative workflow"
+          },
+          "variant": "profile"
+        }
+      ]
+    },
+    {
+      "kind": "stage",
+      "start": 39,
+      "end": 42,
+      "title": "按需选择 继续添加效果",
+      "subtitle": "Product visualization · Sample data",
+      "transition": "iris",
+      "effects": [
+        {
+          "type": "text",
+          "position": [
+            190,
+            400
+          ],
+          "text": "组件 + 参数 + 校验 + 样例",
+          "fontSize": 76
+        },
+        {
+          "type": "tag",
+          "position": [
+            195,
+            560
+          ],
+          "text": "可组合 可复用"
+        }
+      ]
+    },
+    {
+      "kind": "stage",
+      "start": 42,
+      "end": 45,
+      "title": "从效果目录开始组合",
+      "subtitle": "Product visualization · Sample data",
+      "transition": "converge",
+      "effects": [
+        {
+          "type": "card",
+          "position": [
+            420,
+            415
+          ],
+          "width": 470,
+          "title": "选择已有模块",
+          "detail": "根据讲解目的组合效果",
+          "color": "#2585ED"
+        },
+        {
+          "type": "card",
+          "position": [
+            1010,
+            415
+          ],
+          "width": 470,
+          "title": "添加新的特效",
+          "detail": "实现 参数 校验 样例一起补齐",
+          "color": "#12A968"
+        }
+      ]
+    }
+  ],
+  "captions": []
+}

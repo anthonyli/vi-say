@@ -210,7 +210,7 @@ All eleven workflow stages have separate Markdown files. Edit the relevant stage
 The single version source is `metadata.version` in [SKILL.md](SKILL.md), using the [Agent Skills metadata field](https://agentskills.io/specification#metadata-field). Development versions use a `-dev` suffix. For a release, update the version without that suffix and create the corresponding Git tag. The existing `0.0.1` tag preserves the earlier main-branch baseline.
 
 ```sh
-python scripts/production.py pack outputs/vi-say.skill
+python scripts/production.py pack outputs/vi-say/vi-say.skill
 ```
 
 A `.skill` file is a ZIP archive whose top-level directory is `vi-say`. Its `SKILL.md` carries the same version. The package includes the Apache-2.0 `LICENSE`, the attribution `NOTICE`, runtime instructions, scripts, and assets while excluding tests, caches, working directories, outputs, and private material.

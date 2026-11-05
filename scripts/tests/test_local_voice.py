@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import contextlib
+from dataclasses import replace
 import importlib.util
 import io
 import json
@@ -109,6 +110,44 @@ class LocalVoiceTests(unittest.TestCase):
         self.assertEqual(result, 0)
         self.assertFalse(self.output.parent.exists())
         self.assertFalse(json.loads(output.getvalue())["audio_generated"])
+
+    def test_generated_audio_and_logs_cannot_enter_private_storage(self):
+        for relative in ["episode/raw.wav", "voice/new.wav", "models/new.wav"]:
+            self.output = self.root / "private" / relative
+            with self.subTest(relative=relative), self.assertRaisesRegex(ValueError, "reserved for models"):
+                self.plan()
+            self.assertFalse(self.output.exists())
+        self.output = self.root / "work" / "raw.wav"
+        with self.assertRaisesRegex(ValueError, "reserved for models"):
+            self.plan(log_path=self.root / "private" / "episode" / "raw.log")
+        self.assertFalse((self.root / "private" / "episode").exists())
+
+    def test_work_alias_into_private_storage_is_rejected(self):
+        alias = self.root / "work-alias"
+        alias.symlink_to(self.root / "private", target_is_directory=True)
+        self.output = alias / "episode" / "raw.wav"
+        with self.assertRaisesRegex(ValueError, "reserved for models"):
+            self.plan()
+
+    def test_symlinked_private_store_is_protected_through_other_aliases(self):
+        store = self.root / "resource-store"
+        (self.root / "private").rename(store)
+        (self.root / "private").symlink_to(store, target_is_directory=True)
+        self.output = store / "episode" / "raw.wav"
+        with self.assertRaisesRegex(ValueError, "reserved for models"):
+            self.plan()
+
+    def test_synthesis_rechecks_a_redirected_output_before_backend_import(self):
+        plan = self.plan()
+        redirected = replace(plan, output=self.root / "private" / "episode" / "raw.wav")
+        with patch.object(voice, "load_backend", side_effect=AssertionError("must not import")), \
+                self.assertRaisesRegex(ValueError, "reserved for models"):
+            voice.synthesize(redirected)
+        self.assertFalse(redirected.output.parent.exists())
+
+    def test_macos_system_private_directory_is_not_a_project_store(self):
+        path = Path("/private/var/tmp/voice-episode/work/raw.wav")
+        self.assertEqual(voice.require_generated_path(path), path)
 
     def test_rejects_cloud_and_unrecorded_consent(self):
         self.config["backend"] = "cloud"

@@ -5,6 +5,7 @@
 """One production entry: project, posters, pronunciation, timeline and shared Remotion."""
 import argparse
 import copy
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -18,6 +19,9 @@ from production_design import ROOT, ASSETS, STYLE, font_path, poster
 from local_voice import wav_info
 SKILL_NAME='vi-say'
 OUTRO=json.loads((ASSETS/'outro.json').read_text())
+INTRO=json.loads((ASSETS/'intro.json').read_text())
+PRESETS=sorted(p.stem for p in (ASSETS/'presets').glob('*.json'))
+TEMPLATES=['story',*sorted(p.stem for p in (ASSETS/'examples').glob('*.json'))]
 
 
 def write_json(path, data):
@@ -40,9 +44,12 @@ def project(path):
     return path.parent,doc
 
 
-def init(dest, title, subtitle, label):
+def init(dest, title, subtitle, label, preset='glass', template='story'):
+    if preset not in PRESETS or template not in TEMPLATES:
+        raise ValueError(f'Choose preset {PRESETS} and template {TEMPLATES}')
     dest=Path(dest);dest.mkdir(parents=True,exist_ok=False)
     doc={'style_id':STYLE['id'],'title':title,'subtitle':subtitle,'series':label,
+         'modules':json.loads((ASSETS/'presets'/f'{preset}.json').read_text()),
          'narration':'narration.txt','lexicon':'lexicon.json','font':None,'poster':{'theme':'yellow-comic'},
          'scenes':[
              {'kind':'hero','start':0,'end':4,'title':title,'subtitle':subtitle},
@@ -50,8 +57,27 @@ def init(dest, title, subtitle, label):
               'items':[{'text':'看问题','detail':'明确要解决什么','at':.5},{'text':'做演示','detail':'展示真实变化','at':1.5},{'text':'看结果','detail':'用证据说明效果','at':2.5}]},
              {'kind':'cta','start':9,'end':13,'title':OUTRO['title'],'subtitle':OUTRO['subtitle'],
               'outroId':OUTRO['id'],'items':[{**item,'at':at} for item,at in zip(OUTRO['items'],[.4,1.2,2.0])]}]}
+    doc['modules']['captions']['keywords']=[title]
+    if template!='story':
+        example=json.loads((ASSETS/'examples'/f'{template}.json').read_text())
+        doc['modules']['captions']['keywords']=example.pop('keywords')
+        doc.update(example)
+        for scene in doc['scenes']:
+            for key in ['image','video']:
+                if scene.get(key):
+                    relative=Path(scene[key])
+                    if relative.is_absolute() or '..' in relative.parts:
+                        raise ValueError('Template media needs a safe relative path')
+                    source=(ASSETS/'examples'/relative).resolve()
+                    if not source.is_relative_to((ASSETS/'examples').resolve()):
+                        raise ValueError('Template media must stay within examples')
+                    target=dest/relative;target.parent.mkdir(parents=True,exist_ok=True)
+                    shutil.copyfile(source,target)
+    elif preset=='glass':
+        for scene,position,action in zip(doc['scenes'],[[830,735],[1780,830],[1720,815]],['peek','hop','celebrate']):
+            scene['effects']=[{'type':'bot','id':'helper','variant':'hexagon','position':position,'size':90,'action':action}]
     write_json(dest/'project.json',doc);write_json(dest/'lexicon.json',{})
-    (dest/'narration.txt').write_text('先看问题，再做演示，最后用证据说明结果。\n\n'+OUTRO['narration']+'\n')
+    (dest/'narration.txt').write_text(('' if doc['modules'].get('character',{}).get('mode')=='none' else INTRO['narration'])+'\n先看问题，再做演示，最后用证据说明结果。\n\n'+OUTRO['narration']+'\n')
     print(dest/'project.json')
 
 
@@ -77,7 +103,7 @@ def compile_project(base,doc,out,*,audio=None,listening=None,preview=False):
         raise ValueError('Append the shared outro narration and its measured scene; omit_outro is only for an explicit user opt-out')
     text=(base/doc['narration']).read_text()
     plan=prepare(text,json.loads((base/doc['lexicon']).read_text()))
-    f=font_path(str(base/doc['font']) if doc.get('font') else None)
+    f=font_path(str(base/doc['font']) if doc.get('font') else str(ASSETS/'fonts/Manrope.ttf') if doc.get('modules',{}).get('background')=='studio' else None)
     if preview:
         duration=doc['scenes'][-1]['end']
         if isinstance(duration,bool) or not isinstance(duration,(int,float)) or not 0<duration<=600:
@@ -92,16 +118,41 @@ def compile_project(base,doc,out,*,audio=None,listening=None,preview=False):
             raise ValueError('; '.join(result['issues']))
     if abs(doc['scenes'][-1]['end']-duration)>.001:
         raise ValueError('Scene endpoint must match measured final WAV duration; rebind word anchors, never stretch animation or audio')
+    caption_input=doc.get('captions',[])
+    if isinstance(caption_input,str):caption_input=json.loads((base/caption_input).read_text())
+    if isinstance(caption_input,dict):caption_input=caption_input.get('captions')
     timeline={'aspect':'16:9','fps':STYLE['video']['fps'],'duration':duration,
               'audio':'audio.wav','character':'dragon.png','fontFile':'font'+f.suffix,
-              'captions':[],'overlays':[],'styleId':STYLE['id'],'cartoonScenes':copy.deepcopy(doc['scenes']),
+              'captions':copy.deepcopy(caption_input),'overlays':[],'styleId':STYLE['id'],'cartoonScenes':copy.deepcopy(doc['scenes']),
               'visualPreview':preview,'bg':STYLE['palette']['white'],'accent':STYLE['palette']['blue']}
+    if doc.get('modules') is not None:timeline['modules']=copy.deepcopy(doc['modules'])
+    if f.name=='Manrope.ttf':timeline['fontWeightRange']='200 800'
+    timeline['series']=doc.get('series','小龙带你看')
+    rounded=doc.get('modules',{}).get('character',{}).get('mode')=='rounded'
+    if rounded:
+        timeline['characterClosed']='dragon-closed.png';timeline['characterNeutral']='dragon-neutral.png'
+    if doc.get('mouth_cues'):
+        if preview or not audio:raise ValueError('mouth_cues requires its final audio; silent studies use a closed mouth')
+        cues=json.loads((base/doc['mouth_cues']).read_text())
+        if cues.get('audio_sha256')!=hashlib.sha256(Path(audio).read_bytes()).hexdigest():
+            raise ValueError('mouth_cues must be bound to the exact final audio')
+        timeline['mouthCues']=cues['mouthCues'];timeline['mouthCueAudioSha256']=cues['audio_sha256']
+    for scene in timeline['cartoonScenes']:
+        if scene.get('image') and not scene.get('mediaSize') and any(e.get('type')=='focus' for e in scene.get('effects',[])):
+            from PIL import Image,UnidentifiedImageError
+            try:
+                with Image.open(base/scene['image']) as image:scene['mediaSize']=list(image.size)
+            except UnidentifiedImageError:
+                raise ValueError('Provide mediaSize for vector demo media with focus effects')
     # Validate before reserving output; the exact renderer contract is authoritative.
     cmd=['node','--input-type=module','-e',
          "import {validate} from "+json.dumps((ROOT/'assets/remotion/render.mjs').as_uri())+";let s='';for await(const c of process.stdin)s+=c;validate(JSON.parse(s));"]
     subprocess.run(cmd,input=json.dumps(timeline),text=True,check=True)
     out.mkdir(parents=True,exist_ok=False)
     shutil.copyfile(ASSETS/STYLE['character']['file'],out/'dragon.png');shutil.copyfile(f,out/timeline['fontFile'])
+    if rounded:
+        shutil.copyfile(ASSETS/STYLE['character']['closedFile'],out/'dragon-closed.png')
+        shutil.copyfile(ASSETS/'dragon-neutral.png',out/'dragon-neutral.png')
     if preview:
         with wave.open(str(out/'audio.wav'),'wb') as w:
             w.setparams((1,2,48000,0,'NONE','not compressed'))
@@ -140,6 +191,8 @@ def package_skill(output):
     """Ship runtime resources, not developer tests, reports, media outputs or caches."""
     output=Path(output).resolve()
     if output.exists():raise FileExistsError(output)
+    # Validate all distributable recipes through the actual effect contract.
+    subprocess.run(['node',str(ROOT/'assets/remotion/effects/catalog.mjs'),'--json'],check=True,capture_output=True,text=True)
     files=[ROOT/'SKILL.md',ROOT/'LICENSE',ROOT/'NOTICE']
     excluded={'tests','__pycache__','node_modules','.cache','.remotion'}
     for folder in ['agents','references','scripts','assets']:
@@ -158,15 +211,18 @@ def package_skill(output):
 
 def main():
     ap=argparse.ArgumentParser(description=__doc__);sub=ap.add_subparsers(dest='command',required=True)
-    a=sub.add_parser('init');a.add_argument('directory',type=Path);a.add_argument('--title',required=True);a.add_argument('--subtitle',required=True);a.add_argument('--series',default='小龙实战')
+    a=sub.add_parser('init');a.add_argument('directory',type=Path);a.add_argument('--title',required=True);a.add_argument('--subtitle',required=True);a.add_argument('--series',default='小龙实战');a.add_argument('--preset',choices=PRESETS,default='glass');a.add_argument('--template',choices=TEMPLATES,default='story')
     for name in ['covers','compile','render']:
         a=sub.add_parser(name);a.add_argument('project',type=Path);a.add_argument('--output-dir',required=True,type=Path)
         if name!='covers':
             a.add_argument('--audio',type=Path);a.add_argument('--listening',type=Path);a.add_argument('--preview',action='store_true')
         if name=='render':a.add_argument('--stills',action='store_true')
     a=sub.add_parser('pack');a.add_argument('output',type=Path)
+    a=sub.add_parser('catalog',help='List implemented effects, parameters and validated templates');a.add_argument('--json',action='store_true')
     args=ap.parse_args()
-    if args.command=='init':return init(args.directory,args.title,args.subtitle,args.series)
+    if args.command=='catalog':
+        return subprocess.run(['node',str(ROOT/'assets/remotion/effects/catalog.mjs')]+(['--json'] if args.json else []),check=True)
+    if args.command=='init':return init(args.directory,args.title,args.subtitle,args.series,args.preset,args.template)
     if args.command=='pack':return package_skill(args.output)
     base,doc=project(args.project);out=args.output_dir.resolve()
     if args.command=='covers':covers(base,doc,out);print(out);return

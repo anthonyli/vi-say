@@ -1,0 +1,5 @@
+{
+  "background": "glass",
+  "captions": {"style": "highlight", "stripPunctuation": true, "keywords": [], "protectedTerms": []},
+  "character": {"mode": "rounded", "travelSeconds": 0.9, "arc": 70, "tilt": 1.2}
+}

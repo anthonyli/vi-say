@@ -10,9 +10,13 @@
 
 `production.py init` 建立 `project.json`、`narration.txt`、`lexicon.json`。项目名与输出目录由任务决定；每次选择新的输出目录，脚本拒绝覆盖。
 
-默认 `style_id=colorful-dragon-v1`。角色、颜色和动作参数的唯一来源为 `assets/production/style.json`。新增主题不复制一套颜色常量；需要改变系列风格时，改源配置并重新验证。`dragon.png` 是母版，`character.json` 保存生成方式与提示。
+基础 `style_id=colorful-dragon-v1`。`init` 默认 `--preset glass`，也可用 `--preset classic` 或无角色产品风格 `--preset studio`；选择保存为项目 `modules`，不按产品写分支。基础色板与传统动作参数来自 `assets/production/style.json`，模块预设来自 `assets/production/presets/`，Bot 外观来自 `bot-styles.json`。`dragon.png` 是身份母版，`character.json` 保存素材说明；圆润口型另外保存实际组件、图片和参数。
+
+`--template effects` 可初始化完整的无声模块示例，`--template business` 提供产品演示动效样例；默认 `--template story` 建立常规分镜。已实现模块、字段与示例命令见 [动画模块接口](animation-modules.md)。新增题材只替换项目文案、对象、词表和实际触发时间，复用组件。
 
 `project.json` 的 `title/subtitle/series` 用于脚本封面草稿；`narration/lexicon/font` 路径相对该文件。`font` 可省略，使用 `VIDEO_FONT_BOLD` 或探测到的中文字体。脚本三种比例各自排版，标题放不下会报错；最终海报按 [poster.md](../stages/poster.md) 使用图像生成工具独立制作。默认视频是横版，海报横竖版不意味着支持竖版视频。
+
+`python scripts/production.py catalog --json` 从代码和配置读取可用效果及字段，同时验证随包示例；预设和模板按目录发现。`.skill` 打包前也执行此验证，缺少示例或非法时序会阻止打包。
 
 ## 发音准备
 
@@ -68,6 +72,7 @@ python scripts/local_voice.py --help
 - `steps`：2–3 个有语义顺序的步骤；`items` 含 `text/detail/at`。
 - `demo`：真实截图或录屏展示；素材放在项目内，通过 `image` 或 `video` 指定，二者只选一个。视频可设 `videoStart` 为源视频起点秒数，声音统一来自最终 WAV。
 - `cta`：2–3 个互动提示；`items[].at` 对应实际口播词起点，画面只做示意。
+- `stage`：通过 `effects` 自由组合已实现模块，用于连接、汇聚分发、路径传递等操作解释；接口见 [动画模块](animation-modules.md)。
 
 `items[].at` 是场内秒数。每次动作使用配置中的固定时长；相邻动作不得挤掉前一动作，片尾要留完成和停留时间。只改时间锚点，不把整段按比例缩放。原始录屏声音与画面剪辑要同步；需要全屏操作证据时继续用 [录屏路线](recorded-video.md)，不要挤进不适合的小窗。
 
@@ -102,14 +107,17 @@ node assets/remotion/render.mjs PROJECT/timeline.json OUTPUT/episode-未听审�
 
 ## 精简分发
 
+本节只在明确需要打包、安装或发布时执行。普通源码修改和验证不生成 `.skill` 交付包，也不递增版本。执行用户要求的代码提交并推送时，为这一批改动统一递增一次版本并随代码提交推送；推送重试不重复递增，提交推送本身不触发打包。打包测试将产物放在临时目录并在测试结束后清理。
+
 每期交付的发布标题、正文与话题按 [publishing-copy.md](../stages/publishing-copy.md) 生成，独立保存为 `发布文案.txt` 或 `发布文案.md`。该文件统一维护默认口吻与示例。最终 ZIP 中的文案须与最新修订一致。
 
-`python scripts/production.py pack outputs/vi-say.skill` 打包 `SKILL.md/LICENSE/NOTICE/references/scripts/assets`；若另有 `agents/` 配置也会一并包含。`LICENSE` 为 Apache-2.0 全文，`NOTICE` 保留 Anthony Li 的版权与署名声明。排除测试、依赖、缓存、私有声音、模型、产物和历史审计文件。开发测试继续留在源码中。`.skill` 是 ZIP，解压后目录名为 `vi-say`，调用名为 `$vi-say`。
+`python scripts/production.py pack outputs/vi-say/vi-say.skill` 打包 `SKILL.md/LICENSE/NOTICE/references/scripts/assets`；若另有 `agents/` 配置也会一并包含。交付包放在对应项目目录中，不散放到 `outputs/` 根目录。`LICENSE` 为 Apache-2.0 全文，`NOTICE` 保留 Anthony Li 的版权与署名声明。排除测试、依赖、缓存、私有声音、模型、产物和历史审计文件。开发测试继续留在源码中。`.skill` 是 ZIP，解压后目录名为 `vi-say`，调用名为 `$vi-say`。
 
 ## 风格与共用能力的接入
 
 - 项目 `characterSide`、`transition` 是场景字段；前者选择左右站位，后者选择已注册效果。默认转场池与动作时长取 `style.json.motion`，扩展见 [extensions.md](../extensions.md)。
 - 正式 compile 从最终 WAV 生成 `speechMotion`，绑定 fps、时长与声音 SHA，拷贝配准的闭嘴素材；换声音需要重算。角色参数与素材替换规范统一在 [character.md](../styles/character.md)。
+- `modules.character.mode=rounded` 同时拷贝无嘴线底板并调用圆润嘴形组件；可用 `mouth_cues` 接入绑定音轨哈希的完整嘴形时间。没有近似音素时间时使用音量开口，无声预览保持闭嘴。普通字幕文件通过项目 `captions` 接入，关键词与显示风格由 `modules.captions` 控制。
 - 配色在 [colors.md](../styles/colors.md)，海报与脚本草稿在 [poster.md](../stages/poster.md)，默认输出的 `covers/` 仍为可选草稿。
 - 初始项目自动带片尾稿与示例时间。正式片尾文案、词时间、`outroId` 与省略条件统一在 [outro.md](../stages/outro.md)。
 - 字体在捕帧前加载，静止后不持续亚像素位移。需要不同字体或新布局时检查实际帧，不把三比例海报推定为三比例角色视频。

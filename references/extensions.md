@@ -14,12 +14,13 @@
 | 语言、参考声音 | 制作项目的私有声音配置、`local_voice.py --language` | 新增推理后端时；语言效果仍须实际短测 |
 | 统一片尾 | `assets/production/outro.json` | 新图标或新的互动布局时 |
 | 发布口吻 | [发布文案](stages/publishing-copy.md) | 通常无需改代码 |
+| Bot、玻璃、连接、汇聚分发、路径、聚焦与高亮 | 项目 `modules` 和场景 `effects`，见 [动画模块接口](tools/animation-modules.md) | 已实现模块直接选择；新类型同时扩展 contract、motion、绘制与实际样片 |
 
 配置只能使用当前实现支持的字段。修改全局默认前先在任务副本验证；单期偏好写入本期记录，不自动变为所有任务的默认。
 
 ## 新增或替换小龙转场
 
-现有四种效果集中在 `assets/remotion/cartoon-transitions.mjs` 的 `CARTOON_TRANSITIONS` 注册表。调用关系：
+现有十二种效果集中在 `assets/remotion/cartoon-transitions.mjs` 的 `CARTOON_TRANSITIONS` 注册表。调用关系：
 
 ```text
 场景 transition／style.json 自动转场池
@@ -48,6 +49,8 @@ node --test assets/remotion/tests/cartoon-contract.test.mjs assets/remotion/test
 
 转场注册表只负责场景切换。元素入场、强调和角色运动仍分别在 `src/cartoon.jsx`、`cartoon-motion.mjs`，时长取 `style.json.motion`；新增这些行为时修改对应实现并检查实际帧。
 
+可选模块现通过 `effects/contract.mjs → effects/motion.mjs → src/effects/ → src/cartoon.jsx` 调用。Bot 外观与动作分开；SceneEffects 组合非角色效果，BotActors 保持跨场单一身份；新项目预设由 `assets/production/presets/` 选择。完整接口见 [动画模块](tools/animation-modules.md) 与 [产品演示动效](tools/business-effects.md)，不需要为新题材复制单期工程。
+
 | 新表现 | 应同时更新的代码 |
 |---|---|
 | 小龙新场景类型 | `src/cartoon.jsx` 的画面、`cartoon-contract.mjs` 的类型与字段校验；新增素材需更新 `mapCartoonAssets`，新增状态需更新 `cartoonStillPoints` |
@@ -57,6 +60,10 @@ node --test assets/remotion/tests/cartoon-contract.test.mjs assets/remotion/test
 | 新 SVG 装置 | Anatomy `scene.mjs` 的元数据与 `renderFrame(seconds)`，使用独立 SVG 渲染入口 |
 
 真实参数、画面实现、校验和预览取样一起落地，才能对外描述为已支持。复杂图解不强塞进 `steps` 的两三张卡片；可以选择专项路线或补充合适的新场景。需要重复使用时再提取公共组件，不创建空的未来实现目录。
+
+## 已有可执行能力
+
+动效之外，字幕、语音时间、素材绑定和质量检查也已有代码入口；查看 [代码复用地图](tools/reuse-map.md)。优先复用这些入口，新增确定性行为连同校验和可运行输入一起保存。选题判断、事实真实性、真实使用感受和审美结论继续依据实际资料与人工评价，不能由结构校验自动宣布通过。
 
 ## 保留共用时间与交付约束
 

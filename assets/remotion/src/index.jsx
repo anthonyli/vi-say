@@ -6,6 +6,7 @@ import {AbsoluteFill, Audio, Composition, Img, OffthreadVideo, Sequence, interpo
   registerRoot, spring, staticFile, useCurrentFrame, useVideoConfig, delayRender, continueRender, cancelRender} from 'remotion';
 import {EditorialScenes} from './editorial';
 import {CartoonScenes} from './cartoon';
+import {HighlightCaption} from './effects/highlight-caption';
 
 const sizes = {'16:9': [1920, 1080], '4:3': [1440, 1080], '3:4': [1080, 1440]};
 const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'};
@@ -319,12 +320,13 @@ function Card({cue, aspect, accent, box}) {
 }
 
 // ─── Captions ─────────────────────────────────────────────────────────────────
-function Captions({captions, accent}) {
+function Captions({captions, accent,options={}}) {
   const frame = useCurrentFrame();
   const {fps, width} = useVideoConfig();
   const time = frame / fps;
   const cue = captions.find(c => c.start <= time && time < c.end);
   if (!cue) return null;
+  if(options.style==='highlight'||options.stripPunctuation)return <HighlightCaption text={cue.text} options={{...options,keywords:options.style==='highlight'?options.keywords:[]}}/>;
   return (
     <div style={{position: 'absolute', left: '7%', right: '7%', bottom: '7%',
       textAlign: 'center'}}>
@@ -352,14 +354,14 @@ function MotionVideo(doc) {
   useEffect(() => {
     (async () => {
       if (doc.fontFile) {
-        const face = new FontFace('VideoFont', `url("${staticFile(doc.fontFile)}")`);
+        const face = new FontFace('VideoFont', `url("${staticFile(doc.fontFile)}")`, doc.fontWeightRange?{weight:doc.fontWeightRange}:{});
         await face.load();
         document.fonts.add(face);
         await document.fonts.ready;
       }
       continueRender(fontHandle);
     })().catch(cancelRender);
-  }, [doc.fontFile, fontHandle]);
+  }, [doc.fontFile, doc.fontWeightRange, fontHandle]);
   const {fps} = useVideoConfig();
   const {bg, accent} = useTheme(doc);
   const editorial = Boolean(doc.scenes?.length);
@@ -375,7 +377,7 @@ function MotionVideo(doc) {
           <Card cue={cue} aspect={doc.aspect} accent={accent} box={doc.cardBox}/>
         </Sequence>)}
       </>}
-      <Captions captions={doc.captions ?? []} accent={accent}/>
+      <Captions captions={doc.captions ?? []} accent={accent} options={doc.modules?.captions}/>
     </AbsoluteFill>
   );
 }

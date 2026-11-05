@@ -1,0 +1,82 @@
+{
+  "id": "xiaolong-rounded-mouth-v3",
+  "imageSize": [
+    1134,
+    1387
+  ],
+  "sourcePathBase": "skill repository root",
+  "sources": [
+    {
+      "file": "assets/production/dragon-closed.png",
+      "sha256": "ad8e838d5a4fa91de6aec2a04dc20ef5b38b5cb2d8fa4a1757ee839820424002"
+    },
+    {
+      "file": "assets/production/dragon-neutral.png",
+      "sha256": "c7dca599828828f139a42d41bf19d22b0e4bd283db4c8abe4798cdfbe6c619ab"
+    },
+    {
+      "file": "assets/production/dragon-mouth-shapes.json",
+      "sha256": "0991123c1cec1de72271cd0d505b335f474b69792a057f77891aa0f8add6da97"
+    },
+    {
+      "file": "assets/remotion/src/dragon-mouth.jsx",
+      "sha256": "57dd1cb6f23b7d86d3999c34dece467e082da5bdd2162288f9d651a146561ab4"
+    }
+  ],
+  "images": [
+    {
+      "cue": "X",
+      "file": "mouth-X.png",
+      "bytes": 1419824,
+      "sha256": "eb5b21c1de60873d7028130ddfc653f87a27e741dd72f8c16d0bb0e2dd1b8e53"
+    },
+    {
+      "cue": "A",
+      "file": "mouth-A.png",
+      "bytes": 1419730,
+      "sha256": "4e81b3ca12f8f9ab356e76da58987067a7495687c6e770cead5bead7bac86d0e"
+    },
+    {
+      "cue": "B",
+      "file": "mouth-B.png",
+      "bytes": 1421071,
+      "sha256": "c333a4bfbb64621cc35080298a681c8066f605fa9abb9f72533847abaf21d005"
+    },
+    {
+      "cue": "C",
+      "file": "mouth-C.png",
+      "bytes": 1420612,
+      "sha256": "f002af6e93cd43ba4aad643be8a83bba2a5e62247df05d767bfe62db06c8b0d8"
+    },
+    {
+      "cue": "D",
+      "file": "mouth-D.png",
+      "bytes": 1418740,
+      "sha256": "ac8178306223a02d0e542f3282585d42b3f343b3cffdd5981884549d6fbc19c9"
+    },
+    {
+      "cue": "E",
+      "file": "mouth-E.png",
+      "bytes": 1419724,
+      "sha256": "43a8e12eb8609ad40c7805256b9d1adea602fecf0328668443c744d883f9b4b5"
+    },
+    {
+      "cue": "F",
+      "file": "mouth-F.png",
+      "bytes": 1419309,
+      "sha256": "8117c1e1c7dd8ff99216e17c03e0ff3b6dcbd0feab9b11175790436623ab4047"
+    },
+    {
+      "cue": "G",
+      "file": "mouth-G.png",
+      "bytes": 1420888,
+      "sha256": "73731ba3c00439a4b8ceb897c13dd7c1139219cc2145656a1366f39ad9832198"
+    },
+    {
+      "cue": "H",
+      "file": "mouth-H.png",
+      "bytes": 1419058,
+      "sha256": "0cedad040200fbecc3363f8c724d29f505447f8f35a41cb3d1c813e4a9b14737"
+    }
+  ]
+}

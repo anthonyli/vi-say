@@ -2,9 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react';
-import {AbsoluteFill, Freeze, Img, OffthreadVideo, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, Freeze, Img, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import style from '../../production/style.json';
-import {characterPose, sideOf, transitionFor, transitionStyle, clamp} from '../cartoon-motion.mjs';
+import {DragonMouth} from './dragon-mouth';
+import {StudioBackdrop} from './effects/business';
+import {BrightBackdrop} from './effects/glass';
+import {GlassScene} from './effects/glass-scene';
+import {SceneEffects,BotActors} from './effects/layer';
+import {MediaFrame} from './effects/operations';
+import {sceneVisibility,characterPose, sideOf, transitionFor, transitionStyle, clamp, closedMouthOpacity} from '../cartoon-motion.mjs';
 const C=style.palette,M=style.motion;
 const ease=x=>1-(1-clamp(x))**3;
 const tint=(color,a)=>`color-mix(in srgb, ${color} ${a}%, ${C.white})`;
@@ -16,7 +22,7 @@ function Icon({name}) {
 function Scene({scene:s}) {
   const frame=useCurrentFrame(),{fps}=useVideoConfig(),t=frame/fps;
   const hero=s.kind==='hero',demo=s.kind==='demo',right=sideOf(s)==='right';
-  const contentLeft=hero?(right?90:960):(right?90:700);
+  const contentLeft=s.kind==='stage'?90:hero?(right?90:960):(right?90:700);
   const enter=(at=0,distance=32)=>{const p=ease((t-at)/M.enter);return {opacity:p,transform:p===1?'none':`translateY(${(1-p)*distance}px)`};};
   return <AbsoluteFill style={{background:C.white,color:C.black}}>
     <div style={{position:'absolute',right:-100,top:-230,width:1040,height:1040,borderRadius:'50%',background:tint(C.blue,12)}}/>
@@ -28,9 +34,7 @@ function Scene({scene:s}) {
       {s.subtitle&&<div style={{fontSize:hero?36:30,lineHeight:1.45,marginTop:28,color:`${C.black}B3`,maxWidth:1000}}>{s.subtitle}</div>}
       {hero&&<div style={{marginTop:48,display:'inline-block',background:C.blue,color:C.black,borderRadius:24,padding:'20px 32px',boxShadow:shadow,fontSize:30,fontWeight:800}}>跟着小龙，一起搞懂 ↗</div>}
     </div>
-    {demo&&<div style={{position:'absolute',left:contentLeft,top:405,width:1080,height:590,padding:16,boxSizing:'border-box',background:C.white,borderRadius:32,boxShadow:shadow,...enter(.25)}}>
-      {s.video?<OffthreadVideo src={staticFile(s.video)} muted trimBefore={Math.round((s.videoStart??0)*fps)} style={{width:'100%',height:'100%',objectFit:'contain',borderRadius:20}}/>:<Img src={staticFile(s.image)} style={{width:'100%',height:'100%',objectFit:'contain',borderRadius:20}}/>}
-    </div>}
+    {demo&&<MediaFrame scene={s} time={t} box={s.mediaBox??[contentLeft,405,1080,590]}/>}
     {s.items?.map((item,i)=>{
       const q=ease((t-item.at)/M.emphasis),p=ease((t-item.at)/M.enter),active=t>=item.at+M.enter;
       const colors=[C.blue,C.green,C.yellow];
@@ -48,29 +52,39 @@ function SceneLayer({scene,index,doc}) {
   const frame=useCurrentFrame(),{fps}=useVideoConfig();
   const transition=scene.transition??transitionFor(index,doc.transitionSeed??doc.cartoonScenes[0].title);
   const duration=Math.round(scene.end*fps)-Math.round(scene.start*fps);
-  return <AbsoluteFill style={index?transitionStyle(transition,frame/(M.transition*fps)):{}}>
-    <Freeze frame={Math.min(frame,duration-1)}><Scene scene={scene}/></Freeze>
+  const next=doc.cartoonScenes[index+1],nextTransition=next?(next.transition??transitionFor(index+1,doc.transitionSeed??doc.cartoonScenes[0].title)):undefined;
+  const entrance=index?transitionStyle(transition,frame/(M.transition*fps)):{};
+  const visibility=sceneVisibility({index,frame,duration,transitionFrames:M.transition*fps,transition,nextTransition});
+  return <AbsoluteFill style={{...entrance,opacity:(entrance.opacity??1)*visibility}}>
+    <Freeze frame={Math.min(frame,duration-1)}>{['glass','studio'].includes(doc.modules?.background)?<GlassScene scene={scene} doc={doc} time={Math.min(frame,duration-1)/fps}/>:<Scene scene={scene}/>}<SceneEffects scene={scene} time={Math.min(frame,duration-1)/fps}/></Freeze>
   </AbsoluteFill>;
 }
 export function CartoonScenes({doc}) {
   const {fps}=useVideoConfig(),frame=useCurrentFrame();
   const p=spring({frame,fps,config:{damping:M.damping,stiffness:M.stiffness,mass:M.mass},durationInFrames:Math.round(M.enter*fps)});
-  const {turn,...box}=characterPose(doc.cartoonScenes,frame/fps,M.enter);
-  const openness=doc.speechMotion?.values[Math.min(frame,doc.speechMotion.values.length-1)]??1;
-  // Mouth asset uses identical image coordinates. Only the mouth region crossfades;
-  // the body and eyes never swap between differently generated full-body frames.
+  const characterSettings=doc.modules?.character??{};
+  const {turn,rotation=0,...box}=characterPose(doc.cartoonScenes,frame/fps,characterSettings.travelSeconds??M.enter,characterSettings);
+  const tilt=rotation+Math.sin(frame/fps*1.3)*(characterSettings.tilt??0);
+  const energy=doc.speechMotion?.values[frame]??0;
+  const fallbackCue=energy<=.12?'X':energy<.28?'B':energy<.6?'C':'D';
+  const mouthCues=doc.mouthCues??[{start:0,end:doc.duration,value:fallbackCue}];
+  const closedOpacity=closedMouthOpacity(doc.speechMotion?.values,frame);
+  // Replace the whole mouth opaquely; crossfades expose two lips at once.
+  // The feather stays outside both lip silhouettes; body and eyes never swap.
   const ratio=style.character.imageSize[0]/style.character.imageSize[1],iw=Math.min(box.width,box.height*ratio),ih=iw/ratio;
   const mask=style.character.mouthMask;
   const mouthMask=`radial-gradient(ellipse ${mask.radii[0]*100}% ${mask.radii[1]*100}% at ${mask.center[0]*100}% ${mask.center[1]*100}%, black ${mask.solid*100}%, transparent 100%)`;
   return <>
+    {doc.modules?.background==='studio'?<StudioBackdrop time={frame/fps}/>:doc.modules?.background==='glass'?<BrightBackdrop time={frame/fps} duration={doc.duration}/>:<AbsoluteFill style={{background:C.white}}/>}
     {doc.cartoonScenes.map((s,i)=><Sequence key={i} from={Math.round(s.start*fps)} durationInFrames={Math.round(s.end*fps)-Math.round(s.start*fps)+(i<doc.cartoonScenes.length-1?Math.ceil(M.transition*fps):0)}><SceneLayer scene={s} index={i} doc={doc}/></Sequence>)}
-    <div style={{position:'absolute',...box,transform:`translateY(${(1-p)*M.travel}px) rotate(${(1-p)*-7}deg) scale(${.92+.08*p})`,transformOrigin:'50% 90%',opacity:clamp(p),pointerEvents:'none'}}>
+    {characterSettings.mode!=='none'&&<div style={{position:'absolute',...box,transform:`translateY(${(1-p)*M.travel}px) rotate(${(1-p)*-7+tilt}deg) scale(${.92+.08*p})`,transformOrigin:'50% 90%',opacity:clamp(p),pointerEvents:'none'}}>
       <div style={{position:'absolute',bottom:15,left:'22%',width:'60%',height:34,borderRadius:'50%',background:`${C.black}22`,filter:'blur(14px)'}}/>
       <div style={{position:'absolute',left:(box.width-iw)/2,top:(box.height-ih)/2,width:iw,height:ih,transform:`perspective(1600px) rotateY(${turn}deg)`}}>
-        <Img src={staticFile(doc.character)} style={{position:'absolute',width:'100%',height:'100%'}}/>
-        {doc.characterClosed&&doc.speechMotion&&<Img src={staticFile(doc.characterClosed)} style={{position:'absolute',width:'100%',height:'100%',opacity:1-openness,maskImage:mouthMask,WebkitMaskImage:mouthMask}}/>}
+        {characterSettings.mode==='rounded'?<DragonMouth x={0} y={0} w={iw} time={frame/fps} cues={mouthCues} closedFile={doc.characterClosed} neutralFile={doc.characterNeutral}/>:<>        <Img src={staticFile(doc.character)} style={{position:'absolute',width:'100%',height:'100%'}}/>
+        {doc.characterClosed&&doc.speechMotion&&<Img src={staticFile(doc.characterClosed)} style={{position:'absolute',width:'100%',height:'100%',opacity:closedOpacity,maskImage:mouthMask,WebkitMaskImage:mouthMask}}/>}</>}
       </div>
-    </div>
+    </div>}
+    <BotActors scenes={doc.cartoonScenes} time={frame/fps}/>
     {doc.reviewBadgeVisible===true&&<div style={{position:'absolute',right:28,top:20,padding:'10px 18px',borderRadius:12,background:'#fff3cf',border:'2px solid #b65f00',color:'#713b00',fontSize:26,fontWeight:800,zIndex:100}}>未听审候选 · 声音未验收</div>}
   </>;
 }

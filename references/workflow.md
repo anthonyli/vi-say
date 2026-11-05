@@ -40,6 +40,9 @@
 | 任务 | 技术说明 | 当前边界 |
 |---|---|---|
 | 默认小龙项目、预览与正式渲染 | [production.md](tools/production.md) | hero/steps/demo/cta；16:9 |
+| 分模块选择 Bot、玻璃、汇聚分发、连接、聚焦与字幕 | [animation-modules.md](tools/animation-modules.md) | 接入同一小龙入口，含自由编排 stage；16:9 |
+| 产品面板汇聚、节点拖放、关系图与报告生成 | [business-effects.md](tools/business-effects.md) | 六类效果与八种新转场；支持无角色 studio 预设 |
+| 其他可执行复用能力 | [reuse-map.md](tools/reuse-map.md) | 已有脚本与当前自动化边界 |
 | 原声同步剪辑 | [recorded-video.md](tools/recorded-video.md) | 脚本按单源 EDL 执行，多源先整理母版 |
 | 本地合成 | [local-tts.md](tools/local-tts.md) | MLX／CPU，依赖、模型和声音另备 |
 | 实录信息层 | [remotion.md](tools/remotion.md) | overlays，16:9／4:3／3:4 |

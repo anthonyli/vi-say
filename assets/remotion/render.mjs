@@ -9,6 +9,7 @@ import {fileURLToPath} from 'node:url';
 import {auditEditorial, editorialStillPoints, mapEditorialAssets, validateEditorial} from './editorial-contract.mjs';
 import {validateCartoon, mapCartoonAssets, cartoonStillPoints} from './cartoon-contract.mjs';
 import {loadRuntime} from './runtime.mjs';
+import {captionText} from './effects/captions.mjs';
 import {inspectAudioReview, audioRenderDecision} from './audio-review.mjs';
 
 const types = new Set(['big-title', 'keyword', 'bullet-list', 'number', 'quote', 'comparison', 'browser', 'code', 'diagram', 'progress', 'chapter-label', 'info-card', 'input-bar']);
@@ -19,6 +20,8 @@ const rect = box => Array.isArray(box) && box.length === 4 && box.every(finite) 
   box[0] >= 0 && box[1] >= 0 && box[2] > 0 && box[3] > 0 && box[0] + box[2] <= 1 && box[1] + box[3] <= 1;
 
 export function validate(doc) {
+  if(doc.fontWeightRange!==undefined){const weights=typeof doc.fontWeightRange==='string'?doc.fontWeightRange.split(' ').map(Number):[];if(!doc.fontFile||weights.length!==2||weights.some(n=>!finite(n)||n<1||n>1000)||weights[0]>weights[1])fail('fontWeightRange needs a font file and an ascending weight range');}
+  if(doc.modules!==undefined&&!Object.hasOwn(doc,'cartoonScenes'))fail('modules require a 16:9 cartoon scene timeline');
   // New scene timelines do not need legacy overlays. Preserve the old contract
   // for overlay-only documents, and normalize only an omitted editorial field.
   if (Object.hasOwn(doc, 'scenes') && !Object.hasOwn(doc, 'overlays')) doc = {...doc, overlays: []};
@@ -37,6 +40,7 @@ export function validate(doc) {
   for (const cue of doc.captions) {
     interval(cue);
     if (cue.start < lastEnd || !hasText(cue.text)) fail('Captions must be ordered, non-overlapping and nonempty');
+    if(!hasText(captionText(cue.text,doc.modules?.captions??{})))fail('Caption display text is empty after punctuation cleanup');
     if (cue.text.split('\n').length > 2 || [...cue.text].length > 44) fail('Split long captions into at most two short lines');
     lastEnd = cue.end;
     if (cue.tokens) {
@@ -112,9 +116,11 @@ async function main() {
   try {
     doc = validate(JSON.parse(await fs.readFile(input, 'utf8')));
     audioReview = await inspectAudioReview(doc, {timelinePath: input});
-    if (doc.speechMotion) {
+    if (doc.speechMotion||doc.mouthCues) {
       const bytes=await fs.readFile(path.resolve(path.dirname(input),doc.audio));
-      if(createHash('sha256').update(bytes).digest('hex')!==doc.speechMotion.audio_sha256) fail('Mouth motion belongs to a different audio file; regenerate it');
+      const hash=createHash('sha256').update(bytes).digest('hex');
+      if(doc.speechMotion&&hash!==doc.speechMotion.audio_sha256) fail('Mouth motion belongs to a different audio file; regenerate it');
+      if(doc.mouthCues&&hash!==doc.mouthCueAudioSha256)fail('Mouth cues belong to a different audio file; regenerate them');
     }
     warnings = doc.cartoonScenes ? [{code:'CARTOON_REVIEW',message:'Review real frames, word timing and original-speed playback; fixed styling does not certify visual quality.'}] : auditEditorial(doc);
     for (const key of ['audio', 'video', 'image', 'fontFile']) if (doc[key]) doc[key] = await resolveAsset(doc[key]);
@@ -190,7 +196,7 @@ async function main() {
     await renderMedia({serveUrl, composition, inputProps: doc, codec: 'h264', audioCodec: 'aac',
       pixelFormat: 'yuv420p', colorSpace: 'bt709', imageFormat: 'png', audioBitrate: '192k', crf: 18, sampleRate: 48000,
       outputLocation: target, overwrite: false, concurrency: 2, browserExecutable});
-    await fs.writeFile(subtitle, doc.captions.map((c,i) => `${i+1}\n${stamp(c.start)} --> ${stamp(c.end)}\n${c.text}\n`).join('\n'), {flag: 'wx'});
+    await fs.writeFile(subtitle, doc.captions.map((c,i) => `${i+1}\n${stamp(c.start)} --> ${stamp(c.end)}\n${captionText(c.text,doc.modules?.captions)}\n`).join('\n'), {flag: 'wx'});
     if (audioReview.required) await fs.writeFile(target.slice(0, -4) + '.audio-review.json', JSON.stringify({
       schema_version: 1, output: target, video_sha256: createHash('sha256').update(await fs.readFile(target)).digest('hex'),
       audio_sha256: audioReview.audioSha256, ...audioDecision, review: audioReview,

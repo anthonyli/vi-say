@@ -14,11 +14,13 @@
 | 黑色 | `#000000` |
 | 白色 | `#FFFFFF` |
 
-配置的唯一来源是 `assets/production/style.json → palette`。其中 `blue/green/yellow/orange/lightBlue/black/white` 只是便于引用的颜色名称，不赋予用途含义。JS 从 `assets/production/colors.mjs` 导入 `PALETTE` 或 `ALLOWED_COLORS`；Python 读取同一份 JSON。
+随包基础色板的配置来源是 `assets/production/style.json → palette`。其中 `blue/green/yellow/orange/lightBlue/black/white` 只是便于引用的颜色名称，不赋予用途含义。JS 从 `assets/production/colors.mjs` 导入 `PALETTE` 或 `ALLOWED_COLORS`；Python 读取同一份 JSON。
+
+当次已选择的品牌与风格优先。小龙系列的 [明亮玻璃风](glass.md) 与 [Bot 样式](bots.md) 各自维护其色值；选择模块预设后调用对应组件，基础色板继续服务原风格。
 
 ## 使用规则
 
-- 新做的视频背景、文字、卡片、图形和装饰，从上述色板选色；不另加基础色。
+- 使用随包基础色板时，视频背景、文字、卡片、图形和装饰从上述范围选色；已选择其他品牌或风格时，按相应模块的色板统一使用。
 - 颜色的用途、组合与占比按当期内容决定。绿色不强制代表成功，橙色不强制代表危险，也不自动生成任何风险等级配色。
 - 允许使用这些颜色的透明度叠加形成浅底或阴影，不引入额外基础色相。
 - 正文以清晰可读为先；彩底上的文字需检查对比度，不默认都配白字。

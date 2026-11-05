@@ -56,6 +56,24 @@ def read_text(path, label):
     return value
 
 
+def require_generated_path(path, *, sources=()):
+    """Keep synthesis artifacts out of private model/reference storage."""
+    candidate = Path(path).absolute()
+    roots = {Path.cwd() / "private", Path(__file__).resolve().parents[1] / "private"}
+    # Include both lexical and resolved paths to cover symlinked private stores.
+    # macOS /private is an OS directory, not a project resource directory.
+    for source in (candidate, *sources):
+        source = Path(source).absolute()
+        for variant in (source, source.resolve()):
+            roots.update(parent for parent in variant.parents
+                         if parent.name == "private" and parent.parent != Path(parent.anchor))
+    resolved = candidate.resolve()
+    if any(resolved.is_relative_to(root.resolve()) for root in roots):
+        raise ValueError("private/ is reserved for models and voice references; "
+                         "write generated audio and logs to work/<project>/ or outputs/<project>/")
+    return candidate
+
+
 def wav_info(path):
     """Read every PCM frame; a valid header alone does not prove a complete WAV."""
     require_file(path, "WAV")
@@ -79,6 +97,7 @@ def wav_info(path):
 
 
 def prepare_plan(config_path, text_path, output_path, *, language="Chinese", max_tokens=4096, log_path=None):
+    config_source = Path(config_path).absolute()
     config_path = Path(config_path).resolve()
     require_file(config_path, "voice configuration")
     try:
@@ -109,7 +128,8 @@ def prepare_plan(config_path, text_path, output_path, *, language="Chinese", max
     reference_text_path = local_path(config.get("reference_text_file"), base, "reference_text_file")
     reference_text = read_text(reference_text_path, "reference transcription")
     text = read_text(Path(text_path).resolve(), "narration text")
-    output = Path(output_path).absolute()
+    sources = (config_source, model, reference)
+    output = require_generated_path(output_path, sources=sources)
     if output.suffix.lower() != ".wav":
         raise ValueError("Output must use the .wav extension")
     if output.exists() or output.is_symlink():
@@ -118,7 +138,7 @@ def prepare_plan(config_path, text_path, output_path, *, language="Chinese", max
         raise ValueError("language must be nonempty")
     if isinstance(max_tokens, bool) or not isinstance(max_tokens, int) or max_tokens <= 0:
         raise ValueError("max_tokens must be a positive integer")
-    log = Path(log_path).absolute() if log_path else None
+    log = require_generated_path(log_path, sources=sources) if log_path else None
     if log and (log.resolve() == output.resolve() or log.exists() or log.is_symlink()):
         raise FileExistsError("Log must use a new path distinct from the output")
     engine = config.get("engine", "mlx")
@@ -229,6 +249,9 @@ def load_cpu_backend():
 
 
 def synthesize(plan):
+    for path in (plan.output, plan.log):
+        if path is not None:
+            require_generated_path(path, sources=(plan.model, plan.reference_audio))
     os.environ["HF_HUB_OFFLINE"] = "1"
     os.environ["TRANSFORMERS_OFFLINE"] = "1"
     if plan.output.exists() or plan.output.is_symlink():
@@ -276,10 +299,10 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", default="private/voice/voice-preferences.json")
     parser.add_argument("--text", required=True, help="UTF-8 complete narration file; relative to the working directory")
-    parser.add_argument("--output", required=True, help="New WAV path; relative to the working directory")
+    parser.add_argument("--output", required=True, help="New WAV in work/<project>/ or outputs/<project>/; private/ is reserved")
     parser.add_argument("--language", default="Chinese")
     parser.add_argument("--max-tokens", type=int, default=4096)
-    parser.add_argument("--log", help="Optional new private log path; can contain narration and reference text")
+    parser.add_argument("--log", help="Optional new log in work/<project>/; can contain narration and reference text")
     parser.add_argument("--check-only", action="store_true", help="Check configuration/local files without importing MLX or synthesizing")
     args = parser.parse_args(argv)
     try:

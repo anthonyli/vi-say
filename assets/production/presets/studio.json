@@ -1,0 +1,12 @@
+{
+  "background": "studio",
+  "captions": {
+    "style": "highlight",
+    "stripPunctuation": true,
+    "keywords": [],
+    "protectedTerms": []
+  },
+  "character": {
+    "mode": "none"
+  }
+}

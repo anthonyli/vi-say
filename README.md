@@ -225,7 +225,7 @@ python -m unittest discover -s scripts/tests -p 'test_*.py'
 版本号统一维护在 [SKILL.md](SKILL.md) 的 `metadata.version`，使用 [Agent Skills 规范支持的元数据字段](https://agentskills.io/specification#metadata-field)。开发版本带 `-dev` 后缀；正式发布时更新为不带该后缀的版本号，再创建对应 Git 标签。已有 `0.0.1` 标签保留为此前的主分支基线。
 
 ```sh
-python scripts/production.py pack outputs/vi-say.skill
+python scripts/production.py pack outputs/vi-say/vi-say.skill
 ```
 
 `.skill` 是 ZIP，解压后的目录名为 `vi-say`，安装到所用 Agent 的技能目录后通过 `$vi-say` 调用。包内的 `SKILL.md` 保留同一版本号，无需维护另一份包版本。打包包含 `LICENSE`、`NOTICE` 和运行所需规则、脚本与素材，排除测试、缓存、工作目录、产物和私人资料。全局已安装的旧技能不会随编辑本仓库自动更新。仓库地址为 [anthonyli/vi-say](https://github.com/anthonyli/vi-say)，包名和调用名为 `vi-say`。

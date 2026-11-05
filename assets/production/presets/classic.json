@@ -1,0 +1,5 @@
+{
+  "background": "classic",
+  "captions": {"style": "plain", "stripPunctuation": false, "keywords": [], "protectedTerms": []},
+  "character": {"mode": "legacy", "travelSeconds": 0.65, "arc": 120, "tilt": 0}
+}
