@@ -10,7 +10,9 @@ import {BrightBackdrop} from './effects/glass';
 import {GlassScene} from './effects/glass-scene';
 import {SceneEffects,BotActors} from './effects/layer';
 import {MediaFrame} from './effects/operations';
-import {sceneVisibility,characterPose, sideOf, transitionFor, transitionStyle, clamp, closedMouthOpacity} from '../cartoon-motion.mjs';
+import GLScenePair from './gl-transition';
+import {isGLTransition} from '../gl-transitions.mjs';
+import {sceneVisibility,characterPose, sideOf, sceneTransition, sceneTransitionSettings, transitionSeconds, transitionStyle, clamp, closedMouthOpacity} from '../cartoon-motion.mjs';
 const C=style.palette,M=style.motion;
 const ease=x=>1-(1-clamp(x))**3;
 const tint=(color,a)=>`color-mix(in srgb, ${color} ${a}%, ${C.white})`;
@@ -48,15 +50,28 @@ function Scene({scene:s}) {
     <div style={{position:'absolute',left:90,bottom:42,fontSize:21,color:`${C.black}99`}}>{s.kind==='cta'?'互动动画示意':s.kind==='demo'?'官方界面素材展示':'小龙带你看'}</div>
   </AbsoluteFill>;
 }
+function SceneContent({scene,doc}) {
+  const frame=useCurrentFrame(),{fps}=useVideoConfig();
+  const duration=Math.round(scene.end*fps)-Math.round(scene.start*fps);
+  const time=Math.min(frame,duration-1)/fps;
+  return <Freeze frame={Math.min(frame,duration-1)}>{['glass','studio'].includes(doc.modules?.background)?<GlassScene scene={scene} doc={doc} time={time}/>:<Scene scene={scene}/>}<SceneEffects scene={scene} time={time}/></Freeze>;
+}
 function SceneLayer({scene,index,doc}) {
   const frame=useCurrentFrame(),{fps}=useVideoConfig();
-  const transition=scene.transition??transitionFor(index,doc.transitionSeed??doc.cartoonScenes[0].title);
+  const settings=sceneTransitionSettings(scene,index,doc),transition=settings.name,seconds=transitionSeconds(scene,transition,settings.alias);
   const duration=Math.round(scene.end*fps)-Math.round(scene.start*fps);
-  const next=doc.cartoonScenes[index+1],nextTransition=next?(next.transition??transitionFor(index+1,doc.transitionSeed??doc.cartoonScenes[0].title)):undefined;
-  const entrance=index?transitionStyle(transition,frame/(M.transition*fps)):{};
-  const visibility=sceneVisibility({index,frame,duration,transitionFrames:M.transition*fps,transition,nextTransition});
-  return <AbsoluteFill style={{...entrance,opacity:(entrance.opacity??1)*visibility}}>
-    <Freeze frame={Math.min(frame,duration-1)}>{['glass','studio'].includes(doc.modules?.background)?<GlassScene scene={scene} doc={doc} time={Math.min(frame,duration-1)/fps}/>:<Scene scene={scene}/>}<SceneEffects scene={scene} time={Math.min(frame,duration-1)/fps}/></Freeze>
+  const next=doc.cartoonScenes[index+1],nextTransition=next?sceneTransition(next,index+1,doc):undefined;
+  const outgoingSeconds=next?transitionSeconds(next,nextTransition):seconds;
+  const gl=index>0&&isGLTransition(transition);
+  const entrance=index&&!gl?transitionStyle(transition,frame/(seconds*fps),settings.params):{};
+  const visibility=sceneVisibility({index,frame,duration,transitionFrames:seconds*fps,outgoingTransitionFrames:outgoingSeconds*fps,transition,nextTransition,transitionAlias:settings.alias,nextTransitionAlias:next?.transitionAlias??next?.transition});
+  // Media and effect z-indices must stay inside their own scene. Without a
+  // stacking context, the outgoing screenshot can cover the incoming shader
+  // or transformed scene until the transition has already finished.
+  return <AbsoluteFill style={{isolation:'isolate',zIndex:0,...entrance,opacity:(entrance.opacity??1)*visibility}}>
+    {gl?<GLScenePair name={transition} params={settings.params} frames={Math.max(1,Math.round(seconds*fps))}
+      before={<Freeze frame={Math.round(doc.cartoonScenes[index-1].end*fps)-Math.round(doc.cartoonScenes[index-1].start*fps)-1}><SceneContent scene={doc.cartoonScenes[index-1]} doc={doc}/></Freeze>}
+      after={<SceneContent scene={scene} doc={doc}/>}/>:<SceneContent scene={scene} doc={doc}/>}
   </AbsoluteFill>;
 }
 export function CartoonScenes({doc}) {
@@ -76,7 +91,7 @@ export function CartoonScenes({doc}) {
   const mouthMask=`radial-gradient(ellipse ${mask.radii[0]*100}% ${mask.radii[1]*100}% at ${mask.center[0]*100}% ${mask.center[1]*100}%, black ${mask.solid*100}%, transparent 100%)`;
   return <>
     {doc.modules?.background==='studio'?<StudioBackdrop time={frame/fps}/>:doc.modules?.background==='glass'?<BrightBackdrop time={frame/fps} duration={doc.duration}/>:<AbsoluteFill style={{background:C.white}}/>}
-    {doc.cartoonScenes.map((s,i)=><Sequence key={i} from={Math.round(s.start*fps)} durationInFrames={Math.round(s.end*fps)-Math.round(s.start*fps)+(i<doc.cartoonScenes.length-1?Math.ceil(M.transition*fps):0)}><SceneLayer scene={s} index={i} doc={doc}/></Sequence>)}
+    {doc.cartoonScenes.map((s,i)=>{const next=doc.cartoonScenes[i+1];return <Sequence key={i} from={Math.round(s.start*fps)} durationInFrames={Math.round(s.end*fps)-Math.round(s.start*fps)+(next?Math.ceil(transitionSeconds(next,sceneTransition(next,i+1,doc))*fps):0)}><SceneLayer scene={s} index={i} doc={doc}/></Sequence>;})}
     {characterSettings.mode!=='none'&&<div style={{position:'absolute',...box,transform:`translateY(${(1-p)*M.travel}px) rotate(${(1-p)*-7+tilt}deg) scale(${.92+.08*p})`,transformOrigin:'50% 90%',opacity:clamp(p),pointerEvents:'none'}}>
       <div style={{position:'absolute',bottom:15,left:'22%',width:'60%',height:34,borderRadius:'50%',background:`${C.black}22`,filter:'blur(14px)'}}/>
       <div style={{position:'absolute',left:(box.width-iw)/2,top:(box.height-ih)/2,width:iw,height:ih,transform:`perspective(1600px) rotateY(${turn}deg)`}}>

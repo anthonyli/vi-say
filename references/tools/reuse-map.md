@@ -8,6 +8,7 @@
 | 分镜、预设、素材复制 | `production.py init/compile`、`assets/production/presets/`、`examples/` | 按配置选择效果、复制本地媒体、生成统一时间轴，拒绝未知字段和非法时序 |
 | 完整产品界面与字体 | `src/effects/product-shell.jsx`、`node-editor.jsx`、`product-views.jsx`、`assets/production/fonts/` | 保留成熟画面的比例、导航、工具栏、证据与审核布局；文案和数据通过 ui 配置，可变字体保留真实字重 |
 | 动效与转场 | `assets/remotion/effects/`、`src/effects/`、`cartoon-transitions.mjs` | 帧时间驱动动作、对象变化与转场，支持跳帧重现；新增实现须接入校验、绘制、采样和样例 |
+| GL 与原有转场 | `gl-transitions.json/mjs`、`src/gl-transition.jsx`、`cartoon-transitions.mjs`、`transition-selection.mjs` | 30 种上游 shader 与 5 种基础机制全部进入轮换，显式指定优先，其次场景匹配；7 个旧名兼容但不重复计数；保持声音与角色时间不变 |
 | 字幕显示 | `effects/captions.mjs`、`src/effects/highlight-caption.jsx` | 去显示标点、保护术语、关键词高亮，与导出的 SRT 一致 |
 | 字幕与语义时间 | `scripts/align_captions.py`、`audio_timing.py` | 基于实际声音生成或整理时间；ASR 有误时仍需修正，不能用文字估时替代 |
 | 口型与角色 | `scripts/mouth_cues.py`、`speech_motion.py`、`src/dragon-mouth.jsx` | 绑定当前音频哈希、验证完整时间、驱动嘴形；口型和声音好坏仍须观察和听查 |

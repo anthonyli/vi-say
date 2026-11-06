@@ -9,6 +9,9 @@ import {fileURLToPath} from 'node:url';
 import {auditEditorial, editorialStillPoints, mapEditorialAssets, validateEditorial} from './editorial-contract.mjs';
 import {validateCartoon, mapCartoonAssets, cartoonStillPoints} from './cartoon-contract.mjs';
 import {loadRuntime} from './runtime.mjs';
+import {resolveCartoonTransitions,transitionPlan} from './cartoon-motion.mjs';
+import {GL_TRANSITIONS} from './gl-transitions.mjs';
+import {createRequire} from 'node:module';
 import {captionText} from './effects/captions.mjs';
 import {inspectAudioReview, audioRenderDecision} from './audio-review.mjs';
 
@@ -114,7 +117,7 @@ async function main() {
     return assets.get(source);
   }
   try {
-    doc = validate(JSON.parse(await fs.readFile(input, 'utf8')));
+    doc = resolveCartoonTransitions(validate(JSON.parse(await fs.readFile(input, 'utf8'))));
     audioReview = await inspectAudioReview(doc, {timelinePath: input});
     if (doc.speechMotion||doc.mouthCues) {
       const bytes=await fs.readFile(path.resolve(path.dirname(input),doc.audio));
@@ -137,7 +140,7 @@ async function main() {
   if (mode === 'validate') { console.log(JSON.stringify({valid: true, qualityAssessed: false, audioReview})); return; }
   if (mode === 'audit') {
     console.log(JSON.stringify({valid: true, errors: [], warnings, qualityAssessed: false,
-      localAssets: assets.size, audioReview, stillPoints: cartoonStillPoints(doc) ?? editorialStillPoints(doc)}, null, 2));
+      localAssets: assets.size, audioReview, transitions:transitionPlan(doc),stillPoints: cartoonStillPoints(doc) ?? editorialStillPoints(doc)}, null, 2));
     return;
   }
   if (mode === 'render') {
@@ -159,6 +162,7 @@ async function main() {
   const originalCwd = process.cwd();
   try {
     const runtime = await loadRuntime();
+    const usesGL=transitionPlan(doc).some(t=>t.engine==='gl');
     // Remotion locates downloaded Chrome relative to cwd's package.json.
     // Keep that browser in the same shared cache, not each video project.
     process.chdir(runtime.dir);
@@ -168,15 +172,28 @@ async function main() {
     await fs.mkdir(publicDir);
     for (const [source, name] of assets) await fs.copyFile(source, path.join(publicDir, name));
     const root = path.dirname(fileURLToPath(import.meta.url));
+    if(usesGL){
+      const require=createRequire(path.join(runtime.dir,'package.json')),upstream=require('gl-transitions');
+      for(const preset of GL_TRANSITIONS){
+        const shader=upstream.find(t=>t.name===preset.shader);
+        if(!shader||createHash('sha256').update(shader.glsl).digest('hex')!==preset.shaderSha256)fail(`GL shader source does not match the verified catalog: ${preset.name}`);
+      }
+    }
     const serveUrl = await bundle({entryPoint: path.join(root, 'src/index.jsx'), publicDir, outDir: path.join(tmp, 'bundle'),
       rootDir: runtime.dir,
       webpackOverride: config => ({...config,
+        // Concurrent video jobs share dependencies, not writable disk packs.
+        // The bundle itself is task-local and is removed in finally below.
+        cache:{type:'memory'},
         resolve: {...config.resolve, modules: [runtime.nodeModules, ...(config.resolve?.modules ?? ['node_modules'])]},
         resolveLoader: {...config.resolveLoader, modules: [runtime.nodeModules, ...(config.resolveLoader?.modules ?? ['node_modules'])]}})});
     // Use Remotion's pinned Headless Shell by default. Desktop Chrome can emit
     // isolated tiled/corrupt frames during parallel capture (upstream #9473).
     const browserExecutable = process.env.REMOTION_BROWSER_EXECUTABLE || undefined;
-    const composition = await selectComposition({serveUrl, id: 'NarratedVideo', inputProps: doc, browserExecutable});
+    const gl=process.env.VI_SAY_GL??(process.platform==='darwin'?'angle':'swangle');
+    if(usesGL&&!['angle','swangle'].includes(gl))fail('VI_SAY_GL must be angle or swangle');
+    const chromiumOptions=usesGL?{gl}:undefined;
+    const composition = await selectComposition({serveUrl, id: 'NarratedVideo', inputProps: doc, browserExecutable,chromiumOptions});
     if (mode === 'stills') {
       const points = cartoonStillPoints(doc) ?? editorialStillPoints(doc);
       const manifest = [];
@@ -184,7 +201,7 @@ async function main() {
         const name = `${String(index + 1).padStart(3, '0')}-frame-${String(point.frame).padStart(6, '0')}.png`;
         const outputLocation = path.join(stillDirectory, name);
         await renderStill({serveUrl, composition, inputProps: doc, frame: point.frame,
-          imageFormat: 'png', output: outputLocation, overwrite: false, browserExecutable});
+          imageFormat: 'png', output: outputLocation, overwrite: false, browserExecutable,chromiumOptions});
         manifest.push({...point, file: name});
       }
       await fs.writeFile(path.join(stillDirectory, 'manifest.json'), JSON.stringify({timeline: input,
@@ -195,7 +212,7 @@ async function main() {
     }
     await renderMedia({serveUrl, composition, inputProps: doc, codec: 'h264', audioCodec: 'aac',
       pixelFormat: 'yuv420p', colorSpace: 'bt709', imageFormat: 'png', audioBitrate: '192k', crf: 18, sampleRate: 48000,
-      outputLocation: target, overwrite: false, concurrency: 2, browserExecutable});
+      outputLocation: target, overwrite: false, concurrency: 2, browserExecutable,chromiumOptions});
     await fs.writeFile(subtitle, doc.captions.map((c,i) => `${i+1}\n${stamp(c.start)} --> ${stamp(c.end)}\n${captionText(c.text,doc.modules?.captions)}\n`).join('\n'), {flag: 'wx'});
     if (audioReview.required) await fs.writeFile(target.slice(0, -4) + '.audio-review.json', JSON.stringify({
       schema_version: 1, output: target, video_sha256: createHash('sha256').update(await fs.readFile(target)).digest('hex'),

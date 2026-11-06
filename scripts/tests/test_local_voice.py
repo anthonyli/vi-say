@@ -19,6 +19,7 @@ import numpy as np
 
 
 MODULE_PATH = Path(__file__).resolve().parents[1] / "local_voice.py"
+sys.path.insert(0, str(MODULE_PATH.parent))
 SPEC = importlib.util.spec_from_file_location("local_voice", MODULE_PATH)
 voice = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = voice
@@ -267,6 +268,69 @@ class LocalVoiceTests(unittest.TestCase):
         self.output.unlink()
         with self.assertRaises(FileExistsError):
             self.plan(log_path=log)
+
+    def test_locked_reference_and_weights_cannot_silently_change(self):
+        plan = self.plan()
+        self.config['voice_lock'] = {'schema_version': 1, 'id': 'fixed-test-voice', 'assets': plan.identity}
+        self.save_config()
+        self.assertEqual(self.plan().voice_id, 'fixed-test-voice')
+        for source in [self.voice_dir / 'reference.wav', self.voice_dir / 'reference.txt', self.model / 'model.safetensors']:
+            previous = source.read_bytes()
+            source.write_bytes(previous + b'changed')
+            with self.assertRaisesRegex(ValueError, 'Locked voice'):
+                self.plan()
+            source.write_bytes(previous)
+
+    def test_anchored_segments_reuse_original_reference_and_seed_and_join_exact_samples(self):
+        self.text.write_text('第一段完整句子。\n\n第二段完整句子。\n\n第三段完整句子。')
+        self.config['generation'] = {'mode': 'anchored', 'seed': 42, 'temperature': .4, 'top_p': .9, 'top_k': 30}
+        self.save_config()
+        calls = []
+        def generate(**kwargs):
+            calls.append(kwargs)
+            write_wav(Path(kwargs['file_prefix'] + '.wav'), frames=len(calls) * 100)
+        with patch.object(voice, 'load_backend', return_value=(lambda _: object(), generate)), \
+                patch.object(voice, 'set_generation_seed') as seed:
+            result = voice.synthesize(self.plan())
+        self.assertEqual(len(calls), 3)
+        self.assertEqual(seed.call_args_list, [unittest.mock.call('mlx', 42)] * 3)
+        for call in calls:
+            self.assertEqual(call['ref_audio'], str((self.voice_dir / 'reference.wav').resolve()))
+            self.assertEqual(call['ref_text'], 'private reference transcript')
+            self.assertEqual((call['temperature'], call['top_p'], call['top_k']), (.4, .9, 30))
+        self.assertEqual([(s['start_sample'], s['end_sample']) for s in result['segments']], [(0, 100), (100, 300), (300, 600)])
+        with wave.open(str(self.output)) as audio:
+            self.assertEqual(audio.readframes(audio.getnframes()), b'\x01\x00' * 600)
+        report = json.loads(self.output.with_suffix('.generation.json').read_text())
+        self.assertEqual(report['audio_sha256'], voice.file_digest(self.output))
+        self.assertFalse(report['voice_consistency_assessed'])
+
+    def test_reference_mutation_between_segments_aborts_without_publishing(self):
+        self.text.write_text('第一段。\n\n第二段。')
+        def generate(**kwargs):
+            write_wav(Path(kwargs['file_prefix'] + '.wav'))
+            (self.voice_dir / 'reference.txt').write_text('different reference')
+        with patch.object(voice, 'load_backend', return_value=(lambda _: object(), generate)), \
+                self.assertRaises(RuntimeError):
+            voice.synthesize(self.plan(mode='anchored'))
+        self.assertFalse(self.output.exists())
+        self.assertFalse(self.output.with_suffix('.generation.json').exists())
+
+    def test_invalid_sampling_parameters_fail_before_synthesis(self):
+        for options in [{'seed': -1}, {'seed': True}, {'temperature': float('nan')},
+                        {'temperature': -1}, {'top_p': 0}, {'top_k': 1.5}, {'mode': 'unknown'},
+                        {'mode': 'anchored', 'segment_chars': 0}]:
+            with self.subTest(options=options), self.assertRaises(ValueError):
+                self.plan(**options)
+
+    def test_generation_report_collision_preserves_existing_files(self):
+        self.output.parent.mkdir()
+        report = self.output.with_suffix('.generation.json')
+        report.write_text('existing report')
+        with patch.object(voice, 'load_backend', side_effect=AssertionError('must not load')), self.assertRaises(FileExistsError):
+            voice.synthesize(self.plan())
+        self.assertEqual(report.read_text(), 'existing report')
+        self.assertFalse(self.output.exists())
 
 
 class FakeQwenTokenizer:

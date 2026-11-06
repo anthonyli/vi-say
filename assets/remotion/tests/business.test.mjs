@@ -45,7 +45,7 @@ test('the same graph moves continuously to an inset and is deterministic on seek
   assert.deepEqual(networkBox(e,12),networkBox(e,5));
 });
 test('new transitions settle exactly with no residual blur, perspective or clipping',()=>{
-  for(const name of catalog().transitions){assert.deepEqual(transitionStyle(name,1),{});assert.deepEqual(transitionStyle(name,10),{});assert.notDeepEqual(transitionStyle(name,0),{});assert.deepEqual(transitionStyle(name,.5),transitionStyle(name,.5));}
+  for(const name of catalog().cssTransitions){assert.deepEqual(transitionStyle(name,1),{});assert.deepEqual(transitionStyle(name,10),{});assert.notDeepEqual(transitionStyle(name,0),{});assert.deepEqual(transitionStyle(name,.5),transitionStyle(name,.5));}
 });
 test('all nested inputs are validated and delayed phases cannot run before effect visibility',()=>{
   const changes=[['scan',e=>e.scanAt=3.9],['chart',e=>e.values[0]=NaN],['document',e=>e.rows[0].txt='typo'],['panel-merge',e=>e.at=2],['network',e=>e.boxFrames[1].at=e.boxFrames[0].at],['node-editor',e=>e.moving=1.2]];

@@ -37,9 +37,20 @@ def profile_state(config):
     return result
 
 
-def select_voice(voice_root, output, requested="random"):
+def select_voice(voice_root, output, requested="default"):
     root = Path(voice_root).resolve()
     output = Path(output).resolve()
+    if requested == 'default':
+        fixed = root / 'fixed-voice.json'
+        if fixed.exists() or fixed.is_symlink():
+            pinned = json.loads(fixed.read_text(encoding='utf-8'))
+            name = pinned.get('voice')
+            if not isinstance(name, str) or name in {'default', 'random', '', '.', '..'} or Path(name).name != name:
+                raise ValueError('Invalid pinned project voice')
+            selected = select_voice(root, fixed, name)
+            requested = selected['voice']
+        else:
+            requested = 'random'
     if requested != "random" and (requested in {".", ".."} or Path(requested).name != requested):
         raise ValueError("Voice must be a profile directory name or random")
 
@@ -98,7 +109,7 @@ def select_voice(voice_root, output, requested="random"):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--voice-root", default="private/voice")
-    parser.add_argument("--voice", default="random", help="Profile directory name, or random")
+    parser.add_argument("--voice", default="default", help="Pinned project default when configured; explicit profile name or random also supported")
     parser.add_argument("--output", required=True, help="One persistent selection file per episode")
     parser.add_argument("--print-config", action="store_true", help="Print only the selected configuration path")
     args = parser.parse_args(argv)

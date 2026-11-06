@@ -32,6 +32,7 @@ async function healthy(dir, manifest) {
 export async function prepareRuntime(source = here) {
   const dir = await runtimeLocation(source);
   const manifest = JSON.parse(await fs.readFile(path.join(source, 'package.json')));
+  validateRuntimeVersions(manifest);
   if (await healthy(dir, manifest)) return {dir, reused: true};
   await fs.mkdir(path.dirname(dir), {recursive: true});
   const lockDir = `${dir}.install-lock`;
@@ -61,6 +62,12 @@ export async function prepareRuntime(source = here) {
     if (!await healthy(dir, manifest)) throw new Error('Shared dependency version check failed');
     return {dir, reused: false};
   } finally { await fs.rm(lockDir, {recursive: true, force: true}); }
+}
+export function validateRuntimeVersions(manifest) {
+  const expected=manifest.dependencies.remotion;
+  for(const [name,version] of Object.entries(manifest.dependencies)){
+    if((name==='remotion'||name.startsWith('@remotion/'))&&version!==expected)throw new Error(`${name} must use the shared Remotion version ${expected}`);
+  }
 }
 export async function loadRuntime() {
   const runtime = await prepareRuntime();

@@ -4,7 +4,7 @@ description: 将 GitHub 项目、官网、文章链接、已录视频或知识�
 license: Apache-2.0
 metadata:
   author: Anthony Li
-  version: "0.0.6"
+  version: "0.0.7"
 ---
 
 # vi-say：把内容讲给你看
@@ -44,6 +44,7 @@ GitHub 项目介绍默认核对并说明当期 Star 数，采集可用的真实�
 - 小龙系列的明亮玻璃科技风见 [玻璃视觉](references/styles/glass.md)；造型独立放在 [Bot 样式](references/styles/bots.md)，动作另见 [动画](references/stages/animation.md#小龙与-bot-的动作编排)。已实现的可选模块、字段与运行命令见 [动画模块接口](references/tools/animation-modules.md)；新项目默认使用 `glass` 预设，也可显式选择 `classic`。
 - 企业产品片可选择 [产品演示动效](references/tools/business-effects.md)：面板汇聚、节点拖放、关系图、扫描、图表、文档交接；`studio` 预设可隐藏角色。先用 `python scripts/production.py catalog` 查询实际模块，再按 JSON 示例组合。其他可执行能力见 [代码复用地图](references/tools/reuse-map.md)。
 - 改参数、新增动画或接入新场景读 [extensions.md](references/extensions.md)。配置只使用已实现字段，新效果要同时落地画面、校验和实际样片。
+- 需要丰富转场时，按需读 [GL 转场](references/tools/gl-transitions.md)：30 种真实 shader 与 5 种基础转场全部参与自动轮换；场景指定优先，未指定时按场景关系排序，旧名称兼容，沿用当前流程与共用 Remotion 环境。
 - 默认角色路线的命令、项目格式和正式音频记录见 [production.md](references/tools/production.md)。其他工具按 workflow 的接口表选择，不混用 JSON schema。
 
 ## 共用约束

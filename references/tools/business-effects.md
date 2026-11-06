@@ -48,11 +48,11 @@ python scripts/production.py render work/product-effects/project.json --output-d
 
 `studio` 编译默认使用随包 Manrope 可变字体及其 OFL 许可证，字重范围按 200–800 加载，避免把正文也变成粗黑体。中文使用浏览器的系统字体回退；跨平台交付需按实际字体检查或明确传入项目字体。其它预设的字体选择保留原行为。
 
-## 八种可选转场
+## 业务名称的兼容映射
 
-场景 `transition` 新增 `converge`（矩形汇聚展开）、`focus`（聚焦去模糊）、`handoff`（横向交接）、`zoom`（缩放进入）、`evidence`（轻透视证据面板）、`report`（报告透视升起）、`merge`（放大收束）、`iris`（圆形展开）。新转场先退去旧场文字，再显现新场，持续背景承接间隙，避免两套标题叠字。原有 `slide/radial/wipe/flip` 继续保留，默认轮换池不变，新效果按场景明确选择。
+原先八个业务转场名称已去重：`converge` 保留为矩形汇聚基础机制；`focus/zoom/merge → gl:CrossZoom`，`handoff → slide`，`evidence/report → flip`，`iris → radial`。别名的位移、圆心和面板透视差异通过参数预设保留，默认 0.6 秒及前后文字顺序仍可读取；缩放虚化类统一采用 GL 表现。
 
-转场与内容交接分开：`report` 仅负责场景进入；真正的来源汇入、内容显现与复核顺序由 `document` 实现。不能只选一个转场就声称完整业务过程已展示。
+新项目从 [35 个主入口](gl-transitions.md) 选择，不再把兼容别名当作独立特效。`report` 的场景切换与 `document` 模块的来源汇入、内容显现、复核流程分别处理；合并转场不会更改业务动画或音轨。
 
 ## 扩展一个效果
 

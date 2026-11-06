@@ -1,0 +1,870 @@
+{
+  "scenes": [
+    {
+      "kind": "demo",
+      "start": 0,
+      "end": 2,
+      "title": "转场组合",
+      "image": "transition-media/scene-a.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ]
+    },
+    {
+      "kind": "demo",
+      "start": 2,
+      "end": 4,
+      "title": "书页翻转",
+      "image": "transition-media/scene-b.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:BookFlip",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 4,
+      "end": 6,
+      "title": "纸张卷页",
+      "image": "transition-media/scene-a.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:InvertedPageCurl",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 6,
+      "end": 8,
+      "title": "立方体旋转",
+      "image": "transition-media/scene-b.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:Cube",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 8,
+      "end": 10,
+      "title": "双门开启",
+      "image": "transition-media/scene-a.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:Doorway",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 10,
+      "end": 12,
+      "title": "网格翻牌",
+      "image": "transition-media/scene-b.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:GridFlip",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 12,
+      "end": 14,
+      "title": "交叉扭曲",
+      "image": "transition-media/scene-a.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:CrossWarp",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 14,
+      "end": 16,
+      "title": "交叉缩放模糊",
+      "image": "transition-media/scene-b.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:CrossZoom",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 16,
+      "end": 18,
+      "title": "色散故障闪回",
+      "image": "transition-media/scene-a.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:GlitchMemories",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 18,
+      "end": 20,
+      "title": "柔和叠化",
+      "image": "transition-media/scene-b.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:Fade",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 20,
+      "end": 22,
+      "title": "定向扭曲推进",
+      "image": "transition-media/scene-a.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:DirectionalWarp",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 22,
+      "end": 24,
+      "title": "梦幻旋转缩放",
+      "image": "transition-media/scene-b.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:DreamyZoom",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 24,
+      "end": 26,
+      "title": "前后景换位",
+      "image": "transition-media/scene-a.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:Swap",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 26,
+      "end": 28,
+      "title": "百叶窗切换",
+      "image": "transition-media/scene-b.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:WindowBlinds",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 28,
+      "end": 30,
+      "title": "窗口切片",
+      "image": "transition-media/scene-a.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:WindowSlices",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 30,
+      "end": 32,
+      "title": "水滴涟漪",
+      "image": "transition-media/scene-b.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:WaterDrop",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 32,
+      "end": 34,
+      "title": "波纹扩散",
+      "image": "transition-media/scene-a.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:Ripple",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 34,
+      "end": 36,
+      "title": "旋涡扭转",
+      "image": "transition-media/scene-b.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:Swirl",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 36,
+      "end": 38,
+      "title": "画面形变融合",
+      "image": "transition-media/scene-a.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:Morph",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 38,
+      "end": 40,
+      "title": "位移故障",
+      "image": "transition-media/scene-b.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:GlitchDisplace",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 40,
+      "end": 42,
+      "title": "像素化融合",
+      "image": "transition-media/scene-a.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:Pixelize",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 42,
+      "end": 44,
+      "title": "六边形像素化",
+      "image": "transition-media/scene-b.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:Hexagonalize",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 44,
+      "end": 46,
+      "title": "圆点幕布",
+      "image": "transition-media/scene-a.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:PolkaDotsCurtain",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 46,
+      "end": 48,
+      "title": "圆形收放",
+      "image": "transition-media/scene-b.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:CircleIris",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 48,
+      "end": 50,
+      "title": "蝴蝶结擦除",
+      "image": "transition-media/scene-a.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:BowTieHorizontal",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 50,
+      "end": 52,
+      "title": "星形揭示",
+      "image": "transition-media/scene-b.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:StarWipe",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 52,
+      "end": 54,
+      "title": "风吹颗粒",
+      "image": "transition-media/scene-a.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:Wind",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 54,
+      "end": 56,
+      "title": "灼烧揭示",
+      "image": "transition-media/scene-b.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:BurnThrough",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 56,
+      "end": 58,
+      "title": "胶片漏光",
+      "image": "transition-media/scene-a.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:FilmBurn",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 58,
+      "end": 60,
+      "title": "墨迹晕染",
+      "image": "transition-media/scene-b.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:InkBleed",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 60,
+      "end": 62,
+      "title": "马赛克空间拼接",
+      "image": "transition-media/scene-a.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "gl:Mosaic",
+      "transitionSeconds": 1
+    },
+    {
+      "kind": "demo",
+      "start": 62,
+      "end": 64,
+      "title": "横向滑入",
+      "image": "transition-media/scene-b.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "slide",
+      "transitionSeconds": 0.6
+    },
+    {
+      "kind": "demo",
+      "start": 64,
+      "end": 66,
+      "title": "圆形揭示",
+      "image": "transition-media/scene-a.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "radial",
+      "transitionSeconds": 0.6
+    },
+    {
+      "kind": "demo",
+      "start": 66,
+      "end": 68,
+      "title": "擦除",
+      "image": "transition-media/scene-b.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "wipe",
+      "transitionSeconds": 0.6
+    },
+    {
+      "kind": "demo",
+      "start": 68,
+      "end": 70,
+      "title": "透视翻入",
+      "image": "transition-media/scene-a.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "flip",
+      "transitionSeconds": 0.6
+    },
+    {
+      "kind": "demo",
+      "start": 70,
+      "end": 72,
+      "title": "汇聚展开",
+      "image": "transition-media/scene-b.svg",
+      "mediaSize": [
+        1920,
+        1080
+      ],
+      "mediaBox": [
+        0,
+        0,
+        1920,
+        1080
+      ],
+      "transition": "converge",
+      "transitionSeconds": 0.6
+    }
+  ],
+  "captions": [
+    {
+      "start": 0,
+      "end": 2,
+      "text": "30 种 GL 转场 + 5 种基础转场"
+    },
+    {
+      "start": 2,
+      "end": 4,
+      "text": "01  gl:BookFlip\n书页翻转"
+    },
+    {
+      "start": 4,
+      "end": 6,
+      "text": "02  gl:InvertedPageCurl\n纸张卷页"
+    },
+    {
+      "start": 6,
+      "end": 8,
+      "text": "03  gl:Cube\n立方体旋转"
+    },
+    {
+      "start": 8,
+      "end": 10,
+      "text": "04  gl:Doorway\n双门开启"
+    },
+    {
+      "start": 10,
+      "end": 12,
+      "text": "05  gl:GridFlip\n网格翻牌"
+    },
+    {
+      "start": 12,
+      "end": 14,
+      "text": "06  gl:CrossWarp\n交叉扭曲"
+    },
+    {
+      "start": 14,
+      "end": 16,
+      "text": "07  gl:CrossZoom\n交叉缩放模糊"
+    },
+    {
+      "start": 16,
+      "end": 18,
+      "text": "08  gl:GlitchMemories\n色散故障闪回"
+    },
+    {
+      "start": 18,
+      "end": 20,
+      "text": "09  gl:Fade\n柔和叠化"
+    },
+    {
+      "start": 20,
+      "end": 22,
+      "text": "10  gl:DirectionalWarp\n定向扭曲推进"
+    },
+    {
+      "start": 22,
+      "end": 24,
+      "text": "11  gl:DreamyZoom\n梦幻旋转缩放"
+    },
+    {
+      "start": 24,
+      "end": 26,
+      "text": "12  gl:Swap\n前后景换位"
+    },
+    {
+      "start": 26,
+      "end": 28,
+      "text": "13  gl:WindowBlinds\n百叶窗切换"
+    },
+    {
+      "start": 28,
+      "end": 30,
+      "text": "14  gl:WindowSlices\n窗口切片"
+    },
+    {
+      "start": 30,
+      "end": 32,
+      "text": "15  gl:WaterDrop\n水滴涟漪"
+    },
+    {
+      "start": 32,
+      "end": 34,
+      "text": "16  gl:Ripple\n波纹扩散"
+    },
+    {
+      "start": 34,
+      "end": 36,
+      "text": "17  gl:Swirl\n旋涡扭转"
+    },
+    {
+      "start": 36,
+      "end": 38,
+      "text": "18  gl:Morph\n画面形变融合"
+    },
+    {
+      "start": 38,
+      "end": 40,
+      "text": "19  gl:GlitchDisplace\n位移故障"
+    },
+    {
+      "start": 40,
+      "end": 42,
+      "text": "20  gl:Pixelize\n像素化融合"
+    },
+    {
+      "start": 42,
+      "end": 44,
+      "text": "21  gl:Hexagonalize\n六边形像素化"
+    },
+    {
+      "start": 44,
+      "end": 46,
+      "text": "22  gl:PolkaDotsCurtain\n圆点幕布"
+    },
+    {
+      "start": 46,
+      "end": 48,
+      "text": "23  gl:CircleIris\n圆形收放"
+    },
+    {
+      "start": 48,
+      "end": 50,
+      "text": "24  gl:BowTieHorizontal\n蝴蝶结擦除"
+    },
+    {
+      "start": 50,
+      "end": 52,
+      "text": "25  gl:StarWipe\n星形揭示"
+    },
+    {
+      "start": 52,
+      "end": 54,
+      "text": "26  gl:Wind\n风吹颗粒"
+    },
+    {
+      "start": 54,
+      "end": 56,
+      "text": "27  gl:BurnThrough\n灼烧揭示"
+    },
+    {
+      "start": 56,
+      "end": 58,
+      "text": "28  gl:FilmBurn\n胶片漏光"
+    },
+    {
+      "start": 58,
+      "end": 60,
+      "text": "29  gl:InkBleed\n墨迹晕染"
+    },
+    {
+      "start": 60,
+      "end": 62,
+      "text": "30  gl:Mosaic\n马赛克空间拼接"
+    },
+    {
+      "start": 62,
+      "end": 64,
+      "text": "31  slide\n横向滑入"
+    },
+    {
+      "start": 64,
+      "end": 66,
+      "text": "32  radial\n圆形揭示"
+    },
+    {
+      "start": 66,
+      "end": 68,
+      "text": "33  wipe\n擦除"
+    },
+    {
+      "start": 68,
+      "end": 70,
+      "text": "34  flip\n透视翻入"
+    },
+    {
+      "start": 70,
+      "end": 72,
+      "text": "35  converge\n汇聚展开"
+    }
+  ],
+  "keywords": [],
+  "omit_outro": true
+}

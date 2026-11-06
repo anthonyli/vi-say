@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import patch
 
@@ -71,6 +72,30 @@ class VoiceSelectionTests(unittest.TestCase):
         for name in ("..", ".", "../male"):
             with self.assertRaises(ValueError):
                 voice.select_voice(self.library, self.selection, name)
+
+    def test_pinned_default_is_reused_across_episodes_without_random_selection(self):
+        voice.select_voice(self.library, self.library / 'fixed-voice.json', 'female')
+        with patch.object(voice.secrets, 'choice', side_effect=AssertionError('must not choose randomly')):
+            self.assertEqual(voice.select_voice(self.library, self.selection)['voice'], 'female')
+            self.assertEqual(voice.select_voice(self.library, self.root / 'work/another.json')['voice'], 'female')
+
+    def test_changed_pinned_reference_fails_instead_of_falling_back_to_another_voice(self):
+        voice.select_voice(self.library, self.library / 'fixed-voice.json', 'female')
+        (self.library / 'female/reference.wav').write_bytes(b'changed speaker')
+        with self.assertRaisesRegex(ValueError, 'assets changed'):
+            voice.select_voice(self.library, self.selection)
+
+    def test_invalid_pinned_alias_cannot_recurse(self):
+        (self.library / 'fixed-voice.json').write_text(json.dumps({'voice': 'default'}))
+        with self.assertRaisesRegex(ValueError, 'Invalid pinned'):
+            voice.select_voice(self.library, self.selection)
+
+    def test_default_synthesis_config_uses_pin_even_if_old_alias_points_elsewhere(self):
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+        from local_voice import default_voice_config
+        voice.select_voice(self.library, self.library / 'fixed-voice.json', 'female')
+        (self.library / 'voice-preferences.json').symlink_to('male/voice-preferences.json')
+        self.assertEqual(default_voice_config(self.library), (self.library / 'female/voice-preferences.json').resolve())
 
 
 if __name__ == "__main__":

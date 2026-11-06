@@ -6,6 +6,8 @@ import {hasCartoonTransition, validateTransitionPool} from './cartoon-transition
 import {validateModules,validateEffects} from './effects/contract.mjs';
 import {BUSINESS_FIELDS,businessTimes} from './effects/business.mjs';
 import {effectTimes} from './effects/motion.mjs';
+import {isGLTransition} from './gl-transitions.mjs';
+import {sceneTransitionSettings,transitionSeconds,transitionPlan} from './cartoon-motion.mjs';
 export const style = JSON.parse(fs.readFileSync(new URL('../production/style.json', import.meta.url), 'utf8'));
 const finite = x => typeof x === 'number' && Number.isFinite(x);
 const fail = msg => {throw new Error(`cartoon: ${msg}`);};
@@ -23,9 +25,10 @@ export function validateCartoon(doc) {
     if (!m || m.fps!==doc.fps || Math.abs(m.duration-doc.duration)>.001 || !Array.isArray(m.values) || m.values.length!==Math.ceil(doc.duration*doc.fps) || m.values.some(x=>!finite(x)||x<0||x>1) || !/^[a-f0-9]{64}$/.test(m.audio_sha256??'')) fail('mouth motion must match the final audio duration/fps/hash');
   }
   if (!Array.isArray(doc.cartoonScenes) || !doc.cartoonScenes.length) fail('scenes required');
+  if(doc.transitionSeed!==undefined)text(doc.transitionSeed,256,'transitionSeed');
   let end = 0;
   const cast=new Map();
-  for (const s of doc.cartoonScenes) {
+  for (const [index,s] of doc.cartoonScenes.entries()) {
     if (!['hero','steps','demo','cta','stage'].includes(s.kind)) fail('unsupported scene kind');
     if (!finite(s.start) || !finite(s.end) || Math.abs(s.start-end) > .001 || s.end-s.start < 1.5) fail('contiguous scenes of at least 1.5 seconds required');
     if (s.end > doc.duration + .001) fail('scene exceeds audio');
@@ -35,6 +38,11 @@ export function validateCartoon(doc) {
     text(s.title, 22, 'title');
     if (s.characterSide && !['left','right'].includes(s.characterSide)) fail('characterSide must be left or right');
     if (s.transition !== undefined && !hasCartoonTransition(s.transition)) fail('unsupported transition');
+    if(isGLTransition(s.transition)&&s===doc.cartoonScenes[0])fail('GL transition needs a previous scene');
+    const settings=sceneTransitionSettings(s,index,doc),kind=settings.name;
+    if(s.transitionParams!==undefined&&index===0)fail('transitionParams require an incoming transition');
+    if(s.transitionSeconds!==undefined&&(!finite(s.transitionSeconds)||s.transitionSeconds<.1||s.transitionSeconds>1.5||index===0))fail('transitionSeconds requires an incoming transition of .1..1.5 seconds');
+    if(index&&transitionSeconds(s,kind,settings.alias)>s.end-s.start)fail('transition must complete within its incoming scene');
     if (s.outroId) {
       const outro=JSON.parse(fs.readFileSync(new URL('../production/outro.json',import.meta.url),'utf8'));
       if (s.outroId!==outro.id || s.kind!=='cta' || s!==doc.cartoonScenes.at(-1) || JSON.stringify(s.items?.map(x=>x.text))!==JSON.stringify(outro.items.map(x=>x.text))) fail('shared outro must end the video with the canonical actions');
@@ -70,11 +78,16 @@ export async function mapCartoonAssets(doc, resolve) {
 }
 export function cartoonStillPoints(doc) {
   if (!doc.cartoonScenes) return null;
+  const plan=transitionPlan(doc);
   return doc.cartoonScenes.flatMap((s, i) => {
+    const cut=plan[i-1];
     const times = [0, .35, Math.min(s.end-s.start-.25, 1.2),
       ...(s.kind==='hero'&&s.end-s.start>3.3?[2,3]:[]),
       ...(s.items ?? []).map(x => x.at + style.motion.enter),
-      ...(s.effects??[]).flatMap(e=>Object.hasOwn(BUSINESS_FIELDS,e.type)?businessTimes(e):effectTimes(e)).filter(t=>t>=0&&t<s.end-s.start)];
-    return [...new Set(times)].map(t => ({frame: Math.min(Math.ceil(doc.duration*doc.fps)-1, Math.round((s.start+t)*doc.fps)), sceneId: `cartoon-${i+1}`, reason: 'entry / semantic state'}));
+      ...(s.effects??[]).flatMap(e=>Object.hasOwn(BUSINESS_FIELDS,e.type)?businessTimes(e):effectTimes(e)).filter(t=>t>=0&&t<s.end-s.start),
+      ...(cut?[cut.seconds/2,cut.seconds]:[])];
+    const points=times.map(t=>({frame:Math.min(Math.ceil(doc.duration*doc.fps)-1,Math.round((s.start+t)*doc.fps)),sceneId:`cartoon-${i+1}`,reason:'entry / semantic state'}));
+    if(cut)for(const [offset,reason] of [[-1,'before transition'],[0,'transition start'],[Math.floor(cut.frames/4),'transition quarter'],[Math.floor(cut.frames/2),'transition middle'],[Math.floor(cut.frames*3/4),'transition three-quarter'],[cut.frames,'transition end']])points.push({frame:Math.min(Math.ceil(doc.duration*doc.fps)-1,cut.startFrame+offset),sceneId:`cartoon-${i+1}`,reason,transition:cut.kind});
+    return [...new Map(points.map(p=>[p.frame,p])).values()];
   });
 }

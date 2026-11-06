@@ -15,15 +15,17 @@
 | 统一片尾 | `assets/production/outro.json` | 新图标或新的互动布局时 |
 | 发布口吻 | [发布文案](stages/publishing-copy.md) | 通常无需改代码 |
 | Bot、玻璃、连接、汇聚分发、路径、聚焦与高亮 | 项目 `modules` 和场景 `effects`，见 [动画模块接口](tools/animation-modules.md) | 已实现模块直接选择；新类型同时扩展 contract、motion、绘制与实际样片 |
+| GL shader 与原有转场 | [GL 转场](tools/gl-transitions.md) 的 `transition/transitionSeconds/transitionParams` | 30 种 GL 已接入统一合成与自动轮换；新 shader 核实元数据、参数和样片后加入目录 |
 
 配置只能使用当前实现支持的字段。修改全局默认前先在任务副本验证；单期偏好写入本期记录，不自动变为所有任务的默认。
 
 ## 新增或替换小龙转场
 
-现有十二种效果集中在 `assets/remotion/cartoon-transitions.mjs` 的 `CARTOON_TRANSITIONS` 注册表。调用关系：
+合并后的五种 CSS 基础机制集中在 `assets/remotion/cartoon-transitions.mjs` 的 `CARTOON_TRANSITIONS` 注册表。调用关系：
 
 ```text
 场景 transition／style.json 自动转场池
+  → transition-selection.mjs 按显式指定、场景关系及未使用项规划
   → cartoon-contract.mjs 校验效果确已实现
   → cartoon-motion.mjs 统一计算时间进度和缓动
   → cartoon-transitions.mjs 生成转场样式
@@ -34,8 +36,10 @@
 
 1. 在注册表增加一个具名函数，接收已经缓动的 `p`（0 到 1），返回 React/CSS 样式对象。需要多个文件时可从独立模块导入，注册表保留统一入口。
 2. 效果只依赖传入进度，不用实时时钟、无种子随机或跨帧状态。完成时样式由统一调用层归为 `{}`，使后一场完整呈现。需要新素材或参数时必须同时扩展校验与素材映射，不在样式中偷偷引用外部资源。
-3. 指定场景的 `transition` 即可使用已注册效果。只有希望它参与自动轮换时，才加入 `style.json.motion.transitionKinds`；注册表与默认选择池分开维护，未实现的名称会被拒绝。
+3. 指定场景的 `transition` 即可使用已注册效果。当前全部 35 项已在 `style.json.motion.transitionKinds` 中；新增效果验证后同步加入，并在 `transition-selection.mjs` 配置合适的场景分组。注册表与选择池分开维护，未实现的名称会被拒绝。
 4. 补充效果的起始、中间和完成状态测试，实渲接点并看连续过程。核对露底、重影、标题叠字、可读落点和真实动作时长，再决定是否加入默认池。
+
+GL shader 走独立双场景合成，不返回 CSS 样式。当前 30 项的名称、默认参数、建议时长、作者、许可与源码哈希在 `assets/remotion/gl-transitions.json`，类型与参数校验在同名 `.mjs`，绘制在 `src/gl-transition.jsx`。新增 GL 项同时补入 `examples/transitions.json` 并实渲；`catalog` 与打包会拒绝没有可运行样例的转场。默认池允许已注册的 CSS 与 GL 名称，自动选择结果会写入编译时间轴，详情见 [GL 转场](tools/gl-transitions.md)。
 
 替换某个已有效果可修改同名函数；需要保留旧项目表现时使用新名称。默认池的种子选择保持确定性。当前这些场景固定为 1920×1080 横版，新比例要同时实现布局与几何。
 
@@ -73,6 +77,8 @@ node --test assets/remotion/tests/cartoon-contract.test.mjs assets/remotion/test
 
 ## 接入其他渲染工具
 
-当前未附通用 GSAP／WebGL 渲染工程。已有可信本地工程可作为专项适配，但先确认输入接口、锁定依赖、画布、帧率、时长与按时间 seek 的逐帧导出；关闭不符本期的默认品牌和声音行为。复用本技能最终音轨，先验证连续样片与所有接点再扩展，不靠实时计时器录制冒充确定性渲染。
+当前新增的第三方转场库只保留 GL Transitions，30 种 shader 已接入现有 Remotion 场景，见 [GL 转场](tools/gl-transitions.md)。其他渲染工具的成品视频仍可通过原有 `demo.video` 使用；没有附带其他动画库的专用适配器。
+
+其他可信本地工程可作为专项适配，先确认输入接口、锁定依赖、画布、帧率、时长与按时间 seek 的逐帧导出；关闭不符本期的默认品牌和声音行为。复用本技能最终音轨，先验证连续样片与所有接点再扩展，不靠实时计时器录制冒充确定性渲染。
 
 公共能力更新后，用不同解释结构的主题检查新实现，而不只是换产品名。实际观察支持到哪里就描述到哪里；自动测试与文档完整不代表任意主题同样达标。

@@ -32,7 +32,14 @@
 
 多个音色分别放在 `private/voice/female/`、`private/voice/male/` 等目录中，每个目录各有 `voice-preferences.json`、参考 WAV、准确转写和授权记录。子目录中的模型相对路径相应改为 `../../models/...`，共用项目内同一份权重。单音色的原有目录结构仍可使用。
 
-随机选择只在一期开始时执行一次，结果保存到该期的工作目录。例如：
+固定音色时，先明确选择已有授权参考并创建项目默认配置记录，后续默认调用复用这一选择：
+
+```sh
+python scripts/select_voice.py --voice-root private/voice --voice female --output private/voice/fixed-voice.json
+python scripts/select_voice.py --voice-root private/voice --output work/episode/voice-selection.json --print-config
+```
+
+`fixed-voice.json` 是长期必要配置，引用的参考或配置改变时拒绝继续，不回退成其他声音。每期记录仍写 `work/`。没有项目固定记录时保留旧版随机选择行为；用户明确要求随机时可用 `--voice random`，随机只在一期开始时执行一次。例如：
 
 ```sh
 VOICE_CONFIG="$(.venv/bin/python "$SKILL_DIR/scripts/select_voice.py" --voice-root private/voice --voice random --output work/episode/voice-selection.json --print-config)"
@@ -41,7 +48,7 @@ VOICE_CONFIG="$(.venv/bin/python "$SKILL_DIR/scripts/select_voice.py" --voice-ro
 
 `--voice male` 或 `--voice female` 可明确指定；其他音色使用自己的目录名。随机池只包含当前制作项目中已配置且已有授权的音色。正文、补录和片尾复用同一个选择文件；已有文件不会重新抽取，音色配置、参考音频或转写改变时会拒绝复用。新一期使用新的选择文件。选择文件只固定参考配置，不锁定每次生成的实际音色，也不代表合成或听审通过。跨调用补录/择段时按 [声音节点](../stages/voice.md) 核对最终声线连续性。
 
-不指定 `--config` 时仍读取 `private/voice/voice-preferences.json`；多音色项目可将这个默认入口设为某个音色配置的项目内软链接。
+不指定 `--config` 时优先校验并读取 `private/voice/fixed-voice.json` 所绑定的配置；没有固定记录时兼容读取 `private/voice/voice-preferences.json`。多音色项目也可将后者设为某个音色配置的项目内软链接；软链接漂移不会覆盖已固定的项目选择。显式 `--config` 用于用户有意选择其他已授权配置。
 
 ## Mac MLX
 
@@ -62,7 +69,44 @@ python3 -m venv .venv
 .venv/bin/python "$SKILL_DIR/scripts/local_voice.py" --text work/narration.txt --output work/raw-v1.wav
 ```
 
-`--check-only` 不导入推理后端、不合成。正式合成前强制 HF／Transformers 离线，只传本地模型与显式参考转写，关闭自动 ASR、播放和流式输出；整稿一次交给上游，不按字幕切句。默认语言 Chinese、原速 1.0、max-tokens 4096，token 上限不证明全文已读完。
+`--check-only` 不导入推理后端、不合成。正式合成前强制 HF／Transformers 离线，只传本地模型与显式参考转写，关闭自动 ASR、播放和流式输出。默认语言 Chinese、原速1.0、max-tokens 4096，token上限不证明全文已读完。兼容旧配置时使用整稿一次生成；配置了下面的 `anchored` 策略时由本仓库脚本先分段，不能依赖上游 `split_pattern`，因为当前MLX的Base克隆分支在普通分段逻辑之前已返回。
+
+### 固定参考与长口播声线控制
+
+参考配置可以包含生成策略；命令行同名参数可用于明确的对照试验：
+
+```json
+{
+  "generation": {
+    "mode": "anchored",
+    "segment_chars": 120,
+    "seed": 42,
+    "temperature": 0.4,
+    "top_p": 1.0,
+    "top_k": 50
+  }
+}
+```
+
+这是初测策略，不是已证明适用于全部音色的最佳参数。`seed`帮助同环境复现，不能保证身份一致；较低温度也可能降低表达自然度。`anchored` 按完整句子组织段落，超过字符上限的单句会报错，要求改写或显式调大限制，不按字幕或单个字硬切。模型只加载一次，每段都重新传入同一原始参考与转写；重新设定seed，不延续上一段生成声作为新参考。采样参数在Mac与CPU单次入口中真实传给后端。
+
+```sh
+.venv/bin/python scripts/local_voice.py --config private/voice/voice-preferences.json --text work/episode/spoken.txt --output work/episode/anchored-candidate.wav --mode anchored --segment-chars 120 --seed 42 --temperature 0.4
+```
+
+每次输出同名 `.generation.json`，记录参考/转写/模型内容哈希、固定音色ID、实际采样参数、各段音轨哈希及最终采样区间。按实际PCM采样拼接，不变速、不重叠人声、不为画面补静音；参考、转写或模型在准备后发生变化会失败。元数据与WAV均不覆盖旧文件。
+
+需要内容锁时，以 `scripts/voice_consistency.py` 的 `reference_identity(model, reference_audio, reference_text)` 计算实际哈希，将 `{"schema_version":1,"id":"项目自定音色ID","assets":计算结果}` 写入当前参考配置的 `voice_lock`；不要手填占位哈希。锁覆盖模型权重、分词器与配置内容，路径名相同也不能掩盖权重替换。配置及音色锁放项目私有资料，不分发真人参考、哈希或本期声音偏好。
+
+固定输入与分段都不自动证明听感稳定。先用相同全文做连续/分段对照，再做目标时长测试；分别实际听查每个接点、开头/中间/结尾及整轨。说话人相似度可辅助定位，阈值需校准，不能以ASR、单一相似度或响度检查清除用户已报告的变声阻塞项。
+
+可选本地诊断复用已安装Qwen模型的说话人编码器，不另下模型。以8秒窗口、4秒步长比较原始固定参考，也记录相对该音轨首窗口的变化供定位；首窗口只用于诊断，不成为新的合成参考。它是同模型辅助指标，没有校准阈值，不自动输出通过结论。
+
+```sh
+.venv/bin/python scripts/check_voice_identity.py --config private/voice/voice-preferences.json --audio work/episode/continuous-candidate.wav --audio work/episode/anchored-candidate.wav --output work/episode/speaker-comparison.json
+```
+
+该诊断目前仅支持MLX Qwen，输入与输出保持本地，输出新报告，不覆盖旧结果。不要与TTS或ASR同时占用有限推理资源。旧的CPU可续跑入口仍使用其原采样逻辑；需要显式固定采样参数时使用本节的 `local_voice.py` 入口。
 
 ### mlx-audio 0.5.7 的 ICL 长度兼容
 

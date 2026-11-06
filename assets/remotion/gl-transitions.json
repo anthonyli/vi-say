@@ -1,0 +1,674 @@
+{
+  "package": "gl-transitions",
+  "version": "2.5.0",
+  "transitions": [
+    {
+      "name": "gl:Fade",
+      "shader": "Fade",
+      "label": "柔和叠化",
+      "category": "柔和衔接",
+      "seconds": 0.6,
+      "preview": "https://gl-transitions.com/editor/Fade",
+      "author": "gre",
+      "license": "MIT",
+      "shaderSha256": "4fbafcd1e5b536b37e256c27a6d7a3d217460b3a6dea0cfee343c3db8b06c5ed",
+      "params": {}
+    },
+    {
+      "name": "gl:CrossWarp",
+      "shader": "CrossWarp",
+      "label": "交叉扭曲",
+      "category": "空间推进",
+      "seconds": 0.8,
+      "preview": "https://gl-transitions.com/editor/CrossWarp",
+      "author": "Eke Péter <peterekepeter@gmail.com>",
+      "license": "MIT",
+      "shaderSha256": "a3a8a4800489f26f8ff3be6b63ccef2ab53279d97df16d469db3d4f57b7df381",
+      "params": {}
+    },
+    {
+      "name": "gl:CrossZoom",
+      "shader": "CrossZoom",
+      "label": "交叉缩放模糊",
+      "category": "空间推进",
+      "seconds": 0.8,
+      "preview": "https://gl-transitions.com/editor/CrossZoom",
+      "author": "rectalogic",
+      "license": "MIT",
+      "shaderSha256": "a30adba2a78deac0ac114a30ea285e972fdd7d488ed0cde90e15bc0eef333e84",
+      "params": {
+        "strength": {
+          "type": "float",
+          "default": 0.4,
+          "min": 0,
+          "max": 1,
+          "description": "Blur strength"
+        }
+      }
+    },
+    {
+      "name": "gl:DirectionalWarp",
+      "shader": "DirectionalWarp",
+      "label": "定向扭曲推进",
+      "category": "空间推进",
+      "seconds": 0.8,
+      "preview": "https://gl-transitions.com/editor/DirectionalWarp",
+      "author": "pschroen",
+      "license": "MIT",
+      "shaderSha256": "9b4988a12affa2fc89a7a1d87ad2df8c8bfaf185fc83e958188e5c674dbf03ce",
+      "params": {
+        "smoothness": {
+          "type": "float",
+          "default": 0.1,
+          "description": "Softness of the edge"
+        },
+        "direction": {
+          "type": "vec2",
+          "default": [
+            -1,
+            1
+          ],
+          "description": "Direction of the wipe"
+        }
+      }
+    },
+    {
+      "name": "gl:DreamyZoom",
+      "shader": "DreamyZoom",
+      "label": "梦幻旋转缩放",
+      "category": "空间推进",
+      "seconds": 0.9,
+      "preview": "https://gl-transitions.com/editor/DreamyZoom",
+      "author": "Zeh Fernando",
+      "license": "MIT",
+      "shaderSha256": "8d3b21accab1dafe21e35c131aec87ce494977f43671ae3d318b3b4dde1ed259",
+      "params": {
+        "rotation": {
+          "type": "float",
+          "default": 6
+        },
+        "scale": {
+          "type": "float",
+          "default": 1.2
+        }
+      }
+    },
+    {
+      "name": "gl:BookFlip",
+      "shader": "BookFlip",
+      "label": "书页翻转",
+      "category": "立体翻页",
+      "seconds": 1,
+      "preview": "https://gl-transitions.com/editor/BookFlip",
+      "author": "hong",
+      "license": "MIT",
+      "shaderSha256": "9ad879d44c84b47f5c077030d3a6301fb2542ecc4835a5b4300a95be4e71bc74",
+      "params": {}
+    },
+    {
+      "name": "gl:InvertedPageCurl",
+      "shader": "InvertedPageCurl",
+      "label": "纸张卷页",
+      "category": "立体翻页",
+      "seconds": 1,
+      "preview": "https://gl-transitions.com/editor/InvertedPageCurl",
+      "author": "Hewlett-Packard",
+      "license": "BSD 3 Clause",
+      "shaderSha256": "108cebf8c85984b4827ac177d85c58c1e215308e5dbef87187a9f4335c2f00d3",
+      "params": {}
+    },
+    {
+      "name": "gl:Cube",
+      "shader": "Cube",
+      "label": "立方体旋转",
+      "category": "立体翻页",
+      "seconds": 1,
+      "preview": "https://gl-transitions.com/editor/Cube",
+      "author": "gre",
+      "license": "MIT",
+      "shaderSha256": "908ff08f54ee4f1db13a0cea2621a4024576fda5694fbbf1cea08ad046edc465",
+      "params": {
+        "persp": {
+          "type": "float",
+          "default": 0.7,
+          "min": 0,
+          "max": 1,
+          "description": "Amount of perspective"
+        },
+        "unzoom": {
+          "type": "float",
+          "default": 0.3
+        },
+        "reflection": {
+          "type": "float",
+          "default": 0.4,
+          "min": 0,
+          "max": 1,
+          "description": "Strength of the reflection"
+        },
+        "floating": {
+          "type": "float",
+          "default": 3
+        }
+      }
+    },
+    {
+      "name": "gl:Doorway",
+      "shader": "Doorway",
+      "label": "双门开启",
+      "category": "立体翻页",
+      "seconds": 1,
+      "preview": "https://gl-transitions.com/editor/Doorway",
+      "author": "gre",
+      "license": "MIT",
+      "shaderSha256": "a68a916ffc50abf5c4e646494da44c02c6e898dbc3acec2272653a264a50abb8",
+      "params": {
+        "reflection": {
+          "type": "float",
+          "default": 0.4,
+          "description": "Strength of the reflection"
+        },
+        "perspective": {
+          "type": "float",
+          "default": 0.4,
+          "description": "Amount of perspective"
+        },
+        "depth": {
+          "type": "float",
+          "default": 3
+        }
+      }
+    },
+    {
+      "name": "gl:Swap",
+      "shader": "Swap",
+      "label": "前后景换位",
+      "category": "立体翻页",
+      "seconds": 1,
+      "preview": "https://gl-transitions.com/editor/Swap",
+      "author": "gre",
+      "license": "MIT",
+      "shaderSha256": "9400e6e61331cb9f62e26b70781928c80d48139ac29b1352a5e4bcd5f0c726ab",
+      "params": {
+        "reflection": {
+          "type": "float",
+          "default": 0.4,
+          "description": "Strength of the reflection"
+        },
+        "perspective": {
+          "type": "float",
+          "default": 0.2,
+          "description": "Amount of perspective"
+        },
+        "depth": {
+          "type": "float",
+          "default": 3
+        }
+      }
+    },
+    {
+      "name": "gl:GridFlip",
+      "shader": "GridFlip",
+      "label": "网格翻牌",
+      "category": "分片重组",
+      "seconds": 1,
+      "preview": "https://gl-transitions.com/editor/GridFlip",
+      "author": "TimDonselaar",
+      "license": "MIT",
+      "shaderSha256": "f84096ffe6fc44808189a381a4e48dfde949beabed8df110fb45e68f6557810c",
+      "params": {
+        "size": {
+          "type": "ivec2",
+          "default": [
+            4,
+            4
+          ],
+          "description": "Number of tiles (columns, rows)"
+        },
+        "pause": {
+          "type": "float",
+          "default": 0.1
+        },
+        "dividerWidth": {
+          "type": "float",
+          "default": 0.05
+        },
+        "bgcolor": {
+          "type": "vec4",
+          "default": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "color": true,
+          "description": "Color behind the tiles"
+        },
+        "randomness": {
+          "type": "float",
+          "default": 0.1
+        }
+      }
+    },
+    {
+      "name": "gl:WindowBlinds",
+      "shader": "WindowBlinds",
+      "label": "百叶窗切换",
+      "category": "分片重组",
+      "seconds": 0.8,
+      "preview": "https://gl-transitions.com/editor/WindowBlinds",
+      "author": "Fabien Benetou",
+      "license": "MIT",
+      "shaderSha256": "418d400c85cab13a0aa7235efb772fc8cd0da2d82d30518803861665b282edfd",
+      "params": {}
+    },
+    {
+      "name": "gl:WindowSlices",
+      "shader": "WindowSlices",
+      "label": "窗口切片",
+      "category": "分片重组",
+      "seconds": 0.8,
+      "preview": "https://gl-transitions.com/editor/WindowSlices",
+      "author": "gre",
+      "license": "MIT",
+      "shaderSha256": "128052b76eaa2802487cbc8940178daa54c2e91bfd0e157de69f2d6295e51449",
+      "params": {
+        "count": {
+          "type": "float",
+          "default": 10,
+          "description": "Number of slices"
+        },
+        "smoothness": {
+          "type": "float",
+          "default": 0.5,
+          "description": "Softness of the slices' edges"
+        }
+      }
+    },
+    {
+      "name": "gl:WaterDrop",
+      "shader": "WaterDrop",
+      "label": "水滴涟漪",
+      "category": "液体形变",
+      "seconds": 1,
+      "preview": "https://gl-transitions.com/editor/WaterDrop",
+      "author": "Paweł Płóciennik",
+      "license": "MIT",
+      "shaderSha256": "35c80cdb1b528c3da5e5a993c4133dd0fef4d8c288909fb0d8daca4e4c74ef2b",
+      "params": {
+        "amplitude": {
+          "type": "float",
+          "default": 30,
+          "description": "Frequency of the ripples"
+        },
+        "speed": {
+          "type": "float",
+          "default": 30,
+          "description": "Speed of the ripples"
+        }
+      }
+    },
+    {
+      "name": "gl:Ripple",
+      "shader": "Ripple",
+      "label": "波纹扩散",
+      "category": "液体形变",
+      "seconds": 0.9,
+      "preview": "https://gl-transitions.com/editor/Ripple",
+      "author": "gre",
+      "license": "MIT",
+      "shaderSha256": "3d71067791beccc32c0a388260ac099d8213e5fd312d896a4a46f1285b94b9d1",
+      "params": {
+        "amplitude": {
+          "type": "float",
+          "default": 100,
+          "description": "Frequency of the ripples"
+        },
+        "speed": {
+          "type": "float",
+          "default": 50,
+          "description": "Speed of the ripples"
+        }
+      }
+    },
+    {
+      "name": "gl:Swirl",
+      "shader": "Swirl",
+      "label": "旋涡扭转",
+      "category": "液体形变",
+      "seconds": 0.9,
+      "preview": "https://gl-transitions.com/editor/Swirl",
+      "author": "Sergey Kosarevsky",
+      "license": "MIT",
+      "shaderSha256": "fbbea8a885ed8cdf913fe481ee09e8897a79fd4f7c9ec6a1f459f6010147301e",
+      "params": {}
+    },
+    {
+      "name": "gl:Morph",
+      "shader": "Morph",
+      "label": "画面形变融合",
+      "category": "液体形变",
+      "seconds": 0.8,
+      "preview": "https://gl-transitions.com/editor/Morph",
+      "author": "paniq",
+      "license": "MIT",
+      "shaderSha256": "be0b79ca27ba19dacd350a8f20988ab4b847937585fac878ac08ecc684fdcfba",
+      "params": {
+        "strength": {
+          "type": "float",
+          "default": 0.1,
+          "description": "Strength of the displacement"
+        }
+      }
+    },
+    {
+      "name": "gl:GlitchMemories",
+      "shader": "GlitchMemories",
+      "label": "色散故障闪回",
+      "category": "数字故障",
+      "seconds": 0.65,
+      "preview": "https://gl-transitions.com/editor/GlitchMemories",
+      "author": "Gunnar Roth",
+      "license": "MIT",
+      "shaderSha256": "95ac53da9e6db7efc350ea26cbfb71e9ee7ec2a23d68b044cb9fa41c1118b407",
+      "params": {}
+    },
+    {
+      "name": "gl:GlitchDisplace",
+      "shader": "GlitchDisplace",
+      "label": "位移故障",
+      "category": "数字故障",
+      "seconds": 0.65,
+      "preview": "https://gl-transitions.com/editor/GlitchDisplace",
+      "author": "Matt DesLauriers",
+      "license": "MIT",
+      "shaderSha256": "4bd0134076bc71fce46da4d359a7965aee32bb0d7e301e3945dfe0d59e98abe1",
+      "params": {}
+    },
+    {
+      "name": "gl:Pixelize",
+      "shader": "Pixelize",
+      "label": "像素化融合",
+      "category": "数字故障",
+      "seconds": 0.8,
+      "preview": "https://gl-transitions.com/editor/Pixelize",
+      "author": "gre",
+      "license": "MIT",
+      "shaderSha256": "f5c541b779364dcf92d71f4928efa07c414ffd83a5bfb5b8ca9280a1c73c8b32",
+      "params": {
+        "squaresMin": {
+          "type": "ivec2",
+          "default": [
+            20,
+            20
+          ],
+          "description": "Number of squares at the strongest pixelation"
+        },
+        "steps": {
+          "type": "int",
+          "default": 50,
+          "description": "Number of pixelation steps; 0 for a continuous effect"
+        }
+      }
+    },
+    {
+      "name": "gl:Hexagonalize",
+      "shader": "Hexagonalize",
+      "label": "六边形像素化",
+      "category": "数字故障",
+      "seconds": 0.8,
+      "preview": "https://gl-transitions.com/editor/Hexagonalize",
+      "author": "Fernando Kuteken",
+      "license": "MIT",
+      "shaderSha256": "abcac2efc147d397875a233ad010d72b03986237f0955ae2b18a214987d75c08",
+      "params": {
+        "steps": {
+          "type": "int",
+          "default": 50
+        },
+        "horizontalHexagons": {
+          "type": "float",
+          "default": 20,
+          "description": "Number of hexagons across"
+        }
+      }
+    },
+    {
+      "name": "gl:PolkaDotsCurtain",
+      "shader": "PolkaDotsCurtain",
+      "label": "圆点幕布",
+      "category": "图形遮罩",
+      "seconds": 0.8,
+      "preview": "https://gl-transitions.com/editor/PolkaDotsCurtain",
+      "author": "bobylito",
+      "license": "MIT",
+      "shaderSha256": "1a11af446cf3c50bf58d1a2b1547092e386bdcf1b7dff71179661f6a4c71d29a",
+      "params": {
+        "dots": {
+          "type": "float",
+          "default": 20,
+          "description": "Number of dots across the image"
+        },
+        "center": {
+          "type": "vec2",
+          "default": [
+            0,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "name": "gl:CircleIris",
+      "shader": "CircleIris",
+      "label": "圆形收放",
+      "category": "图形遮罩",
+      "seconds": 0.8,
+      "preview": "https://gl-transitions.com/editor/CircleIris",
+      "author": "Fernando Kuteken",
+      "license": "MIT",
+      "shaderSha256": "181e702df47bd41754c0da32e33347f71767ba649f72f92a2a4bc5ef10987901",
+      "params": {
+        "center": {
+          "type": "vec2",
+          "default": [
+            0.5,
+            0.5
+          ],
+          "description": "Center of the circle"
+        },
+        "backColor": {
+          "type": "vec4",
+          "default": [
+            0.1,
+            0.1,
+            0.1,
+            1
+          ],
+          "color": true,
+          "description": "Background color"
+        }
+      }
+    },
+    {
+      "name": "gl:BowTieHorizontal",
+      "shader": "BowTieHorizontal",
+      "label": "蝴蝶结擦除",
+      "category": "图形遮罩",
+      "seconds": 0.8,
+      "preview": "https://gl-transitions.com/editor/BowTieHorizontal",
+      "author": "huynx",
+      "license": "MIT",
+      "shaderSha256": "fcd134626185864b9c9dd0eb7d713f367e63afc445ace442ace6849a4700ec59",
+      "params": {}
+    },
+    {
+      "name": "gl:StarWipe",
+      "shader": "StarWipe",
+      "label": "星形揭示",
+      "category": "图形遮罩",
+      "seconds": 0.9,
+      "preview": "https://gl-transitions.com/editor/StarWipe",
+      "author": "Ben Lucas",
+      "license": "MIT",
+      "shaderSha256": "304c8cd4848b74c032a8a51907916af4b2f5f2d7ef9dd19a2b26752f3180c448",
+      "params": {
+        "border_thickness": {
+          "type": "float",
+          "default": 0.01,
+          "description": "Thickness of the star's border"
+        },
+        "star_rotation": {
+          "type": "float",
+          "default": 0.75
+        },
+        "border_color": {
+          "type": "vec4",
+          "default": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "color": true,
+          "description": "Color of the star's border"
+        },
+        "star_center": {
+          "type": "vec2",
+          "default": [
+            0.5,
+            0.5
+          ],
+          "description": "Center of the star"
+        }
+      }
+    },
+    {
+      "name": "gl:Wind",
+      "shader": "Wind",
+      "label": "风吹颗粒",
+      "category": "纹理过渡",
+      "seconds": 0.8,
+      "preview": "https://gl-transitions.com/editor/Wind",
+      "author": "gre",
+      "license": "MIT",
+      "shaderSha256": "a6af68366cd1feb21da596e6503994da8bb052c616ec73d4346006837494a01f",
+      "params": {
+        "size": {
+          "type": "float",
+          "default": 0.2,
+          "min": 0,
+          "max": 1,
+          "description": "Width of the ragged edge"
+        },
+        "reversed": {
+          "type": "bool",
+          "default": false,
+          "description": "Wipe from right to left instead"
+        }
+      }
+    },
+    {
+      "name": "gl:BurnThrough",
+      "shader": "BurnThrough",
+      "label": "灼烧揭示",
+      "category": "纹理过渡",
+      "seconds": 1,
+      "preview": "https://gl-transitions.com/editor/BurnThrough",
+      "author": "liubailin2020@gmail.com",
+      "license": "MIT",
+      "shaderSha256": "d572b6d93c74292c14c1feb3cf55eccfc03ffb98a6bfa3b0900162295f6aa0e9",
+      "params": {
+        "burnColor": {
+          "type": "vec3",
+          "default": [
+            1,
+            0.5,
+            0
+          ],
+          "color": true,
+          "description": "Color of the burning edges"
+        }
+      }
+    },
+    {
+      "name": "gl:FilmBurn",
+      "shader": "FilmBurn",
+      "label": "胶片漏光",
+      "category": "纹理过渡",
+      "seconds": 1,
+      "preview": "https://gl-transitions.com/editor/FilmBurn",
+      "author": "Anastasia Dunbar",
+      "license": "MIT",
+      "shaderSha256": "cbd7ffe97b9e582bb0d775f81ddf309a263746d4d48bae08777e788118cb9dac",
+      "params": {
+        "Seed": {
+          "type": "float",
+          "default": 2.31,
+          "description": "Random seed"
+        }
+      }
+    },
+    {
+      "name": "gl:InkBleed",
+      "shader": "InkBleed",
+      "label": "墨迹晕染",
+      "category": "纹理过渡",
+      "seconds": 1,
+      "preview": "https://gl-transitions.com/editor/InkBleed",
+      "author": "gre",
+      "license": "MIT",
+      "shaderSha256": "d60021b4da66c3ccb99c65c4d5009ce1e6a2f5936a8de1d7a3220922cbc734dd",
+      "params": {
+        "drops": {
+          "type": "float",
+          "default": 4,
+          "min": 1,
+          "max": 8,
+          "step": 1,
+          "description": "Number of ink drops"
+        },
+        "tendrils": {
+          "type": "float",
+          "default": 0.7,
+          "min": 0,
+          "max": 1,
+          "description": "How far the curling tendrils reach out of the blooms"
+        },
+        "rim": {
+          "type": "float",
+          "default": 0.5,
+          "min": 0,
+          "max": 1,
+          "description": "How dark the rim of ink at the front of the blooms is"
+        },
+        "seed": {
+          "type": "float",
+          "default": 3,
+          "description": "Random seed for the drop positions and the swirls"
+        }
+      }
+    },
+    {
+      "name": "gl:Mosaic",
+      "shader": "Mosaic",
+      "label": "马赛克空间拼接",
+      "category": "分片重组",
+      "seconds": 1,
+      "preview": "https://gl-transitions.com/editor/Mosaic",
+      "author": "Xaychru",
+      "license": "MIT",
+      "shaderSha256": "0be8036eeeb346a3896445ba30b7e517f32dfb7674a9c690e66773e1e90160f9",
+      "params": {
+        "endx": {
+          "type": "int",
+          "default": 2
+        },
+        "endy": {
+          "type": "int",
+          "default": -1
+        }
+      }
+    }
+  ]
+}

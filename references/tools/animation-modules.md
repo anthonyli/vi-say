@@ -15,6 +15,8 @@ python scripts/production.py render work/effects-demo/project.json --output-dir 
 
 `--preset studio --template business` 选择无角色的产品演示样例，六类业务动效及八种新转场见 [产品演示动效](business-effects.md)。`python scripts/production.py catalog --json` 查询实际支持字段与已验证样例。
 
+需要更多场景切换时读 [GL 转场](gl-transitions.md)；`--template transitions` 提供同一制作入口的 35 种转场无声展示。默认轮换已包含 GL，角色、字幕和声音继续沿用原流程。
+
 `--preset classic` 选择原风格；老项目没有 `modules` 字段时继续原行为。示例模板提供画面编排，不是最终旁白时间；正式有声制作仍按最终音轨重新对齐。`--preview` 使用真正的静音 WAV。
 
 ## 背景、字幕、角色分别选择
@@ -100,6 +102,6 @@ python scripts/mouth_cues.py --audio PROJECT/final.wav --output PROJECT/mouth-cu
 - 参数校验和效果目录：[contract.mjs](../../assets/remotion/effects/contract.mjs)。
 - 确定性动作、路径、形变与阶段进度：[motion.mjs](../../assets/remotion/effects/motion.mjs)。
 - 外观、玻璃、操作、字幕与持久角色层：[src/effects/](../../assets/remotion/src/effects/)。
-- 十二种转场（原有四种与产品演示新增八种）通过场景 `transition` 选择，默认池仍为 `slide/radial/wipe/flip`，注册与添加方式见 [扩展](../extensions.md)。
+- 35 种转场（30 种 GL 与 5 种基础机制）通过场景 `transition` 统一选择；未指定时按场景关系在全部 35 种中轮换。`transitionSeconds` 调整本次时长，GL 的 `transitionParams` 按各 shader 参数校验，见 [GL 转场](gl-transitions.md)。
 
 静态渲染、连续采样、技术检查与听感分开记录。测试通过表示接口和相应行为已验证，不代替新题材的布局与原速审看。

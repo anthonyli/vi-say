@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import style from '../production/style.json' with {type:'json'};
-import {BUSINESS_TRANSITIONS,CARTOON_TRANSITIONS, hasCartoonTransition, validateTransitionPool} from './cartoon-transitions.mjs';
+import {CARTOON_TRANSITIONS,resolveTransition,sequentialTransition,TRANSITION_ALIASES} from './cartoon-transitions.mjs';
+import {isGLTransition,glTransitionPreset} from './gl-transitions.mjs';
+import {shuffledTransitionPool,selectSceneTransitions} from './transition-selection.mjs';
 export const clamp = x => Math.max(0, Math.min(1,x));
 // Opaque replacement keeps one mouth visible. Hysteresis avoids rapid swaps
 // around the energy threshold; it is deterministic for out-of-order renders.
@@ -31,24 +33,44 @@ export function characterPose(scenes, time, enterSeconds=.65,options={}) {
 }
 // A shuffled cycle gives variety while every render worker sees identical choices.
 export function transitionFor(index, seed='dragon-series') {
-  const kinds=[...validateTransitionPool(style.motion.transitionKinds)];let hash=2166136261;
-  for(const c of seed)hash=Math.imul(hash^c.charCodeAt(0),16777619)>>>0;
-  for(let i=kinds.length-1;i>0;i--){hash=(Math.imul(hash,1664525)+1013904223)>>>0;const j=hash%(i+1);[kinds[i],kinds[j]]=[kinds[j],kinds[i]];}
+  const kinds=shuffledTransitionPool(seed,style.motion.transitionKinds);
   return kinds[Math.max(0,index-1)%kinds.length];
 }
-export function transitionStyle(kind,progress) {
-  if(!hasCartoonTransition(kind))throw new Error('Unknown cartoon transition '+kind);
+const settingsFor=(scene,choice)=>({...resolveTransition(choice.name,scene.transitionParams,scene.transitionAlias),
+  ...(choice.selection?{selection:choice.selection}:{})});
+export const sceneTransitionSettings=(scene,index,doc)=>settingsFor(scene,scene.transition!==undefined
+  ?{name:scene.transition,selection:scene.transitionSelection}
+  :selectSceneTransitions(doc,style.motion.transitionKinds)[index]);
+export const sceneTransition=(scene,index,doc)=>sceneTransitionSettings(scene,index,doc).name;
+export const transitionSeconds=(scene,kind,alias=scene.transitionAlias??(Object.hasOwn(TRANSITION_ALIASES,scene.transition)?scene.transition:undefined))=>scene.transitionSeconds??(alias?style.motion.transition:glTransitionPreset(kind)?.seconds??style.motion.transition);
+export function resolveCartoonTransitions(doc){
+  if(!doc.cartoonScenes)return doc;
+  const choices=selectSceneTransitions(doc,style.motion.transitionKinds);
+  return {...doc,cartoonScenes:doc.cartoonScenes.map((s,i)=>{
+    if(!i)return {...s};const settings=settingsFor(s,choices[i]);
+    return {...s,transition:settings.name,...(Object.keys(settings.params).length?{transitionParams:settings.params}:{}),...(settings.alias?{transitionAlias:settings.alias}:{}),...(settings.selection?{transitionSelection:settings.selection}:{})};
+  })};
+}
+export function transitionPlan(doc){
+  return (doc.cartoonScenes??[]).slice(1).map((s,i)=>{
+    const settings=sceneTransitionSettings(s,i+1,doc),kind=settings.name,seconds=transitionSeconds(s,kind,settings.alias),frame=Math.round(s.start*doc.fps),frames=Math.round(seconds*doc.fps);
+    return {sceneIndex:i+1,kind,...(settings.alias?{alias:settings.alias}:{}),...(settings.selection?{selection:settings.selection}:{}),engine:isGLTransition(kind)?'gl':'css',seconds,frames,startFrame:frame,endFrame:frame+frames};
+  });
+}
+export function transitionStyle(kind,progress,params) {
+  const settings=resolveTransition(kind,params);
+  if(!Object.hasOwn(CARTOON_TRANSITIONS,settings.name))throw new Error('GL transitions require the scene compositor');
   if(!Number.isFinite(progress))throw new Error('Transition progress must be finite');
   const p=ease(progress);
   if(p>=1)return {};
-  return CARTOON_TRANSITIONS[kind](p);
+  return CARTOON_TRANSITIONS[settings.name](p,settings.params);
 }
 
 /** Keep two complete text layers from being readable at the same time. */
-export function sceneVisibility({index,frame,duration,transitionFrames,transition,nextTransition}) {
-  const incoming=index>0&&Object.hasOwn(BUSINESS_TRANSITIONS,transition)
+export function sceneVisibility({index,frame,duration,transitionFrames,outgoingTransitionFrames=transitionFrames,transition,nextTransition,transitionAlias,nextTransitionAlias}) {
+  const incoming=index>0&&sequentialTransition(transition,transitionAlias)
     ?ease((frame/transitionFrames-.45)/.55):1;
-  const outgoing=frame>=duration&&Object.hasOwn(BUSINESS_TRANSITIONS,nextTransition)
-    ?1-ease((frame-duration)/(transitionFrames*.45)):1;
+  const outgoing=frame>=duration&&sequentialTransition(nextTransition,nextTransitionAlias)
+    ?1-ease((frame-duration)/(outgoingTransitionFrames*.45)):1;
   return incoming*outgoing;
 }

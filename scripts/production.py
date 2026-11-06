@@ -126,6 +126,7 @@ def compile_project(base,doc,out,*,audio=None,listening=None,preview=False):
               'captions':copy.deepcopy(caption_input),'overlays':[],'styleId':STYLE['id'],'cartoonScenes':copy.deepcopy(doc['scenes']),
               'visualPreview':preview,'bg':STYLE['palette']['white'],'accent':STYLE['palette']['blue']}
     if doc.get('modules') is not None:timeline['modules']=copy.deepcopy(doc['modules'])
+    if 'transitionSeed' in doc:timeline['transitionSeed']=doc['transitionSeed']
     if f.name=='Manrope.ttf':timeline['fontWeightRange']='200 800'
     timeline['series']=doc.get('series','小龙带你看')
     rounded=doc.get('modules',{}).get('character',{}).get('mode')=='rounded'
@@ -146,8 +147,10 @@ def compile_project(base,doc,out,*,audio=None,listening=None,preview=False):
                 raise ValueError('Provide mediaSize for vector demo media with focus effects')
     # Validate before reserving output; the exact renderer contract is authoritative.
     cmd=['node','--input-type=module','-e',
-         "import {validate} from "+json.dumps((ROOT/'assets/remotion/render.mjs').as_uri())+";let s='';for await(const c of process.stdin)s+=c;validate(JSON.parse(s));"]
-    subprocess.run(cmd,input=json.dumps(timeline),text=True,check=True)
+         "import {validate} from "+json.dumps((ROOT/'assets/remotion/render.mjs').as_uri())+";"
+         "import {resolveCartoonTransitions} from "+json.dumps((ROOT/'assets/remotion/cartoon-motion.mjs').as_uri())+";"
+         "let s='';for await(const c of process.stdin)s+=c;console.log(JSON.stringify(resolveCartoonTransitions(validate(JSON.parse(s)))));"]
+    timeline=json.loads(subprocess.run(cmd,input=json.dumps(timeline),text=True,capture_output=True,check=True).stdout)
     out.mkdir(parents=True,exist_ok=False)
     shutil.copyfile(ASSETS/STYLE['character']['file'],out/'dragon.png');shutil.copyfile(f,out/timeline['fontFile'])
     if rounded:

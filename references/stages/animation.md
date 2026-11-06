@@ -6,9 +6,9 @@
 
 | 项目 | 默认实现 | 怎样调整 |
 |---|---|---|
-| 动作时长 | 入场 0.65、强调 0.28、退出 0.22、转场 0.6 秒 | `style.json.motion`；调整后复核动作完成与阅读时间 |
-| 转场组合 | `slide/radial/wipe/flip` | `motion.transitionKinds` 选择默认池，场景 `transition` 单独指定 |
-| 新转场 | 独立注册表 | `cartoon-transitions.mjs`，详见 [扩展说明](../extensions.md) |
+| 动作时长 | 入场 0.65、强调 0.28、退出 0.22、原有转场 0.6 秒；GL 取目录建议值 | `style.json.motion` 与场景 `transitionSeconds`；调整后复核动作完成与阅读时间 |
+| 转场组合 | 全部 35 种：显式指定优先，未指定按场景关系排序并轮换 | 场景 `transition` 单独指定；默认池在 `motion.transitionKinds`，规则见 [GL 转场](../tools/gl-transitions.md#自动选择顺序) |
+| 新转场 | 独立注册表 | `cartoon-transitions.mjs` 与 `gl-transitions.json`，详见 [扩展说明](../extensions.md) |
 | 角色动作 | 左右站位、镜像与连续迁移 | `characterSide`、`cartoon-motion.mjs` 与绘制组件 |
 | 内容动画 | 分步出现、连线、数字增长、状态变化 | 选择对应场景；新行为需实际实现 |
 | 复杂对象接续 | Python 共享元素与空间迁移 API | [共享元素工具](../tools/shared-motion.md) |
@@ -19,6 +19,7 @@
 - 比较、流程、数据与状态解释用 [编辑式场景](../tools/editorial-scenes.md)。
 - 同一对象跨场迁移、连续重排与匹配接续用 [共享元素](../tools/shared-motion.md)，其中包含空间和 Python 转场 API。
 - 等距装置原理用 [Anatomy SVG](../tools/anatomy-video.md)。
+- 场景转场可从 [GL 转场](../tools/gl-transitions.md) 的 30 种 shader 与 5 种基础机制选择，7 个旧名称通过参数预设兼容；35 种全部进入默认池。未指定时按场景已有描述、类型、动画模块及前后素材关系排序，从本轮未使用项中选择；不要求每片展示全部转场。
 - 用户明确只要简单图片讲义时，可用 [图片时间轴](../tools/timeline.md)；不能把它当作已经完成复杂动画。
 
 按内容选择，不要求每片用全。上述接口并不互通，不能把 Python 转场名称直接放入 Remotion JSON。接入其他渲染工具的条件见 [扩展说明](../extensions.md#接入其他渲染工具)。

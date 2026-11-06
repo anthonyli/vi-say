@@ -8,6 +8,7 @@ import {mapCartoonAssets, cartoonStillPoints, style} from '../cartoon-contract.m
 import {cacheKey, prepareRuntime, runtimeLocation} from '../runtime.mjs';
 import {characterPose, transitionStyle} from '../cartoon-motion.mjs';
 import {validateTransitionPool} from '../cartoon-transitions.mjs';
+import {isGLTransition,glTransitionPreset} from '../gl-transitions.mjs';
 const fixture=()=>({aspect:'16:9',fps:30,duration:4,audio:'audio.wav',character:'dragon.png',styleId:'colorful-dragon-v1',captions:[],overlays:[],cartoonScenes:[{kind:'cta',start:0,end:4,title:'一起探索',items:[{text:'留言',at:.4},{text:'点赞',at:1.2},{text:'关注',at:2}]}]});
 test('real-second actions reject causal overlap and uncompleted ending',()=>{
   assert.equal(validate(fixture()).duration,4);
@@ -45,7 +46,7 @@ test('transition choices are repeatable, varied, and finish with an untransforme
   const a=[1,2,3,4].map(i=>transitionFor(i,'fixture'));
   assert.equal(new Set(a).size,4);
   assert.deepEqual(a,[1,2,3,4].map(i=>transitionFor(i,'fixture')));
-  for(const kind of a)assert.deepEqual(transitionStyle(kind,1),{});
+  for(const kind of a)if(isGLTransition(kind))assert.ok(glTransitionPreset(kind));else assert.deepEqual(transitionStyle(kind,1),{});
 });
 test('implemented effects can be selected explicitly outside the automatic pool',()=>{
   const original=style.motion.transitionKinds;

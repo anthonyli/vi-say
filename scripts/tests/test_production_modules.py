@@ -14,6 +14,56 @@ from production import init, compile_project
 
 
 class ProductionModules(unittest.TestCase):
+    def test_regular_project_compiles_scene_choices_without_changing_the_workflow(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);init(root/'project','原有流程','自动使用 GL','系列')
+            base=root/'project';doc=json.loads((base/'project.json').read_text())
+            with patch('production.covers'):
+                timeline=compile_project(base,doc,root/'compiled',preview=True)
+            result=json.loads(timeline.read_text())
+            self.assertIn(result['cartoonScenes'][1]['transitionSelection']['source'],['scene','rotation'])
+            self.assertEqual([(s['start'],s['end']) for s in result['cartoonScenes']],[(s['start'],s['end']) for s in doc['scenes']])
+            self.assertNotIn('transition',doc['scenes'][1])
+            renderer=Path(__file__).resolve().parents[2]/'assets/remotion/render.mjs'
+            audit=json.loads(subprocess.run(['node',str(renderer),str(timeline),str(root/'unused.mp4'),'--audit-only'],capture_output=True,text=True,check=True).stdout)
+            self.assertEqual(audit['transitions'][0]['selection'],result['cartoonScenes'][1]['transitionSelection'])
+            self.assertEqual(audit['transitions'][0]['kind'],result['cartoonScenes'][1]['transition'])
+
+    def test_transition_template_stages_both_media_sources_and_covers_35_canonical_effects(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);init(root/'project','转场目录','实际 shader','系列','studio','transitions')
+            base=root/'project';doc=json.loads((base/'project.json').read_text())
+            with patch('production.covers'):
+                timeline=compile_project(base,doc,root/'compiled',preview=True)
+            result=json.loads(timeline.read_text())
+            cuts=[s['transition'] for s in result['cartoonScenes'][1:]]
+            self.assertEqual(len(set(cuts)),35)
+            self.assertEqual(sum(c.startswith('gl:') for c in cuts),30)
+            for original,staged in zip(doc['scenes'],result['cartoonScenes']):
+                self.assertEqual((base/original['image']).read_bytes(),(timeline.parent/staged['image']).read_bytes())
+            self.assertEqual(result['duration'],72)
+
+    def test_all_effects_rotate_automatically_through_compile_and_project_seed_is_honored(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);init(root/'project','场景选择','自动轮换','系列','studio','transitions')
+            base=root/'project';doc=json.loads((base/'project.json').read_text())
+            for scene in doc['scenes']:
+                scene.pop('transition',None)
+                scene['title']='阅读报告'
+            choices=[]
+            for seed in ['seed-a','seed-b']:
+                doc['transitionSeed']=seed
+                with patch('production.covers'):
+                    timeline=compile_project(base,doc,root/seed,preview=True)
+                result=json.loads(timeline.read_text())
+                self.assertEqual(result['transitionSeed'],seed)
+                cuts=result['cartoonScenes'][1:]
+                self.assertEqual(len(set(s['transition'] for s in cuts)),35)
+                self.assertEqual(cuts[0]['transitionSelection']['intent'],'document')
+                self.assertTrue(all(s['transitionSelection']['cycle']==1 for s in cuts))
+                choices.append([s['transition'] for s in cuts])
+            self.assertNotEqual(*choices)
+
     def test_selected_modules_and_caption_input_survive_the_real_compile_path(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp)
@@ -65,7 +115,9 @@ class ProductionModules(unittest.TestCase):
             self.assertEqual(result['modules']['background'],'studio')
             self.assertEqual(result['modules']['character']['mode'],'none')
             self.assertEqual(result['duration'],45)
-            self.assertEqual(result['cartoonScenes'],doc['scenes'])
+            content=lambda scenes:[{k:v for k,v in s.items() if k not in ['transition','transitionAlias','transitionParams']} for s in scenes]
+            self.assertEqual(content(result['cartoonScenes']),content(doc['scenes']))
+            self.assertEqual([s['transition'] for s in result['cartoonScenes'][1:]],['gl:CrossZoom','slide','gl:CrossZoom','flip','flip','gl:CrossZoom','radial','converge'])
             catalog=json.loads(subprocess.run([sys.executable,str(Path(__file__).resolve().parents[1]/'production.py'),'catalog','--json'],check=True,text=True,capture_output=True).stdout)
             self.assertIn('business',[t['name'] for t in catalog['templates']])
             self.assertIn('network',[e['type'] for e in catalog['effects']])
