@@ -9,12 +9,15 @@
   },
   "dependencies": {
     "@gl-transitions/remotion": "1.0.0",
+    "@react-three/fiber": "9.4.0",
     "@remotion/bundler": "4.0.540",
     "@remotion/renderer": "4.0.540",
+    "@remotion/three": "4.0.540",
     "@remotion/transitions": "4.0.540",
     "gl-transitions": "2.5.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "remotion": "4.0.540"
+    "remotion": "4.0.540",
+    "three": "0.187.0"
   }
 }

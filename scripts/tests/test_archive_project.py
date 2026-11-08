@@ -161,6 +161,23 @@ class ArchiveTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'resource target differs'):self.plan()
         self.assertEqual(target.read_bytes(),b'existing reference')
 
+    def test_identical_resource_copies_share_one_preserved_target(self):
+        for name in ['font.otf', 'bundle/font.otf']:
+            self.put('work/demo/'+name,b'same font')
+            self.spec['resources'].append({'source':'work/demo/'+name,'to':'.cache/fonts/shared.otf'})
+        plan=self.plan()
+        self.assertEqual(len(plan['resources']),1)
+        archive.run_plan(self.root,plan)
+        self.assertEqual((self.root/'.cache/fonts/shared.otf').read_bytes(),b'same font')
+        self.assertFalse((self.root/'work/demo').exists())
+
+    def test_different_resources_cannot_share_new_target(self):
+        for name in ['font.otf', 'other.otf']:
+            self.put('work/demo/'+name,name.encode())
+            self.spec['resources'].append({'source':'work/demo/'+name,'to':'.cache/fonts/shared.otf'})
+        with self.assertRaisesRegex(ValueError,'contents differ'):self.plan()
+        self.assertFalse((self.root/'.cache/fonts/shared.otf').exists())
+
     def test_existing_archive_is_never_merged_or_overwritten(self):
         plan=self.plan();self.destination().mkdir(parents=True)
         note=self.destination()/'old.txt';note.write_text('existing archive')

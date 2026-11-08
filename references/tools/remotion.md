@@ -92,6 +92,12 @@ node "$SKILL_DIR/assets/remotion/render.mjs" work/task/motion.json outputs/video
 
 小龙 cartoonScenes 的有声输出另受 [完整听审门禁](production.md#底层有声小龙门禁) 约束：正式渲染需 timeline.audioReview 指向当前稿件计划、完整听审记录及证据，三项 pronunciation / term_fluency / voice_consistency 必须通过。未听审有声候选必须显式使用 --unreviewed-audio，且文件名含“候选/预览”或 candidate/preview；旁车保留真实听审状态。制作/审阅状态默认不进入视频画面，只有用户明确要求时才额外使用 --show-review-badge；它不改变听审结论。validate/audit/stills 仍可独立检查并报告听审状态。普通原视频 overlays/editorial 接口不因此更改。
 
+## 三维情景样片
+
+共用依赖包含 `three`、`@react-three/fiber` 和与 Remotion 同版的 `@remotion/three`。需要真实空间关系的知识演示，可在 `work/<项目>/` 编写独立场景，通过 `ThreeCanvas` 接入，不把单期场景写进公共模板。
+
+对象、镜头与灯光状态均由 `useCurrentFrame()` 推导，不能使用实时累加的 `useFrame` 动画。复用 `runtime.mjs` 的共用依赖和浏览器；先检查静态关键帧与连续动作，再导出视频。二维标注可叠加于三维画面之上，但应使用同一镜头投影，避免标签与对象分离。此路线不改变既有 `overlays` / `scenes` JSON 接口，当前由各期入口独立编排。
+
 ## 验收
 
 - FFmpeg 完整解码 MP4；检查尺寸、帧率、H.264/yuv420p、AAC、48 kHz，视频与最终 WAV 时差不超过一帧或已解释的编码延迟。

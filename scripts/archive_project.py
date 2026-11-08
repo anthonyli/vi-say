@@ -128,7 +128,7 @@ def validate_spec(root, spec):
             local(root, row['to'])
     file_destinations = set(destinations)
     resources = [row['to'] for row in spec.get('resources', [])]
-    require(len(resources) == len(set(resources)), 'Reusable resource destination collision')
+    # Repeated resource targets are checked by content while building the plan.
     packages = spec.get('packages', [])
     for package in packages:
         require(set(package) == {'to', 'files'}, 'Package needs to and explicit files')
@@ -170,6 +170,7 @@ def make_plan(root, spec, *, allow_existing=False):
     require(allow_existing or not destination.exists(), f'Archive already exists; never overwrite: {destination}')
     snapshot = inventory(root, spec['sources'])
     files, resources, aliases, hashes = [], [], {}, {}
+    resource_targets = {}
     for row in spec['files'] + spec.get('resources', []):
         require(row['source'] in snapshot and snapshot[row['source']]['kind'] == 'file', 'Selected source is not inventoried')
         with source_stream(root, row) as stream:
@@ -177,6 +178,11 @@ def make_plan(root, spec, *, allow_existing=False):
         if row in spec.get('resources', []):
             target = local(root, row['to'])
             require(not target.exists() or file_info(target) == {k: entry[k] for k in ['size', 'sha256']}, 'Reusable resource target differs; choose another name')
+            identity = (entry['size'], entry['sha256'])
+            if row['to'] in resource_targets:
+                require(resource_targets[row['to']] == identity, 'Reusable resource destination collision: contents differ')
+                continue
+            resource_targets[row['to']] = identity
             resources.append(entry)
         elif entry['sha256'] in hashes:
             aliases[entry['to']] = hashes[entry['sha256']]

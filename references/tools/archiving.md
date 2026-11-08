@@ -63,7 +63,7 @@ python scripts/production.py archive verify archive/2026-11-05/demo
 - `sources` 只能是 `work/<项目>` 或 `outputs/<项目>` 的直接子目录。归档后清理这些目录；不接受父目录、`private/`、`archive/` 或缓存目录作为清理范围。
 - `files` 明确列出保留产物。类型包括 `video/audio/poster/captions/script/copy/document`；目标可使用 `历史产物/`。按 SHA256 去重，首条选择为保留路径，其余路径在索引中注明指向。
 - `member` 从旧 ZIP 读取单个成品，不复制整个旧包，不执行解压路径。被选择 ZIP 中未列出的成员不会留存，盘点时必须核对是否还有独有成品。
-- `resources` 把工作目录中需要继续使用的参考音频、模型、字体或配置保存到 `private/voice/`、`private/models/`、`.cache/fonts/`。已有同名且同哈希的资源直接复用，内容不同则停止。原本已位于 `private/` 或缓存的资源不在清理范围。
+- `resources` 把工作目录中需要继续使用的参考音频、模型、字体或配置保存到 `private/voice/`、`private/models/`、`.cache/fonts/`。多份源副本可指向同一目标，大小与哈希一致时只保留一份，不同则停止；已有同名且同哈希的资源直接复用。原本已位于 `private/` 或缓存的资源不在清理范围。
 - `discard` 是相对根目录的 glob 清单，明确标记制作过程或已有副本；保留与资源映射优先。未分类文件阻止执行，字体、模型和命名为参考的音频不能被宽泛丢弃规则静默删除，须先明确保留或转存。
 - `packages` 从明确列出的归档产物和简短 README 生成必要交付 ZIP，逐成员验证；不沿用夹带日志、ASR、脚本、检查记录的旧包。
 

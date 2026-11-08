@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "profile": "self_media_narrated",
+  "artifacts": {
+    "video": {
+      "path": "",
+      "sha256": ""
+    },
+    "audio": {
+      "path": "",
+      "sha256": ""
+    },
+    "script": {
+      "path": "",
+      "sha256": ""
+    },
+    "captions": {
+      "path": "",
+      "sha256": ""
+    },
+    "poster_16x9": {
+      "path": "",
+      "sha256": ""
+    },
+    "poster_4x3": {
+      "path": "",
+      "sha256": ""
+    },
+    "poster_3x4": {
+      "path": "",
+      "sha256": ""
+    },
+    "publishing_copy": {
+      "path": "",
+      "sha256": ""
+    },
+    "delivery_note": {
+      "path": "",
+      "sha256": ""
+    }
+  },
+  "omissions": {},
+  "text_requirements": [
+    {
+      "id": "host_intro",
+      "role": "script",
+      "any_of": [
+        "我是小龙"
+      ]
+    },
+    {
+      "id": "like",
+      "role": "script",
+      "any_of": [
+        "点赞"
+      ]
+    },
+    {
+      "id": "follow",
+      "role": "script",
+      "any_of": [
+        "关注"
+      ]
+    },
+    {
+      "id": "comment",
+      "role": "script",
+      "any_of": [
+        "留言",
+        "评论区"
+      ]
+    }
+  ]
+}
