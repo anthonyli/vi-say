@@ -198,6 +198,20 @@ class ArchiveTests(unittest.TestCase):
         with zipfile.ZipFile(self.destination()/'delivery.zip') as z:
             self.assertNotIn('episode/check.json',z.namelist())
 
+    def test_prompt_json_is_preserved_without_process_log(self):
+        content=b'{"prompt":"Create a landscape poster"}'
+        self.put('work/demo/prompts.json',content)
+        self.spec['files'].append({'source':'work/demo/prompts.json','to':'prompts/poster.json','kind':'prompt'})
+        archive.run_plan(self.root,self.plan())
+        self.assertEqual((self.destination()/'prompts/poster.json').read_bytes(),content)
+        self.assertFalse((self.destination()/'qa/check.json').exists())
+        self.assertFalse((self.root/'work/demo').exists())
+
+    def test_prompt_cannot_be_lost_under_broad_discard(self):
+        self.put('work/demo/海报提示词.json',b'{"prompt":"poster"}')
+        self.spec['discard']=['work/demo/**']
+        with self.assertRaisesRegex(ValueError,'prompt: preserve explicitly'):self.plan()
+
     def test_zip_traversal_and_zip_symlink_are_rejected(self):
         path=self.root/'outputs/demo/old.zip'
         with zipfile.ZipFile(path,'w') as z:

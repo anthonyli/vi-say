@@ -18,6 +18,8 @@ python scripts/production.py archive init demo \
 
 Agent 查看 `_inventory`（含旧 ZIP 的成员名），填写 `summary`、`files`、`resources`、`discard`、`packages`。不要依据扩展名就把检查抽帧当海报、试音当最终旁白；这些语义选择由本期记录决定。
 
+归档前同时保留实际使用的提示词：纯提示词文件可直接选择；混合的海报记录或工具日志先提取正文与用途、版本、参考素材角色。按 `kind: prompt` 保存到 `提示词/`，支持 txt/md/json。不要保留整份会话、工具脚本或检查记录。找回历史提示词时区分原文件、调用记录恢复、未找回，不以新编文案冒充原文；补档使用独立项目目录，不覆盖旧档案。
+
 ```sh
 python scripts/production.py archive plan .cache/archive/demo.json \
   --output .cache/archive/demo.plan.json
@@ -61,13 +63,13 @@ python scripts/production.py archive verify archive/2026-11-05/demo
 - `project` 是归档目录名；结果为 `archive/<date>/<project>/`，不覆盖、不合并已有目录。
 - `summary` 是简短真实状态说明，写清当前版本、用户认可/发布原话及历史拒绝版状态；需要绑定认可时注明对应视频及哈希。`plan` 不会把生成成功推断为用户认可或已发布。
 - `sources` 只能是 `work/<项目>` 或 `outputs/<项目>` 的直接子目录。归档后清理这些目录；不接受父目录、`private/`、`archive/` 或缓存目录作为清理范围。
-- `files` 明确列出保留产物。类型包括 `video/audio/poster/captions/script/copy/document`；目标可使用 `历史产物/`。按 SHA256 去重，首条选择为保留路径，其余路径在索引中注明指向。
+- `files` 明确列出保留产物及提示词。类型包括 `video/audio/poster/captions/script/copy/document/prompt`；目标可使用 `历史产物/`。按 SHA256 去重，首条选择为保留路径，其余路径在索引中注明指向。
 - `member` 从旧 ZIP 读取单个成品，不复制整个旧包，不执行解压路径。被选择 ZIP 中未列出的成员不会留存，盘点时必须核对是否还有独有成品。
 - `resources` 把工作目录中需要继续使用的参考音频、模型、字体或配置保存到 `private/voice/`、`private/models/`、`.cache/fonts/`。多份源副本可指向同一目标，大小与哈希一致时只保留一份，不同则停止；已有同名且同哈希的资源直接复用。原本已位于 `private/` 或缓存的资源不在清理范围。
-- `discard` 是相对根目录的 glob 清单，明确标记制作过程或已有副本；保留与资源映射优先。未分类文件阻止执行，字体、模型和命名为参考的音频不能被宽泛丢弃规则静默删除，须先明确保留或转存。
+- `discard` 是相对根目录的 glob 清单，明确标记制作过程或已有副本；保留与资源映射优先。未分类文件阻止执行，字体、模型、命名为参考的音频以及文件名含 prompt/提示词 的文本文件不能被丢弃规则静默删除，须先明确保留或转存。混合记录中的提示词仍须由 Agent 提取，文件名检查不证明没有遗漏。
 - `packages` 从明确列出的归档产物和简短 README 生成必要交付 ZIP，逐成员验证；不沿用夹带日志、ASR、脚本、检查记录的旧包。
 
-目标名与内容类型需相符；不通过改扩展名把制作过程塞进成品。交付说明中的旧路径若需要修改，应在生成计划前改好。主归档只写产物、简短 `README.md` 和 `SHA256SUMS.txt`，不附带清单、时间轴或长篇复盘。
+目标名与内容类型需相符；不通过改扩展名把制作过程塞进成品。交付说明中的旧路径若需要修改，应在生成计划前改好。主归档只写产物、提示词、简短 `README.md` 和 `SHA256SUMS.txt`，不附带制作清单、时间轴或长篇复盘。
 
 ## 失败与重复执行
 

@@ -25,6 +25,7 @@ KINDS = {
     'video': {'.mp4', '.mov', '.webm'}, 'audio': {'.wav', '.mp3', '.m4a', '.flac'},
     'poster': {'.png', '.jpg', '.jpeg', '.webp', '.svg'}, 'captions': {'.srt', '.vtt'},
     'script': {'.txt', '.md'}, 'copy': {'.txt', '.md'}, 'document': {'.txt', '.md', '.pdf'},
+    'prompt': {'.txt', '.md', '.json'},
 }
 RESOURCES = {'.ttf', '.otf', '.woff', '.woff2', '.safetensors', '.onnx', '.rnnn'}
 RESERVED = {'README.md', 'SHA256SUMS.txt'}
@@ -196,6 +197,8 @@ def make_plan(root, spec, *, allow_existing=False):
             continue
         if protected_resource(name):
             unknown.append(name + ' (reusable resource: preserve explicitly)')
+        elif Path(name).suffix.lower() in KINDS['prompt'] and re.search(r'prompt|提示词', Path(name).name, re.I):
+            unknown.append(name + ' (prompt: preserve explicitly)')
         elif any(fnmatch.fnmatchcase(name, pattern) for pattern in spec.get('discard', [])):
             discarded.append(name)
         else:
