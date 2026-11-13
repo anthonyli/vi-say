@@ -5,7 +5,7 @@
 ## 直接运行
 
 ```sh
-# 常规项目：默认玻璃背景、圆润口型、去标点高亮字幕和一个配角 Bot
+# 已根据本期主题选定玻璃方案时：圆润口型、去标点高亮字幕和一个配角 Bot
 python scripts/production.py init work/new-video --title "本期标题" --subtitle "本期收益" --preset glass
 
 # 模块展示模板：用于检查效果的 29 秒无声样片

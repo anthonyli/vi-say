@@ -20,6 +20,7 @@ import tempfile
 import traceback
 import wave
 
+from audit_speech_pauses import audit as audit_speech_pauses
 from voice_consistency import (file_digest, join_pcm, reference_identity, semantic_segments,
                                set_generation_seed, validate_lock)
 
@@ -380,9 +381,17 @@ def synthesize(plan):
                   'mode': plan.mode, 'voice_id': plan.voice_id, 'voice_identity': plan.identity,
                   'sampling': {'seed': plan.seed, 'temperature': plan.temperature, 'top_p': plan.top_p, 'top_k': plan.top_k},
                   'segments': [{**detail, **span} for detail, span in zip(segment_details, ranges)],
+                  'prosody_review': {'status': 'not_checked',
+                                     'criteria': ['natural phrase continuity', 'no abrupt pause or restart',
+                                                  'stable pitch loudness and stress across joins'],
+                                     'automatic_pause_audit_is_not_listening': True},
                   'audio_sha256': file_digest(generated),
                   "quality_assessed": False, 'voice_consistency_assessed': False,
                   "review_required": "Listen for identity, missing words, repetition, paragraph joins and a complete ending"}
+        try:
+            result['pause_audit'] = audit_speech_pauses(generated, [span['start'] for span in ranges[1:]])
+        except ValueError as error:
+            result['pause_audit'] = {'status': 'not_checked', 'reason': str(error), 'quality_assessed': False}
         report = Path(temporary) / 'generation.json'
         report.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
         # The temporary file shares the output filesystem. link is exclusive,

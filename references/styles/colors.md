@@ -16,7 +16,7 @@
 
 随包基础色板的配置来源是 `assets/production/style.json → palette`。其中 `blue/green/yellow/orange/lightBlue/black/white` 只是便于引用的颜色名称，不赋予用途含义。JS 从 `assets/production/colors.mjs` 导入 `PALETTE` 或 `ALLOWED_COLORS`；Python 读取同一份 JSON。
 
-当次已选择的品牌与风格优先。小龙系列的 [明亮玻璃风](glass.md) 与 [Bot 样式](bots.md) 各自维护其色值；选择模块预设后调用对应组件，基础色板继续服务原风格。
+当次已选择的品牌与风格优先。小龙系列默认的 [漫画积木风](comic-bricks.md) 与 [Bot 样式](bots.md) 各自维护其色值；选择模块预设后调用对应组件，基础色板继续服务原风格。
 
 ## 使用规则
 

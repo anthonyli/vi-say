@@ -4,12 +4,12 @@ description: 将 GitHub 项目、官网、文章链接、已录视频或知识�
 license: Apache-2.0
 metadata:
   author: Anthony Li
-  version: "0.0.9"
+  version: "0.0.10"
 ---
 
 # vi-say：把内容讲给你看
 
-名称取 Visual + Say。适用于项目分享、产品介绍、文章解读、已录视频剪辑、知识科普和实战复盘。随包小龙是可替换的示例风格；当次品牌、参考、角色和已认可素材优先。
+名称取 Visual + Say。适用于项目分享、产品介绍、文章解读、已录视频剪辑、知识科普和实战复盘。小龙系列默认采用漫画分镜、对话气泡与积木搭建；当次品牌、参考、角色和已认可素材优先。
 
 ## 共用流程与按需读取
 
@@ -46,8 +46,8 @@ GitHub 项目介绍默认核对并说明当期 Star 数，采集可用的真实�
 ## 风格与实现入口
 
 - 改配色读 [色板](references/styles/colors.md)，换角色或口型读 [角色](references/styles/character.md)。
-- 沿用小龙系列时，固定开场与问题切入见 [脚本](references/stages/script.md#小龙系列固定开场)，女声选择见 [声音](references/stages/voice.md#小龙系列的声音选择)，去标点与关键词高亮见 [字幕](references/stages/captions.md#中文口播的显示标点与关键词)。其他角色、原声剪辑及当次明确要求继续按各自任务处理。
-- 小龙系列的明亮玻璃科技风见 [玻璃视觉](references/styles/glass.md)；造型独立放在 [Bot 样式](references/styles/bots.md)，动作另见 [动画](references/stages/animation.md#小龙与-bot-的动作编排)。已实现的可选模块、字段与运行命令见 [动画模块接口](references/tools/animation-modules.md)；新项目默认使用 `glass` 预设，也可显式选择 `classic`。
+- 沿用小龙系列时，固定开场与问题切入见 [脚本](references/stages/script.md#小龙系列固定开场)，女声选择见 [声音](references/stages/voice.md#小龙系列的声音选择)，中英双语、中文去标点与关键词高亮见 [字幕](references/stages/captions.md#中文口播的显示标点与关键词)。其他角色、原声剪辑及当次明确要求继续按各自任务处理。
+- 小龙系列默认采用 [漫画积木风](references/styles/comic-bricks.md)：小龙、粗描边分镜、对话气泡、网点与硬阴影，每个重点是一块实际搭建的积木。背景、配色、道具仍随每期主题设计。旧玻璃／灰绿方向退出系列默认；保留旧实现用于历史项目兼容。公共组件在 `assets/remotion/src/comic-kit.jsx`，自编工程的章节接点也按信息关系接入现有 [GL 转场](references/tools/gl-transitions.md)，不能只写效果名称却仍然硬切。Bot 造型继续独立见 [Bot 样式](references/styles/bots.md)。
 - 企业产品片可选择 [产品演示动效](references/tools/business-effects.md)：面板汇聚、节点拖放、关系图、扫描、图表、文档交接；`studio` 预设可隐藏角色。先用 `python scripts/production.py catalog` 查询实际模块，再按 JSON 示例组合。其他可执行能力见 [代码复用地图](references/tools/reuse-map.md)。
 - 改参数、新增动画或接入新场景读 [extensions.md](references/extensions.md)。配置只使用已实现字段，新效果要同时落地画面、校验和实际样片。
 - 需要丰富转场时，按需读 [GL 转场](references/tools/gl-transitions.md)：30 种真实 shader 与 5 种基础转场全部参与自动轮换；场景指定优先，未指定时按场景关系排序，旧名称兼容，沿用当前流程与共用 Remotion 环境。
@@ -57,6 +57,7 @@ GitHub 项目介绍默认核对并说明当期 Star 数，采集可用的真实�
 
 - 事实和效果依据本期资料与真实素材；模拟界面、对话和图解明确标示意。
 - 已录视频默认保留原声、原速，剪辑音画同步；新声音使用获授权的当前参考。参考认可不等于合成整轨认可，术语短测和最终全轨听审分别核对；跨生成版本替换还须听查声线连续性。默认速度 1.0，错音修订完整语义段落，未听审只交付明确候选。
+- 小龙旁白默认平稳、连贯，句间与分段接缝不突然停住、起高调或加重音；生成前按完整语义组织稿件，生成后检查短停顿与实际语气衔接。具体见 [声音规范](references/stages/voice.md#平稳连贯的默认生成要求)。
 - 正式字幕、口型与动画使用最终声音的可靠时间。改稿或换音轨重新对齐，动作时长不随整段等比例拉伸。
 - 自媒体有旁白产品片默认交付可见字幕；英文按词与意群断行。声音模板集中放当前项目 `private/voice/`，具体见 [字幕](references/stages/captions.md) 与 [声音模板](references/tools/voice-templates.md)。
 - 静态画面、连续运动、音画语义与听感分别检查。自动记录校验不等于审美或听感通过，没有实际检查就标明未检查。

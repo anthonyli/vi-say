@@ -10,7 +10,9 @@
 
 `production.py init` 建立 `project.json`、`narration.txt`、`lexicon.json`。项目名与输出目录由任务决定；每次选择新的输出目录，脚本拒绝覆盖。
 
-基础 `style_id=colorful-dragon-v1`。`init` 默认 `--preset glass`，也可用 `--preset classic` 或无角色产品风格 `--preset studio`；选择保存为项目 `modules`，不按产品写分支。基础色板与传统动作参数来自 `assets/production/style.json`，模块预设来自 `assets/production/presets/`，Bot 外观来自 `bot-styles.json`。`dragon.png` 是身份母版，`character.json` 保存素材说明；圆润口型另外保存实际组件、图片和参数。
+当前小龙系列的默认漫画积木路线见 [漫画积木风](../styles/comic-bricks.md)，复用公共 JSX 组件与现有 GL 转场。本页的旧 JSON 入口仅作兼容工具，尚没有 `comic` 预设，不要省略参数生成玻璃场景后当作当前默认交付。
+
+基础 `style_id=colorful-dragon-v1`。`init` 的兼容默认参数仍为 `--preset glass`，但新一期必须先确定主题视觉，再显式传入合适预设，不能将省略参数产生的玻璃场景当作系列要求。可用 `--preset classic` 或无角色产品风格 `--preset studio`，也可复用角色组件实现本期场景；预设不足时不要虚构未实现字段。选择保存为项目 `modules`，不按产品写公共分支。基础色板与传统动作参数来自 `assets/production/style.json`，模块预设来自 `assets/production/presets/`，Bot 外观来自 `bot-styles.json`。`dragon.png` 是身份母版，`character.json` 保存素材说明；圆润口型另外保存实际组件、图片和参数。
 
 `--template effects` 可初始化完整的无声模块示例，`--template business` 提供产品演示动效样例；默认 `--template story` 建立常规分镜。已实现模块、字段与示例命令见 [动画模块接口](animation-modules.md)。新增题材只替换项目文案、对象、词表和实际触发时间，复用组件。
 
