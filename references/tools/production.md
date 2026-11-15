@@ -127,3 +127,5 @@ node assets/remotion/render.mjs PROJECT/timeline.json OUTPUT/episode-未听审�
 - 配色在 [colors.md](../styles/colors.md)，海报与脚本草稿在 [poster.md](../stages/poster.md)，默认输出的 `covers/` 仍为可选草稿。
 - 初始项目自动带片尾稿与示例时间。正式片尾文案、词时间、`outroId` 与省略条件统一在 [outro.md](../stages/outro.md)。
 - 字体在捕帧前加载，静止后不持续亚像素位移。需要不同字体或新布局时检查实际帧，不把三比例海报推定为三比例角色视频。
+
+用户明确要求交付名不带“候选/预览”时，可在`--unreviewed-audio`同时传`--review-name-reason '用户的实际命名要求'`。正常文件名不会改变听审结论；旁车记录保留原因和`listening:not_checked`。缺原因或未显式启用未听审输出仍拒绝。不为改名重新合成旁白。

@@ -69,3 +69,5 @@ python scripts/align_captions.py --alignment work/task/words.json --text work/ta
 自编漫画 JSX 必须调用 `assets/remotion/src/comic-captions.jsx` 的 `ComicCaptions`，不要再次用纯 `{caption.text}` 绕开高亮。传 `caption={text,en,start,end}`，`options={bilingual:true,keywords:[...],keywordsEn:[...]}`；可逐条用 `keywords/keywordsEn` 覆盖。默认双语，缺英文直接报错；明确单语任务传 `bilingual:false`。这是 JSX 接口，不是旧生产 JSON 已支持的新字段。关键词来自当期内容，组件复用已有 `captionSegments` 的长短语优先匹配。
 
 SRT 每条按中文、英文两行输出，与渲染共用同一份 cue。SRT 本身无高亮颜色；高亮由画面组件实际绘制。检查最长译文、关键词、两行整体高度、字幕与录屏按钮及片尾的安全区。用户只要求修代码而不重出视频时，修订数据与音轨保存在 work，不能将旧 MP4 描述为已带新字幕。
+
+`ComicCaptions.options` 可按本期画幅调整 `fontSize/fontSizeEn/lineHeight/lineGap/padding/borderWidth/borderRadius/shadow/bottom`，以及 `highlightColor/highlightBackground`。`RecordedComic.captionOptions` 直接传入同一接口；单期字号与配色保存在项目时间轴，不覆盖其他项目的默认风格。双语框过高时先减少字号、行距、上下留白并减轻阴影，保持两行可读且不遮挡录屏。

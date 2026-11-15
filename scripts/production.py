@@ -213,6 +213,9 @@ def package_skill(output):
 
 
 def main():
+    if sys.argv[1:2] == ['revise-delivery']:
+        from revise_delivery import main as revise_main
+        return revise_main(sys.argv[2:])
     if sys.argv[1:2] == ['check-delivery']:
         from check_delivery import main as delivery_main
         raise SystemExit(delivery_main(sys.argv[2:]))
@@ -227,6 +230,7 @@ def main():
             a.add_argument('--audio',type=Path);a.add_argument('--listening',type=Path);a.add_argument('--preview',action='store_true')
         if name=='render':a.add_argument('--stills',action='store_true')
     a=sub.add_parser('pack');a.add_argument('output',type=Path)
+    sub.add_parser('revise-delivery', help='Clone delivery scope and lock unchanged artifacts; see revise-delivery --help')
     sub.add_parser('check-delivery',help='Check exact delivery files, hashes and poster ratios')
     sub.add_parser('archive',help='Archive deliverables from a reusable manifest; see archive --help')
     a=sub.add_parser('catalog',help='List implemented effects, parameters and validated templates');a.add_argument('--json',action='store_true')

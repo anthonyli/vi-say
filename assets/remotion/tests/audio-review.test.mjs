@@ -175,3 +175,14 @@ test('CLI independently reports gate status and blocks missing review before bro
   assert.match(badgeWithoutCandidate.stderr, /requires --unreviewed-audio/);
   assert.doesNotMatch(badgeWithoutCandidate.stdout + badgeWithoutCandidate.stderr, /shared runtime|Downloading/);
 });
+
+test('explicit neutral delivery name preserves unreviewed status and reason', () => {
+  const gate={required:true,recordValidated:false,issues:[]};
+  const result=audioRenderDecision(gate,{unreviewedAudio:true,output:'episode.mp4',neutralNameReason:'用户要求去掉候选命名'});
+  assert.equal(result.listening,'not_checked');
+  assert.equal(result.listeningRecordValidated,false);
+  assert.equal(result.reviewBadgeVisible,false);
+  assert.equal(result.neutralNameReason,'用户要求去掉候选命名');
+  assert.throws(()=>audioRenderDecision(gate,{unreviewedAudio:true,output:'episode.mp4',neutralNameReason:' '}));
+  assert.throws(()=>audioRenderDecision(gate,{output:'episode.mp4',neutralNameReason:'request'}));
+});

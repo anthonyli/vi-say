@@ -21,6 +21,12 @@ class Delivery(unittest.TestCase):
             self.bind(role,p)
     def bind(self,role,p):
         self.doc['artifacts'][role]={'path':p.name,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()}
+        if role.startswith('poster_'):
+            prompt=self.root/'prompt.txt';prompt.write_text('Actual generation prompt fixture')
+            ref=self.root/'reference.png'
+            Image.new('RGB',(10,10)).save(ref)
+            def binding(f):return {'path':f.name,'sha256':hashlib.sha256(f.read_bytes()).hexdigest()}
+            self.doc['artifacts'][role]['generation']={'method':'imagegen','prompt':binding(prompt),'references':[binding(ref)]}
     def run_check(self):
         self.manifest.write_text(json.dumps(self.doc));return check(self.manifest)
     def test_complete_is_not_quality_approval(self):
@@ -41,8 +47,14 @@ class Delivery(unittest.TestCase):
         self.assertEqual(len(self.run_check()['errors']),2)
         p.write_text('欢迎留言 关注 点赞');self.bind('script',p)
         self.assertTrue(self.run_check()['complete'])
+    def test_poster_requires_bound_generation_inputs(self):
+        del self.doc['artifacts']['poster_16x9']['generation']
+        self.assertIn('poster_16x9: missing imagegen provenance', self.run_check()['errors'])
+        self.bind('poster_16x9', self.root/'poster_16x9.png')
+        (self.root/'prompt.txt').write_text('changed prompt')
+        self.assertFalse(self.run_check()['complete'])
     def test_scoped_copy_only(self):
-        self.doc={'schema_version':1,'profile':'custom','required':['publishing_copy'],'scope_reason':'User requested copy only','artifacts':{'publishing_copy':self.doc['artifacts']['publishing_copy']}}
+        self.doc={'schema_version':1,'profile':'custom','required':['publishing_copy'],'scope_reason':'User requested copy only','scope_basis':{'kind':'explicit_partial_request','request':'Only update the publishing copy'},'artifacts':{'publishing_copy':self.doc['artifacts']['publishing_copy']}}
         self.assertTrue(self.run_check()['complete'])
     def test_omission_requires_actual_basis(self):
         del self.doc['artifacts']['audio'];self.doc['omissions']={'audio':{'reason':'not needed'}}

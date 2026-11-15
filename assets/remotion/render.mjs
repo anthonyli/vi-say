@@ -82,15 +82,17 @@ function stamp(t) {
 
 async function main() {
   const [timeline, output, ...flags] = process.argv.slice(2);
-  const usage = 'Usage: node render.mjs timeline.json output.mp4 [--unreviewed-audio] [--show-review-badge] [--validate-only | --audit-only | --stills directory]';
+  const usage = 'Usage: node render.mjs timeline.json output.mp4 [--unreviewed-audio] [--show-review-badge] [--review-name-reason USER_REQUEST] [--validate-only | --audit-only | --stills directory]';
   if (!timeline || !output) fail(usage);
   let mode = 'render';
   let stillDirectory;
   let unreviewedAudio = false;
   let showReviewBadge = false;
+  let neutralNameReason;
   for (let i = 0; i < flags.length; i++) {
     if (flags[i] === '--unreviewed-audio' && !unreviewedAudio) { unreviewedAudio = true; continue; }
     if (flags[i] === '--show-review-badge' && !showReviewBadge) { showReviewBadge = true; continue; }
+    if (flags[i] === '--review-name-reason' && neutralNameReason === undefined && flags[i+1] && !flags[i+1].startsWith('--')) { neutralNameReason = flags[++i]; continue; }
     if (mode !== 'render') fail(usage);
     if (flags[i] === '--validate-only') mode = 'validate';
     else if (flags[i] === '--audit-only') mode = 'audit';
@@ -144,7 +146,7 @@ async function main() {
     return;
   }
   if (mode === 'render') {
-    audioDecision = audioRenderDecision(audioReview, {unreviewedAudio, showReviewBadge, output: target});
+    audioDecision = audioRenderDecision(audioReview, {unreviewedAudio, showReviewBadge, neutralNameReason, output: target});
     // Review status belongs in the sidecar by default. Burning a production
     // status into the viewer's picture requires a separate explicit choice.
     doc.reviewBadgeVisible = audioDecision.reviewBadgeVisible;

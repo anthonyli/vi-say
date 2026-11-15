@@ -5,6 +5,9 @@
 import argparse
 import hashlib
 import json
+import subprocess
+import tempfile
+import wave
 from pathlib import Path
 
 SELF_MEDIA = ('video', 'audio', 'script', 'captions', 'poster_16x9',
@@ -25,11 +28,19 @@ def check(manifest):
         raise ValueError('custom requires a nonempty role list')
     if profile == 'custom' and not str(doc.get('scope_reason', '')).strip():
         raise ValueError('custom requires scope_reason from the actual task')
+    if profile == 'custom':
+        basis = doc.get('scope_basis', {})
+        if (not isinstance(basis, dict) or basis.get('kind') not in
+                ('explicit_partial_request', 'standalone_artifact') or
+                not str(basis.get('request', '')).strip()):
+            raise ValueError('custom requires scope_basis with the actual partial request; an implementation route cannot narrow delivery')
     items = doc.get('artifacts')
     omissions = doc.get('omissions', {})
     if not isinstance(items, dict) or not isinstance(omissions, dict):
         raise ValueError('artifacts and omissions must be objects')
     errors, records, excluded = [], [], []
+    from revise_delivery import validate as validate_revision
+    errors.extend(validate_revision(doc, manifest.parent))
     for role, reason in omissions.items():
         if role not in required or not isinstance(reason, dict) or not reason.get('reason') or not reason.get('basis'):
             raise ValueError('Each omission needs a required role, reason and task/user basis')
@@ -52,6 +63,18 @@ def check(manifest):
         if item.get('sha256') != digest:
             errors.append(f'{role}: SHA256 missing or changed')
         if role in RATIOS:
+            generation = item.get('generation', {})
+            if generation.get('method') != 'imagegen':
+                errors.append(f'{role}: missing imagegen provenance')
+            else:
+                inputs = [generation.get('prompt', {})] + generation.get('references', [])
+                if not generation.get('references'):
+                    errors.append(f'{role}: missing style references')
+                for source in inputs:
+                    source_path = manifest.parent / source.get('path', '')
+                    if (not source_path.is_file() or not source.get('sha256') or
+                            hashlib.sha256(source_path.read_bytes()).hexdigest() != source['sha256']):
+                        errors.append(f'{role}: prompt/reference missing or changed')
             from PIL import Image
             try:
                 with Image.open(path) as im:
@@ -74,6 +97,30 @@ def check(manifest):
         content = path.read_text(encoding='utf-8')
         if not any(x in content for x in choices):
             errors.append(f'{role}: missing required text {requirement.get("id", choices)}')
+    if doc.get('recorded_story'):
+        from check_recorded_story import check as check_story
+        from revise_delivery import digest
+        import imageio_ffmpeg
+        timeline_path = manifest.parent / doc['recorded_story']
+        timeline = json.loads(timeline_path.read_text())
+        story = check_story(timeline_path, verify_video=True)
+        errors.extend(f'recorded_story: {error}' for error in story['errors'])
+        if items.get('audio') and digest(timeline_path.parent / timeline['audioFile']) != items['audio']['sha256']:
+            errors.append('recorded_story: narration differs from delivered audio')
+        video = items.get('video', {})
+        if not video.get('path'):
+            errors.append('recorded_story: missing final video')
+        else:
+            with tempfile.TemporaryDirectory(prefix='vi-say-audio-check-') as temporary:
+                wav = Path(temporary) / 'export.wav'
+                run = subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(), '-nostdin', '-v', 'error',
+                    '-i', str((manifest.parent / video['path']).resolve()), '-map', '0:a:0',
+                    '-vn', '-c:a', 'pcm_s16le', str(wav)], capture_output=True, text=True)
+                if run.returncode:
+                    errors.append('recorded_story: final video audio cannot be decoded')
+                else:
+                    exported = check_story(timeline_path, audio_override=wav)
+                    errors.extend(f'exported_audio: {error}' for error in exported['errors'])
     return {'schema_version': 1, 'manifest': str(manifest), 'profile': profile,
             'complete': not errors, 'quality_assessed': False, 'publication_assessed': False,
             'artifacts': records, 'omissions': excluded, 'errors': errors}
@@ -96,7 +143,7 @@ def main(argv=None):
             args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2)+'\n')
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0 if result['complete'] else 1
-    except (OSError, ValueError, TypeError, KeyError, ImportError) as exc:
+    except (OSError, ValueError, TypeError, KeyError, ImportError, wave.Error) as exc:
         print(json.dumps({'error': str(exc)}, ensure_ascii=False))
         return 2
 

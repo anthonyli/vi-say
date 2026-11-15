@@ -4,7 +4,7 @@ description: 将 GitHub 项目、官网、文章链接、已录视频或知识�
 license: Apache-2.0
 metadata:
   author: Anthony Li
-  version: "0.0.10"
+  version: "0.0.11"
 ---
 
 # vi-say：把内容讲给你看
@@ -41,7 +41,7 @@ GitHub 项目介绍默认核对并说明当期 Star 数，采集可用的真实�
 
 完整项目开工即建立[交付清单](references/tools/delivery-check.md)，记录本期产物、已确认参考、保留项与未解决问题。自编渲染工程同样执行，不因绕开默认小龙入口而漏掉开场、海报或发布稿。仅做用户要求的局部任务时按实际范围裁剪。
 
-交付前运行 `python scripts/production.py check-delivery <清单>`，补齐范围内缺项，再按[交付节点](references/stages/delivery.md)核对质量。回复同时给出视频与配套文件入口；文件齐全、视听认可、实际发布分开记录。
+局部修订先用 `python scripts/production.py revise-delivery` 继承原清单并锁定不变产物，完整录屏用 `assets/remotion/render-recorded.mjs` 固定入口。交付前运行 `python scripts/production.py check-delivery <清单>`，补齐范围内缺项，再按[交付节点](references/stages/delivery.md)核对质量。回复同时给出视频与配套文件入口；文件齐全、视听认可、实际发布分开记录。
 
 ## 风格与实现入口
 
@@ -52,6 +52,8 @@ GitHub 项目介绍默认核对并说明当期 Star 数，采集可用的真实�
 - 改参数、新增动画或接入新场景读 [extensions.md](references/extensions.md)。配置只使用已实现字段，新效果要同时落地画面、校验和实际样片。
 - 需要丰富转场时，按需读 [GL 转场](references/tools/gl-transitions.md)：30 种真实 shader 与 5 种基础转场全部参与自动轮换；场景指定优先，未指定时按场景关系排序，旧名称兼容，沿用当前流程与共用 Remotion 环境。
 - 默认角色路线的命令、项目格式和正式音频记录见 [production.md](references/tools/production.md)。其他工具按 workflow 的接口表选择，不混用 JSON schema。
+
+完整录屏增强继续继承已选系列风格，使用[漫画录屏组件与检查](references/tools/remotion.md#完整录屏的漫画积木路线)，保留用户要求的视频片头和双语关键词高亮；不得自行插入长静音等待页面切换。发布用三比例海报和发布文案独立交付，不自动替换视频片头。录屏增强与局部修订不自动缩小原完整项目的交付范围。
 
 ## 共用约束
 

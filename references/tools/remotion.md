@@ -116,3 +116,17 @@ API 依据：[Remotion 渲染接口](https://www.remotion.dev/docs/renderer/rend
 - 右侧和底部不仅要留位置，还要让白色图标及细线轮廓在手机尺寸下清楚可见。不要依赖平台可能存在的投影弥补浅底；近白背景、细网格或轻微灰度变化不能作为修复。
 - 对比不足时为该平台版本调整相关区域底色，或在平台操作区域后方加足够深的有色渐变；不要靠把重点内容移到白色按钮下方来增加对比。浅色真实界面可保留在内容区。
 - 叠层仅用于检查，导出视频不烧录这些仿平台按钮。记录实际检查的时间点与结果；只做模拟检查时，不声称抖音或视频号发布后已验收。
+
+## 完整录屏的漫画积木路线
+
+已有系列风格在录屏增强任务中继续生效，不因使用自编工程而回退成普通卡片。使用 `assets/remotion/src/recorded-comic.jsx` 的 `RecordedComic`（1920×1200，30fps）：开头封面页、完整原速视频、漫画气泡、逐块搭建的积木与 `ComicCaptions` 双语高亮均为真实组件。`cover` 包含 title/subtitle/tag/bricks；`coverFrames` 为片头帧数；`videoFrames` 为完整原片帧数；`video/audio` 为 public 素材名。`steps` 使用 start/label/detail/brick，可选 transition/params；`captions` 与 keywords/keywordsEn 沿用漫画字幕接口。这里的 `cover` 仅指视频片头标题页，不能充当发布海报。视频片头可用代码构图；只有用户明确要求将图片用于片头时，才配置 `cover.image` 为 public 图片名。发布海报另外按海报节点生成三比例，并登记交付清单，不因本组件存在片头而省略。
+
+先按完整录屏的实际界面切换写连续口播，必要时修改整段稿件；不要为了等页面切换自行插入长静音。无口播演示窗口需有当次用户要求，不能由制作方自行解释成合理停顿。配音与完整录屏长度不符时重新编排讲解；封面在录屏之前、结尾可留合理停留，不能删掉原片帧来凑时长。
+
+时间轴另含 `audioFile`（相对时间轴的 PCM16 WAV 路径）和 duration。执行 `python scripts/check_recorded_story.py <timeline.json>`，检查封面、关键词实际命中、双语字幕、原片覆盖时长和音轨中间超过1.2秒的低能量区间。该阈值用于暴露待处理断声，不代表听感验收。交付清单增加 `recorded_story` 指向该时间轴，`check-delivery` 会重新运行检查；实际转场、字幕高亮、画幅和末帧仍须从输出视频核对。用户明确选择其他风格或无声演示时使用对应路线，不强套此组件。
+
+### 固定渲染入口
+
+完整录屏工程使用 `node assets/remotion/render-recorded.mjs TIMELINE.json OUTPUT.mp4`，不逐期复制render.mjs。需要已有Python环境（默认仓库.venv，也可设VI_SAY_PYTHON）；素材位于时间轴同级public/。入口先检查实际源帧数、旁白、双语字幕与高亮配置，检查失败不启动浏览器；同时核对检查用WAV与实际播放音频逐字节一致。`--validate-only`仅校验；`--still=FRAME`导出PNG以检查布局。渲染复用共享运行环境并清理临时bundle，不覆盖产物。组件显式限制1920×1200/30fps，不再默默用错误帧率计算时间；字幕外观参数不能覆盖keywords或关闭双语。
+
+断声检查覆盖首尾和中间（包括音轨比片长短造成的尾部静音），默认超过1.2秒报错。用户明确要求无口播演示时，时间轴可声明`silentWindows:[{start,end,user_request}]`，仅豁免落在对应区间的静音。该记录不是额外审批，不能自行编造用户要求。长停顿阈值不替代自然度检查。

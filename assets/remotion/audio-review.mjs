@@ -104,15 +104,16 @@ export async function inspectAudioReview(doc, {timelinePath}) {
   return result;
 }
 
-export function audioRenderDecision(gate, {unreviewedAudio = false, showReviewBadge = false, output}) {
+export function audioRenderDecision(gate, {unreviewedAudio = false, showReviewBadge = false, neutralNameReason, output}) {
   if (gate.invalidSilentPreview) throw new Error(gate.issues.join('; '));
   if (showReviewBadge && !unreviewedAudio) throw new Error('--show-review-badge requires --unreviewed-audio');
+  if (neutralNameReason !== undefined && (!unreviewedAudio || typeof neutralNameReason !== 'string' || !neutralNameReason.trim())) throw new Error('Neutral review naming requires --unreviewed-audio and the actual user naming request');
   if (unreviewedAudio) {
     if (!gate.required) throw new Error('--unreviewed-audio is only for audible cartoon candidates');
-    if (!/(?:预览|候选|preview|candidate)/iu.test(path.basename(output, '.mp4'))) throw new Error('Unreviewed audio output filename must contain 预览, 候选, preview or candidate');
+    if (!neutralNameReason && !/(?:预览|候选|preview|candidate)/iu.test(path.basename(output, '.mp4'))) throw new Error('Unreviewed audio output filename must contain 预览, 候选, preview or candidate');
     return {mode: 'unreviewed_audio_candidate', listeningRecordValidated: false,
       listening: 'not_checked', audioQualityAutomaticallyCertified: false,
-      reviewBadgeVisible: showReviewBadge};
+      reviewBadgeVisible: showReviewBadge, ...(neutralNameReason ? {neutralNameReason} : {})};
   }
   if (gate.required && !gate.recordValidated) throw new Error(`Final cartoon render requires a valid full-track listening record: ${gate.issues.join('; ')}. Use --unreviewed-audio with an explicitly named candidate only.`);
   return {mode: gate.status, listeningRecordValidated: gate.recordValidated,
