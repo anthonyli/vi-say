@@ -96,9 +96,9 @@ test('cut durations keep frame boundaries and previous-scene fade causality',()=
   const incoming=sceneVisibility({index:1,frame:10,duration:150,transitionFrames:30,transition:'report'});
   assert.ok(outgoing===0||incoming===0);
 });
-test('only GL additions remain and all Remotion packages share one version',()=>{
+test('transition validation rejects unsupported effect types and keeps Remotion packages in sync',()=>{
   const manifest=JSON.parse(fs.readFileSync(new URL('../package.json',import.meta.url)));validateRuntimeVersions(manifest);
-  for(const name of ['three','@react-three/fiber','@remotion/three','pixi.js','pixi-filters','lottie-web','@remotion/lottie','animejs'])assert.ok(!Object.hasOwn(manifest.dependencies,name));
+  for(const name of ['pixi.js','pixi-filters','lottie-web','@remotion/lottie','animejs'])assert.ok(!Object.hasOwn(manifest.dependencies,name));
   for(const type of ['three','pixi','lottie','anime','clip']){const d=fixture();d.cartoonScenes[0].effects=[{type}];assert.throws(()=>validate(d),/effect type/);}
   assert.throws(()=>validateRuntimeVersions({dependencies:{remotion:'4.0.540','@remotion/transitions':'4.0.500'}}),/shared Remotion version/);
 });

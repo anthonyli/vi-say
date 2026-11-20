@@ -6,20 +6,24 @@ import os from 'node:os';
 import {fileURLToPath} from 'node:url';
 import {spawnSync} from 'node:child_process';
 import {loadRuntime} from './runtime.mjs';
+import {buildHtmlPreview} from './html-preview.mjs';
 const here=path.dirname(fileURLToPath(import.meta.url));
 const [input,output,...flags]=process.argv.slice(2);
-if(!input||!output)throw new Error('Usage: render-recorded.mjs TIMELINE OUTPUT [--still=FRAME] [--validate-only]');
-if(flags.some(x=>x!=='--validate-only'&&!/^--still=\d+$/.test(x)))throw new Error('Unknown option');
+if(!input||!output)throw new Error('Usage: render-recorded.mjs TIMELINE OUTPUT [--still=FRAME | --validate-only | --html-preview]');
+const htmlPreview=flags.length===1&&flags[0]==='--html-preview';
+if(!htmlPreview&&flags.some(x=>x!=='--validate-only'&&!/^--still=\d+$/.test(x)))throw new Error('Unknown option');
 const timeline=path.resolve(input),destination=path.resolve(output);
 const python=process.env.VI_SAY_PYTHON??path.resolve(here,'../../.venv/bin/python');
 const audit=spawnSync(python,[path.resolve(here,'../../scripts/check_recorded_story.py'),timeline],{encoding:'utf8'});
 if(audit.status!==0)throw new Error(audit.stderr||audit.stdout||String(audit.error));
 const props=JSON.parse(await fs.readFile(timeline,'utf8'));
 const publicDir=path.resolve(path.dirname(timeline),'public');
-for(const asset of [props.video,props.audio,props.cover?.image].filter(Boolean)){
+const assets=[];
+for(const asset of new Set([props.video,props.audio,props.cover?.image].filter(Boolean))){
  const resolved=path.resolve(publicDir,asset);
  if(!resolved.startsWith(publicDir+path.sep))throw new Error('Media must be inside public/');
  await fs.access(resolved);
+ assets.push([resolved,asset]);
 }
 // Rendering must consume exactly the audio inspected by the Python check.
 const inspected=await fs.readFile(path.resolve(path.dirname(timeline),props.audioFile));
@@ -27,6 +31,10 @@ if(!inspected.equals(await fs.readFile(path.resolve(publicDir,props.audio))))thr
 if(flags.includes('--validate-only')){process.stdout.write(audit.stdout);process.exit(0);}
 try{await fs.access(destination);throw new Error('Refusing to overwrite output');}catch(e){if(e.code!=='ENOENT')throw e;}
 const runtime=await loadRuntime();
+if(htmlPreview){
+ console.log(await buildHtmlPreview(props,assets,destination,runtime,{recorded:true}));
+ process.exit(0);
+}
 const temporary=await fs.mkdtemp(path.join(os.tmpdir(),'vi-say-recorded-'));
 const previous=process.cwd();
 try{

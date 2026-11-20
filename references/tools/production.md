@@ -87,6 +87,20 @@ python scripts/production.py render PROJECT/project.json --output-dir OUTPUT/fin
 
 前两条用于自动检查画面与运动。先看海报、入场中间帧和完成帧，再以原速观看短片；修复遮挡、溢出、拖沓或生硬接点后再扩展。程序拒绝无声样片被无标识地当成配音成片。正式输出仍需检查 AAC 编码后的音轨、操作真实性及音画对应。
 
+## 浏览器前审
+
+按[本期设置](../workflow.md#html-前审)决定是否执行前审。用新的预览目录保存每个送审版本。第一条使用项目当前画面时间轴和静音轨，第二条使用正式旁白 WAV 和根据它对齐的场景、字幕、口型。全轨听审记录在正式渲染时验证，HTML 可作为直接听审的播放入口。
+
+```sh
+python scripts/production.py preview-html PROJECT/project.json --output-dir PROJECT/review-v1
+python scripts/production.py preview-html PROJECT/project.json --audio PROJECT/final.wav --output-dir PROJECT/review-v2 --serve
+node assets/remotion/preview-server.mjs PROJECT/review-v2 8765
+```
+
+`--serve` 在写完预览后用本机 `http://127.0.0.1:8765/` 继续提供文件，并支持分段请求。不要用 `python -m http.server`，它不响应 Range，Chrome 会无法拖动 WAV，画面和口播就对不齐。也不要直接双击 `index.html`。预览目录里的 `index.html`、播放器和 `media/` 要留在一起。点画面或按空格后，Remotion 画面、烧录字幕和口播从同一帧开始；进度、音量和可展开的字幕导航在画面下方。默认高亮字幕在画面内同时显示中文和英文。浏览器没有 Canvas Draw Element 或 WebGL 2 时，shader 转场改用可见叠化，方便核对时机；Chrome 具备这两项时播放真实 shader。这一步不生成 MP4。已有标准 Remotion 时间轴可直接用 `node assets/remotion/render.mjs TIMELINE.json PREVIEW_DIRECTORY --html-preview`。收到用户确认后，使用已审核的素材和时间轴进行正式渲染。底层 `render` 保持独立，调用方按本期设置选择是否执行前审。
+
+漫画录屏项目可用 `node assets/remotion/render-recorded.mjs TIMELINE.json PREVIEW_DIRECTORY --html-preview`，预览调用录屏路线的同一画面组件、视频与声轨。
+
 ## 底层有声小龙门禁
 
 正式 compile/render 会将 pronunciation.json、listening.json 与真实证据一并携带，timeline.audioReview 引用这两份 JSON；底层渲染器再次校验当前 WAV、实际 spoken 哈希、全部术语、三项听审结论和证据。手写时间轴或绕过 production.py 也不能让未听审旁白直接变成正式输出。这里只验证记录与文件一致性，不认证审听者身份或自动判断音质。

@@ -14,6 +14,9 @@ import {GL_TRANSITIONS} from './gl-transitions.mjs';
 import {createRequire} from 'node:module';
 import {captionText} from './effects/captions.mjs';
 import {inspectAudioReview, audioRenderDecision} from './audio-review.mjs';
+import {buildHtmlPreview} from './html-preview.mjs';
+import {mapPodcastAssets, podcastCaptionOptions, podcastStillPoints, validatePodcast} from './podcast-contract.mjs';
+import {validatePodcastMedia} from './podcast-media.mjs';
 
 const types = new Set(['big-title', 'keyword', 'bullet-list', 'number', 'quote', 'comparison', 'browser', 'code', 'diagram', 'progress', 'chapter-label', 'info-card', 'input-bar']);
 const fail = message => {throw new Error(message);};
@@ -25,9 +28,10 @@ const rect = box => Array.isArray(box) && box.length === 4 && box.every(finite) 
 export function validate(doc) {
   if(doc.fontWeightRange!==undefined){const weights=typeof doc.fontWeightRange==='string'?doc.fontWeightRange.split(' ').map(Number):[];if(!doc.fontFile||weights.length!==2||weights.some(n=>!finite(n)||n<1||n>1000)||weights[0]>weights[1])fail('fontWeightRange needs a font file and an ascending weight range');}
   if(doc.modules!==undefined&&!Object.hasOwn(doc,'cartoonScenes'))fail('modules require a 16:9 cartoon scene timeline');
-  // New scene timelines do not need legacy overlays. Preserve the old contract
-  // for overlay-only documents, and normalize only an omitted editorial field.
-  if (Object.hasOwn(doc, 'scenes') && !Object.hasOwn(doc, 'overlays')) doc = {...doc, overlays: []};
+  // Normalize omitted legacy overlays only for the structured scene modes.
+  if ((Object.hasOwn(doc, 'scenes') || Object.hasOwn(doc, 'podcast')) && !Object.hasOwn(doc, 'overlays')) {
+    doc = {...doc, overlays: []};
+  }
   if (!['16:9', '4:3', '3:4'].includes(doc.aspect)) fail('Choose aspect 16:9, 4:3 or 3:4');
   if (!Number.isInteger(doc.fps) || doc.fps < 12 || doc.fps > 60) fail('fps must be 12–60');
   if (!finite(doc.duration) || doc.duration <= 0) fail('duration must be measured from the final audio');
@@ -43,7 +47,14 @@ export function validate(doc) {
   for (const cue of doc.captions) {
     interval(cue);
     if (cue.start < lastEnd || !hasText(cue.text)) fail('Captions must be ordered, non-overlapping and nonempty');
-    if(!hasText(captionText(cue.text,doc.modules?.captions??{})))fail('Caption display text is empty after punctuation cleanup');
+    if (!hasText(captionText(cue.text, doc.podcast ? podcastCaptionOptions : doc.modules?.captions))) {
+      fail('Caption display text is empty after punctuation cleanup');
+    }
+    if (doc.modules?.captions?.bilingual && !hasText(cue.en)) fail('Bilingual captions require an English translation in cue.en');
+    if (cue.en !== undefined && !hasText(cue.en)) fail('Caption en must be nonempty text');
+    for (const key of ['keywords', 'keywordsEn']) {
+      if (cue[key] !== undefined && !(Array.isArray(cue[key]) && cue[key].every(hasText))) fail(`Caption ${key} must be a list of terms`);
+    }
     if (cue.text.split('\n').length > 2 || [...cue.text].length > 44) fail('Split long captions into at most two short lines');
     lastEnd = cue.end;
     if (cue.tokens) {
@@ -72,7 +83,7 @@ export function validate(doc) {
     interval(cue);
     if (![cue.from ?? 1, cue.to ?? 1.025].every(n => finite(n) && n >= 1 && n <= 1.08)) fail('Use subtle zoom from 1 to at most 1.08');
   }
-  return validateCartoon(validateEditorial(doc));
+  return validateCartoon(validateEditorial(validatePodcast(doc)));
 }
 
 function stamp(t) {
@@ -82,7 +93,7 @@ function stamp(t) {
 
 async function main() {
   const [timeline, output, ...flags] = process.argv.slice(2);
-  const usage = 'Usage: node render.mjs timeline.json output.mp4 [--unreviewed-audio] [--show-review-badge] [--review-name-reason USER_REQUEST] [--validate-only | --audit-only | --stills directory]';
+  const usage = 'Usage: node render.mjs timeline.json output.mp4 [--unreviewed-audio] [--show-review-badge] [--review-name-reason USER_REQUEST] [--validate-only | --audit-only | --stills directory]\n       node render.mjs timeline.json output-directory --html-preview';
   if (!timeline || !output) fail(usage);
   let mode = 'render';
   let stillDirectory;
@@ -96,12 +107,13 @@ async function main() {
     if (mode !== 'render') fail(usage);
     if (flags[i] === '--validate-only') mode = 'validate';
     else if (flags[i] === '--audit-only') mode = 'audit';
+    else if (flags[i] === '--html-preview' && flags.length === 1) mode = 'html-preview';
     else if (flags[i] === '--stills' && flags[i + 1] && !flags[i + 1].startsWith('--')) {
       mode = 'stills';
       stillDirectory = path.resolve(flags[++i]);
     } else fail(usage);
   }
-  if (!output.endsWith('.mp4')) fail('Use an .mp4 output path');
+  if (mode !== 'html-preview' && !output.endsWith('.mp4')) fail('Use an .mp4 output path');
   const input = path.resolve(timeline);
   const target = path.resolve(output);
   const subtitle = target.slice(0, -4) + '.srt';
@@ -109,6 +121,8 @@ async function main() {
   let warnings;
   let audioReview;
   let audioDecision;
+  let runtimePromise;
+  const runtimeForTask = () => runtimePromise ??= loadRuntime();
   const assets = new Map();
   async function resolveAsset(value) {
     if (!hasText(value) || /^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(value)) fail('Stage media locally before rendering');
@@ -127,11 +141,21 @@ async function main() {
       if(doc.speechMotion&&hash!==doc.speechMotion.audio_sha256) fail('Mouth motion belongs to a different audio file; regenerate it');
       if(doc.mouthCues&&hash!==doc.mouthCueAudioSha256)fail('Mouth cues belong to a different audio file; regenerate them');
     }
-    warnings = doc.cartoonScenes ? [{code:'CARTOON_REVIEW',message:'Review real frames, word timing and original-speed playback; fixed styling does not certify visual quality.'}] : auditEditorial(doc);
+    warnings = doc.podcast
+      ? [{code: 'PODCAST_REVIEW', message: 'Verify the match between source footage and narration, emphasis timing, and readable callouts in playback.'}]
+      : doc.cartoonScenes
+        ? [{code: 'CARTOON_REVIEW', message: 'Review real frames, word timing and original-speed playback; fixed styling does not certify visual quality.'}]
+        : auditEditorial(doc);
     for (const key of ['audio', 'video', 'image', 'fontFile']) if (doc[key]) doc[key] = await resolveAsset(doc[key]);
     for (const cue of doc.overlays) if (cue.image) cue.image = await resolveAsset(cue.image);
     await mapEditorialAssets(doc, resolveAsset);
     await mapCartoonAssets(doc, resolveAsset);
+    await mapPodcastAssets(doc, resolveAsset);
+    if (doc.podcast) {
+      const {renderer} = await runtimeForTask();
+      const ffprobe = renderer.RenderInternals.getExecutablePath({type: 'ffprobe', logLevel: 'error', indent: false});
+      await validatePodcastMedia(doc, assets, ffprobe);
+    }
   } catch (error) {
     if (mode !== 'audit') throw error;
     console.log(JSON.stringify({valid: false, errors: [error.message], warnings: warnings ?? [], qualityAssessed: false}, null, 2));
@@ -142,7 +166,13 @@ async function main() {
   if (mode === 'validate') { console.log(JSON.stringify({valid: true, qualityAssessed: false, audioReview})); return; }
   if (mode === 'audit') {
     console.log(JSON.stringify({valid: true, errors: [], warnings, qualityAssessed: false,
-      localAssets: assets.size, audioReview, transitions:transitionPlan(doc),stillPoints: cartoonStillPoints(doc) ?? editorialStillPoints(doc)}, null, 2));
+      localAssets: assets.size, audioReview, transitions:transitionPlan(doc),
+      stillPoints: podcastStillPoints(doc) ?? cartoonStillPoints(doc) ?? editorialStillPoints(doc)}, null, 2));
+    return;
+  }
+  if (mode === 'html-preview') {
+    const runtime = await runtimeForTask();
+    console.log(await buildHtmlPreview(doc, assets, target, runtime));
     return;
   }
   if (mode === 'render') {
@@ -163,7 +193,7 @@ async function main() {
   const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'narrated-motion-'));
   const originalCwd = process.cwd();
   try {
-    const runtime = await loadRuntime();
+    const runtime = await runtimeForTask();
     const usesGL=transitionPlan(doc).some(t=>t.engine==='gl');
     // Remotion locates downloaded Chrome relative to cwd's package.json.
     // Keep that browser in the same shared cache, not each video project.
@@ -197,7 +227,7 @@ async function main() {
     const chromiumOptions=usesGL?{gl}:undefined;
     const composition = await selectComposition({serveUrl, id: 'NarratedVideo', inputProps: doc, browserExecutable,chromiumOptions});
     if (mode === 'stills') {
-      const points = cartoonStillPoints(doc) ?? editorialStillPoints(doc);
+      const points = podcastStillPoints(doc) ?? cartoonStillPoints(doc) ?? editorialStillPoints(doc);
       const manifest = [];
       for (const [index, point] of points.entries()) {
         const name = `${String(index + 1).padStart(3, '0')}-frame-${String(point.frame).padStart(6, '0')}.png`;
@@ -215,7 +245,8 @@ async function main() {
     await renderMedia({serveUrl, composition, inputProps: doc, codec: 'h264', audioCodec: 'aac',
       pixelFormat: 'yuv420p', colorSpace: 'bt709', imageFormat: 'png', audioBitrate: '192k', crf: 18, sampleRate: 48000,
       outputLocation: target, overwrite: false, concurrency: 2, browserExecutable,chromiumOptions});
-    await fs.writeFile(subtitle, doc.captions.map((c,i) => `${i+1}\n${stamp(c.start)} --> ${stamp(c.end)}\n${captionText(c.text,doc.modules?.captions)}\n`).join('\n'), {flag: 'wx'});
+    const captionOptions = doc.podcast ? podcastCaptionOptions : doc.modules?.captions;
+    await fs.writeFile(subtitle, doc.captions.map((c,i) => `${i+1}\n${stamp(c.start)} --> ${stamp(c.end)}\n${[captionText(c.text,captionOptions), captionOptions?.bilingual !== false && c.en].filter(Boolean).join('\n')}\n`).join('\n'), {flag: 'wx'});
     if (audioReview.required) await fs.writeFile(target.slice(0, -4) + '.audio-review.json', JSON.stringify({
       schema_version: 1, output: target, video_sha256: createHash('sha256').update(await fs.readFile(target)).digest('hex'),
       audio_sha256: audioReview.audioSha256, ...audioDecision, review: audioReview,

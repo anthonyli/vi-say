@@ -22,10 +22,29 @@ OUTRO=json.loads((ASSETS/'outro.json').read_text())
 INTRO=json.loads((ASSETS/'intro.json').read_text())
 PRESETS=sorted(p.stem for p in (ASSETS/'presets').glob('*.json'))
 TEMPLATES=['story',*sorted(p.stem for p in (ASSETS/'examples').glob('*.json'))]
+HTML_REVIEW_MODES = ('required', 'skip')
 
 
 def write_json(path, data):
     Path(path).write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n')
+
+
+def html_review_mode(override, project_path):
+    if override is not None:
+        return override
+    preferences = ROOT / 'private/production-preferences.json'
+    for path in (project_path, preferences if preferences.exists() else None):
+        if path is None:
+            continue
+        doc = json.loads(path.read_text(encoding='utf-8'))
+        if not isinstance(doc, dict):
+            raise ValueError(f'{path}: expected a JSON object')
+        if 'html_review' in doc:
+            mode = doc['html_review']
+            if mode not in HTML_REVIEW_MODES:
+                raise ValueError(f'{path}: html_review must be required or skip')
+            return mode
+    return 'required'
 
 
 def outro_scene(start, end, anchors):
@@ -95,7 +114,7 @@ def covers(base,doc,out):
     return records
 
 
-def compile_project(base,doc,out,*,audio=None,listening=None,preview=False):
+def compile_project(base,doc,out,*,audio=None,listening=None,preview=False,html_preview=False):
     """Never invent final audio timing; narration and scene coverage must agree."""
     if not isinstance(doc.get('scenes'),list) or not doc['scenes']:
         raise ValueError('Author scenes from final word timing first')
@@ -104,18 +123,20 @@ def compile_project(base,doc,out,*,audio=None,listening=None,preview=False):
     text=(base/doc['narration']).read_text()
     plan=prepare(text,json.loads((base/doc['lexicon']).read_text()))
     f=font_path(str(base/doc['font']) if doc.get('font') else str(ASSETS/'fonts/Manrope.ttf') if doc.get('modules',{}).get('background')=='studio' else None)
+    record = None
     if preview:
         duration=doc['scenes'][-1]['end']
         if isinstance(duration,bool) or not isinstance(duration,(int,float)) or not 0<duration<=600:
             raise ValueError('Preview duration must be 0..600 seconds')
     else:
-        if audio is None or listening is None:
+        if audio is None or (listening is None and not html_preview):
             raise ValueError('Final render requires --audio and --listening; use --preview only for visibly marked silent studies')
         duration=wav_info(audio)['duration_seconds']
-        record=json.loads(Path(listening).read_text())
-        result=check_listening(plan,audio,record,Path(listening).resolve().parent)
-        if not result['record_validated']:
-            raise ValueError('; '.join(result['issues']))
+        if listening is not None:
+            record=json.loads(Path(listening).read_text())
+            result=check_listening(plan,audio,record,Path(listening).resolve().parent)
+            if not result['record_validated']:
+                raise ValueError('; '.join(result['issues']))
     if abs(doc['scenes'][-1]['end']-duration)>.001:
         raise ValueError('Scene endpoint must match measured final WAV duration; rebind word anchors, never stretch animation or audio')
     caption_input=doc.get('captions',[])
@@ -132,7 +153,7 @@ def compile_project(base,doc,out,*,audio=None,listening=None,preview=False):
     rounded=doc.get('modules',{}).get('character',{}).get('mode')=='rounded'
     if rounded:
         timeline['characterClosed']='dragon-closed.png';timeline['characterNeutral']='dragon-neutral.png'
-    if doc.get('mouth_cues'):
+    if doc.get('mouth_cues') and not (preview and html_preview):
         if preview or not audio:raise ValueError('mouth_cues requires its final audio; silent studies use a closed mouth')
         cues=json.loads((base/doc['mouth_cues']).read_text())
         if cues.get('audio_sha256')!=hashlib.sha256(Path(audio).read_bytes()).hexdigest():
@@ -164,6 +185,11 @@ def compile_project(base,doc,out,*,audio=None,listening=None,preview=False):
                 n=min(remaining,48000);w.writeframes(b'\0\0'*n);remaining-=n
     else:
         shutil.copy2(audio,out/'audio.wav')
+        from speech_motion import analyze
+        timeline['speechMotion']=analyze(audio,timeline['fps'])
+        timeline['characterClosed']='dragon-closed.png'
+        shutil.copyfile(ASSETS/STYLE['character']['closedFile'],out/'dragon-closed.png')
+    if record is not None:
         # Carry the exact checked conclusion and its evidence with the timeline.
         # The low-level renderer revalidates these against the staged WAV.
         carried_record=copy.deepcopy(record)
@@ -173,10 +199,6 @@ def compile_project(base,doc,out,*,audio=None,listening=None,preview=False):
         carried_record['evidence']['path']=evidence_name
         write_json(out/'listening.json',carried_record)
         timeline['audioReview']={'pronunciation':'pronunciation.json','listening':'listening.json'}
-        from speech_motion import analyze
-        timeline['speechMotion']=analyze(audio,timeline['fps'])
-        timeline['characterClosed']='dragon-closed.png'
-        shutil.copyfile(ASSETS/STYLE['character']['closedFile'],out/'dragon-closed.png')
     # Copy only explicitly authored local screenshots; no synthetic interface claims.
     for i,s in enumerate(timeline['cartoonScenes']):
         for key in ['image','video']:
@@ -186,7 +208,8 @@ def compile_project(base,doc,out,*,audio=None,listening=None,preview=False):
                 name=f'scene-{i}{src.suffix}';shutil.copy2(src,out/name);s[key]=name
     write_json(out/'timeline.json',timeline);write_json(out/'pronunciation.json',plan)
     (out/'spoken.txt').write_text(plan['spoken_text'])
-    covers(base,doc,out/'covers')
+    if not html_preview:
+        covers(base,doc,out/'covers')
     return out/'timeline.json'
 
 
@@ -229,6 +252,15 @@ def main():
         if name!='covers':
             a.add_argument('--audio',type=Path);a.add_argument('--listening',type=Path);a.add_argument('--preview',action='store_true')
         if name=='render':a.add_argument('--stills',action='store_true')
+    a = sub.add_parser('preview-html', help='Build a playable browser preview without encoding video')
+    a.add_argument('project', type=Path)
+    a.add_argument('--output-dir', required=True, type=Path)
+    a.add_argument('--audio', type=Path, help='Use this narration WAV. By default the preview is silent.')
+    a.add_argument('--serve', action='store_true', help='Keep a local player open on 127.0.0.1 after the preview is written')
+    a.add_argument('--port', type=int, default=8765)
+    a = sub.add_parser('review-mode', help='Resolve the HTML review preference for this production')
+    a.add_argument('project', type=Path, nargs='?')
+    a.add_argument('--html-review', choices=HTML_REVIEW_MODES, help='Override the preference for this run')
     a=sub.add_parser('pack');a.add_argument('output',type=Path)
     sub.add_parser('revise-delivery', help='Clone delivery scope and lock unchanged artifacts; see revise-delivery --help')
     sub.add_parser('check-delivery',help='Check exact delivery files, hashes and poster ratios')
@@ -239,8 +271,23 @@ def main():
         return subprocess.run(['node',str(ROOT/'assets/remotion/effects/catalog.mjs')]+(['--json'] if args.json else []),check=True)
     if args.command=='init':return init(args.directory,args.title,args.subtitle,args.series,args.preset,args.template)
     if args.command=='pack':return package_skill(args.output)
+    if args.command == 'review-mode':
+        print(html_review_mode(args.html_review, args.project))
+        return
     base,doc=project(args.project);out=args.output_dir.resolve()
     if args.command=='covers':covers(base,doc,out);print(out);return
+    if args.command == 'preview-html':
+        from tempfile import TemporaryDirectory
+        with TemporaryDirectory(prefix='vi-say-preview-') as temp:
+            timeline = compile_project(base, doc, Path(temp) / 'stage',
+                                       audio=args.audio, preview=args.audio is None, html_preview=True)
+            subprocess.run(['node', str(ROOT/'assets/remotion/render.mjs'), str(timeline),
+                            str(out), '--html-preview'], check=True)
+        if args.serve:
+            if not 0 <= args.port <= 65535:
+                raise ValueError('--port must be 0–65535')
+            subprocess.run(['node', str(ROOT/'assets/remotion/preview-server.mjs'), str(out), str(args.port)], check=True)
+        return
     timeline=compile_project(base,doc,out,audio=args.audio,listening=args.listening,preview=args.preview)
     if args.command=='render':
         cmd=['node',str(ROOT/'assets/remotion/render.mjs'),str(timeline),str(out/'video.mp4')]

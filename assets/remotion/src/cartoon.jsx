@@ -92,7 +92,7 @@ export function CartoonScenes({doc}) {
   return <>
     {doc.modules?.background==='studio'?<StudioBackdrop time={frame/fps}/>:doc.modules?.background==='glass'?<BrightBackdrop time={frame/fps} duration={doc.duration}/>:<AbsoluteFill style={{background:C.white}}/>}
     {doc.cartoonScenes.map((s,i)=>{const next=doc.cartoonScenes[i+1];return <Sequence key={i} from={Math.round(s.start*fps)} durationInFrames={Math.round(s.end*fps)-Math.round(s.start*fps)+(next?Math.ceil(transitionSeconds(next,sceneTransition(next,i+1,doc))*fps):0)}><SceneLayer scene={s} index={i} doc={doc}/></Sequence>;})}
-    {characterSettings.mode!=='none'&&<div style={{position:'absolute',...box,transform:`translateY(${(1-p)*M.travel}px) rotate(${(1-p)*-7+tilt}deg) scale(${.92+.08*p})`,transformOrigin:'50% 90%',opacity:clamp(p),pointerEvents:'none'}}>
+    {characterSettings.mode!=='none'&&<div style={{position:'absolute',...box,transform:`translateY(${(1-p)*M.travel}px) rotate(${(1-p)*-7+tilt}deg) scale(${.92+.08*p})`,transformOrigin:'50% 90%',opacity:characterSettings.mode==='rounded'?1:clamp(p),pointerEvents:'none'}}>
       <div style={{position:'absolute',bottom:15,left:'22%',width:'60%',height:34,borderRadius:'50%',background:`${C.black}22`,filter:'blur(14px)'}}/>
       <div style={{position:'absolute',left:(box.width-iw)/2,top:(box.height-ih)/2,width:iw,height:ih,transform:`perspective(1600px) rotateY(${turn}deg)`}}>
         {characterSettings.mode==='rounded'?<DragonMouth x={0} y={0} w={iw} time={frame/fps} cues={mouthCues} closedFile={doc.characterClosed} neutralFile={doc.characterNeutral}/>:<>        <Img src={staticFile(doc.character)} style={{position:'absolute',width:'100%',height:'100%'}}/>

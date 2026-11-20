@@ -98,3 +98,16 @@ test('counters retain the actual numeric endpoint and entry duration is configur
   assert.equal(counterValue({value:5,seconds:1},0),0);
   assert.ok(Math.abs(pop(.35,0,.7)-pop(.7,0,1.4))<1e-9);
 });
+
+test('bilingual captions require a translation while legacy Chinese-only timelines still work', () => {
+  const doc = fixture([bot()]);
+  doc.captions = [{start: 0, end: 2, text: '打开软件'}];
+  validate(doc);
+  doc.modules.captions = {style: 'highlight', bilingual: true, keywordsEn: ['app']};
+  assert.throws(() => validate(doc), /cue.en/);
+  doc.captions[0].en = 'Open the app.';
+  validate(doc);
+  delete doc.captions[0].en;
+  doc.modules.captions.bilingual = false;
+  validate(doc);
+});

@@ -13,7 +13,7 @@ import wave
 import zipfile
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from pronunciation import prepare, check_listening, digest
-from production_design import STYLE, font_path, poster, fit_text
+from production_design import ROOT, STYLE, font_path, poster, fit_text
 from production import init, compile_project, package_skill
 
 
@@ -136,6 +136,39 @@ class Production(unittest.TestCase):
             data=json.loads(timeline.read_text());self.assertTrue(data['visualPreview'])
             self.assertTrue((p/'preview/audio.wav').is_file())
             with self.assertRaises(FileExistsError):compile_project(p/'project',doc,p/'preview',preview=True)
+
+    def test_html_preview_keeps_captions_and_the_audible_track(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            init(root/'project','预览动效','副标题','系列')
+            base=root/'project'
+            doc=json.loads((base/'project.json').read_text())
+            doc['captions']=[{'start':0.4,'end':2.2,'text':'先看画面，再听口播。','en':'Watch the visuals and listen to the narration.'}]
+            doc['scenes'][1]['transition']='gl:CrossZoom'
+            (base/'project.json').write_text(json.dumps(doc,ensure_ascii=False))
+            frames=round(doc['scenes'][-1]['end']*48000)
+            audio=root/'voice.wav'
+            with wave.open(str(audio),'wb') as w:
+                w.setparams((1,2,48000,0,'NONE','not compressed'))
+                w.writeframes(b'\x10\x00'*frames)
+            out=root/'review'
+            result=subprocess.run([sys.executable,str(ROOT/'scripts/production.py'),'preview-html',
+                                   str(base/'project.json'),'--audio',str(audio),'--output-dir',str(out)],
+                                  capture_output=True,text=True)
+            self.assertEqual(result.returncode,0,result.stderr)
+            timeline=(out/'timeline.js').read_text()
+            self.assertIn('先看画面，再听口播。',timeline)
+            self.assertIn('Watch the visuals and listen to the narration.',timeline)
+            self.assertIn('"visualPreview":false',timeline)
+            self.assertIn('gl:CrossZoom',timeline)
+            player=(out/'player.js').read_text()
+            self.assertIn('synced-playback',player)
+            self.assertTrue('画面、字幕和口播一起开始' in player or r'\u753b\u9762\u3001\u5b57\u5e55\u548c\u53e3\u64ad\u4e00\u8d77\u5f00\u59cb' in player.lower(),
+                            'playable preview bundle is missing the start instruction')
+            wavs=list((out/'media').glob('*.wav'))
+            self.assertEqual(len(wavs),1)
+            self.assertEqual(wavs[0].read_bytes(),audio.read_bytes())
+            self.assertIn('player.js',(out/'index.html').read_text())
 
     def test_pack_excludes_runtime_and_developer_artifacts(self):
         with tempfile.TemporaryDirectory() as d:

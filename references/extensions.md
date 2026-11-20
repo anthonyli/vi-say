@@ -59,7 +59,7 @@ node --test assets/remotion/tests/cartoon-contract.test.mjs assets/remotion/test
 |---|---|
 | 小龙新场景类型 | `src/cartoon.jsx` 的画面、`cartoon-contract.mjs` 的类型与字段校验；新增素材需更新 `mapCartoonAssets`，新增状态需更新 `cartoonStillPoints` |
 | 编辑式新图解 | `src/editorial.jsx` 和 `editorial-contract.mjs` 的校验、素材映射、关键帧取样 |
-| 实录新信息层 | `src/index.jsx` 的绘制、`render.mjs` 的类型与内容校验 |
+| 实录新信息层 | `src/video.jsx` 的绘制、`render.mjs` 的类型与内容校验 |
 | 共享元素新结构 | 任务 Python 适配器的 `create_scenes(config, config_dir)`，复用 `shared-motion/core.py` 与转场工具 |
 | 新 SVG 装置 | Anatomy `scene.mjs` 的元数据与 `renderFrame(seconds)`，使用独立 SVG 渲染入口 |
 

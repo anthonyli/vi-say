@@ -155,7 +155,7 @@ def ass_text(captions, font_name='PingFang SC', font_size=40, font_file=None):
     events = []
     for cue in captions:
         lines = cue['text'].split('\n')
-        # Match Captions in assets/remotion/src/index.jsx: 60px line boxes,
+        # Match Captions in assets/remotion/src/video.jsx: 60px line boxes,
         # 14/28px padding, 12px corner radius and 7% (~76px) bottom margin.
         width = max(text_width(ass_escape(line), font_size, font_file) for line in lines) + 56
         if width > 1920 * .86 * .72:

@@ -40,7 +40,7 @@ function silentPcm16(bytes) {
 
 /** Validate a recorded human/direct-audio conclusion, never acoustic quality. */
 export async function inspectAudioReview(doc, {timelinePath}) {
-  const result = {required: Array.isArray(doc.cartoonScenes), recordValidated: false,
+  const result = {required: Array.isArray(doc.cartoonScenes) || Boolean(doc.podcast), recordValidated: false,
     audioQualityAutomaticallyCertified: false, status: 'not_applicable', issues: []};
   if (!result.required) return result;
   const base = path.dirname(path.resolve(timelinePath));
@@ -109,13 +109,13 @@ export function audioRenderDecision(gate, {unreviewedAudio = false, showReviewBa
   if (showReviewBadge && !unreviewedAudio) throw new Error('--show-review-badge requires --unreviewed-audio');
   if (neutralNameReason !== undefined && (!unreviewedAudio || typeof neutralNameReason !== 'string' || !neutralNameReason.trim())) throw new Error('Neutral review naming requires --unreviewed-audio and the actual user naming request');
   if (unreviewedAudio) {
-    if (!gate.required) throw new Error('--unreviewed-audio is only for audible cartoon candidates');
+    if (!gate.required) throw new Error('--unreviewed-audio is only for audible cartoon or podcast candidates');
     if (!neutralNameReason && !/(?:预览|候选|preview|candidate)/iu.test(path.basename(output, '.mp4'))) throw new Error('Unreviewed audio output filename must contain 预览, 候选, preview or candidate');
     return {mode: 'unreviewed_audio_candidate', listeningRecordValidated: false,
       listening: 'not_checked', audioQualityAutomaticallyCertified: false,
       reviewBadgeVisible: showReviewBadge, ...(neutralNameReason ? {neutralNameReason} : {})};
   }
-  if (gate.required && !gate.recordValidated) throw new Error(`Final cartoon render requires a valid full-track listening record: ${gate.issues.join('; ')}. Use --unreviewed-audio with an explicitly named candidate only.`);
+  if (gate.required && !gate.recordValidated) throw new Error(`Final render requires a valid full-track listening record: ${gate.issues.join('; ')}. Use --unreviewed-audio with an explicitly named candidate only.`);
   return {mode: gate.status, listeningRecordValidated: gate.recordValidated,
     audioQualityAutomaticallyCertified: false, reviewBadgeVisible: false};
 }

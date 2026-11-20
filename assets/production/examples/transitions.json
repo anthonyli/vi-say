@@ -687,182 +687,218 @@
     {
       "start": 0,
       "end": 2,
-      "text": "30 种 GL 转场 + 5 种基础转场"
+      "text": "30 种 GL 转场 + 5 种基础转场",
+      "en": "30 GL transitions and 5 basic transitions"
     },
     {
       "start": 2,
       "end": 4,
-      "text": "01  gl:BookFlip\n书页翻转"
+      "text": "01  gl:BookFlip\n书页翻转",
+      "en": "Page flip"
     },
     {
       "start": 4,
       "end": 6,
-      "text": "02  gl:InvertedPageCurl\n纸张卷页"
+      "text": "02  gl:InvertedPageCurl\n纸张卷页",
+      "en": "Inverted page curl"
     },
     {
       "start": 6,
       "end": 8,
-      "text": "03  gl:Cube\n立方体旋转"
+      "text": "03  gl:Cube\n立方体旋转",
+      "en": "Cube rotation"
     },
     {
       "start": 8,
       "end": 10,
-      "text": "04  gl:Doorway\n双门开启"
+      "text": "04  gl:Doorway\n双门开启",
+      "en": "Opening doors"
     },
     {
       "start": 10,
       "end": 12,
-      "text": "05  gl:GridFlip\n网格翻牌"
+      "text": "05  gl:GridFlip\n网格翻牌",
+      "en": "Flipping tiles"
     },
     {
       "start": 12,
       "end": 14,
-      "text": "06  gl:CrossWarp\n交叉扭曲"
+      "text": "06  gl:CrossWarp\n交叉扭曲",
+      "en": "Cross warp"
     },
     {
       "start": 14,
       "end": 16,
-      "text": "07  gl:CrossZoom\n交叉缩放模糊"
+      "text": "07  gl:CrossZoom\n交叉缩放模糊",
+      "en": "Zoom blur"
     },
     {
       "start": 16,
       "end": 18,
-      "text": "08  gl:GlitchMemories\n色散故障闪回"
+      "text": "08  gl:GlitchMemories\n色散故障闪回",
+      "en": "Chromatic glitch"
     },
     {
       "start": 18,
       "end": 20,
-      "text": "09  gl:Fade\n柔和叠化"
+      "text": "09  gl:Fade\n柔和叠化",
+      "en": "Soft dissolve"
     },
     {
       "start": 20,
       "end": 22,
-      "text": "10  gl:DirectionalWarp\n定向扭曲推进"
+      "text": "10  gl:DirectionalWarp\n定向扭曲推进",
+      "en": "Directional warp"
     },
     {
       "start": 22,
       "end": 24,
-      "text": "11  gl:DreamyZoom\n梦幻旋转缩放"
+      "text": "11  gl:DreamyZoom\n梦幻旋转缩放",
+      "en": "Rotating zoom"
     },
     {
       "start": 24,
       "end": 26,
-      "text": "12  gl:Swap\n前后景换位"
+      "text": "12  gl:Swap\n前后景换位",
+      "en": "Swap layers"
     },
     {
       "start": 26,
       "end": 28,
-      "text": "13  gl:WindowBlinds\n百叶窗切换"
+      "text": "13  gl:WindowBlinds\n百叶窗切换",
+      "en": "Window blinds"
     },
     {
       "start": 28,
       "end": 30,
-      "text": "14  gl:WindowSlices\n窗口切片"
+      "text": "14  gl:WindowSlices\n窗口切片",
+      "en": "Window slices"
     },
     {
       "start": 30,
       "end": 32,
-      "text": "15  gl:WaterDrop\n水滴涟漪"
+      "text": "15  gl:WaterDrop\n水滴涟漪",
+      "en": "Water drop"
     },
     {
       "start": 32,
       "end": 34,
-      "text": "16  gl:Ripple\n波纹扩散"
+      "text": "16  gl:Ripple\n波纹扩散",
+      "en": "Ripples"
     },
     {
       "start": 34,
       "end": 36,
-      "text": "17  gl:Swirl\n旋涡扭转"
+      "text": "17  gl:Swirl\n旋涡扭转",
+      "en": "Swirl"
     },
     {
       "start": 36,
       "end": 38,
-      "text": "18  gl:Morph\n画面形变融合"
+      "text": "18  gl:Morph\n画面形变融合",
+      "en": "Morph"
     },
     {
       "start": 38,
       "end": 40,
-      "text": "19  gl:GlitchDisplace\n位移故障"
+      "text": "19  gl:GlitchDisplace\n位移故障",
+      "en": "Glitch displacement"
     },
     {
       "start": 40,
       "end": 42,
-      "text": "20  gl:Pixelize\n像素化融合"
+      "text": "20  gl:Pixelize\n像素化融合",
+      "en": "Pixelation"
     },
     {
       "start": 42,
       "end": 44,
-      "text": "21  gl:Hexagonalize\n六边形像素化"
+      "text": "21  gl:Hexagonalize\n六边形像素化",
+      "en": "Hexagonal mosaic"
     },
     {
       "start": 44,
       "end": 46,
-      "text": "22  gl:PolkaDotsCurtain\n圆点幕布"
+      "text": "22  gl:PolkaDotsCurtain\n圆点幕布",
+      "en": "Polka dot curtain"
     },
     {
       "start": 46,
       "end": 48,
-      "text": "23  gl:CircleIris\n圆形收放"
+      "text": "23  gl:CircleIris\n圆形收放",
+      "en": "Circular iris"
     },
     {
       "start": 48,
       "end": 50,
-      "text": "24  gl:BowTieHorizontal\n蝴蝶结擦除"
+      "text": "24  gl:BowTieHorizontal\n蝴蝶结擦除",
+      "en": "Horizontal bow tie"
     },
     {
       "start": 50,
       "end": 52,
-      "text": "25  gl:StarWipe\n星形揭示"
+      "text": "25  gl:StarWipe\n星形揭示",
+      "en": "Star wipe"
     },
     {
       "start": 52,
       "end": 54,
-      "text": "26  gl:Wind\n风吹颗粒"
+      "text": "26  gl:Wind\n风吹颗粒",
+      "en": "Windblown particles"
     },
     {
       "start": 54,
       "end": 56,
-      "text": "27  gl:BurnThrough\n灼烧揭示"
+      "text": "27  gl:BurnThrough\n灼烧揭示",
+      "en": "Burn through"
     },
     {
       "start": 56,
       "end": 58,
-      "text": "28  gl:FilmBurn\n胶片漏光"
+      "text": "28  gl:FilmBurn\n胶片漏光",
+      "en": "Film burn"
     },
     {
       "start": 58,
       "end": 60,
-      "text": "29  gl:InkBleed\n墨迹晕染"
+      "text": "29  gl:InkBleed\n墨迹晕染",
+      "en": "Ink bleed"
     },
     {
       "start": 60,
       "end": 62,
-      "text": "30  gl:Mosaic\n马赛克空间拼接"
+      "text": "30  gl:Mosaic\n马赛克空间拼接",
+      "en": "Mosaic tiles"
     },
     {
       "start": 62,
       "end": 64,
-      "text": "31  slide\n横向滑入"
+      "text": "31  slide\n横向滑入",
+      "en": "Slide in"
     },
     {
       "start": 64,
       "end": 66,
-      "text": "32  radial\n圆形揭示"
+      "text": "32  radial\n圆形揭示",
+      "en": "Radial reveal"
     },
     {
       "start": 66,
       "end": 68,
-      "text": "33  wipe\n擦除"
+      "text": "33  wipe\n擦除",
+      "en": "Wipe"
     },
     {
       "start": 68,
       "end": 70,
-      "text": "34  flip\n透视翻入"
+      "text": "34  flip\n透视翻入",
+      "en": "Perspective flip"
     },
     {
       "start": 70,
       "end": 72,
-      "text": "35  converge\n汇聚展开"
+      "text": "35  converge\n汇聚展开",
+      "en": "Converge"
     }
   ],
   "keywords": [],

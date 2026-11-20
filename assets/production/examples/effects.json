@@ -781,52 +781,62 @@
     {
       "start": 0.4,
       "end": 2.6,
-      "text": "样式、动作和内容，分别选择。"
+      "text": "样式、动作和内容，分别选择。",
+      "en": "Choose the style, motion and content independently."
     },
     {
       "start": 3.4,
       "end": 6.6,
-      "text": "跳跃、探头、挤压和回弹。"
+      "text": "跳跃、探头、挤压和回弹。",
+      "en": "Jump, peek, squash and bounce."
     },
     {
       "start": 7.3,
       "end": 9.8,
-      "text": "连接完成，状态跟着更新。"
+      "text": "连接完成，状态跟着更新。",
+      "en": "The status updates when the connection is complete."
     },
     {
       "start": 10.6,
       "end": 11.9,
-      "text": "多份输入，先汇聚。"
+      "text": "多份输入，先汇聚。",
+      "en": "Collect the inputs in one place."
     },
     {
       "start": 12.1,
       "end": 13.4,
-      "text": "形成摘要，保留重点。"
+      "text": "形成摘要，保留重点。",
+      "en": "Summarize the key points."
     },
     {
       "start": 13.8,
       "end": 15.7,
-      "text": "再分发到不同的落点。"
+      "text": "再分发到不同的落点。",
+      "en": "Send the results to different destinations."
     },
     {
       "start": 16.3,
       "end": 18.7,
-      "text": "同一个对象，沿路径传递。"
+      "text": "同一个对象，沿路径传递。",
+      "en": "Follow the same object along the path."
     },
     {
       "start": 19.3,
       "end": 21.7,
-      "text": "按当前讲解，聚焦关键区域。"
+      "text": "按当前讲解，聚焦关键区域。",
+      "en": "Focus on the area being discussed."
     },
     {
       "start": 22.3,
       "end": 24.7,
-      "text": "卡片迁移，指针跟随。"
+      "text": "卡片迁移，指针跟随。",
+      "en": "The pointer follows the moving card."
     },
     {
       "start": 25.4,
       "end": 28.7,
-      "text": "字幕去标点，核心词高亮。"
+      "text": "字幕去标点，核心词高亮。",
+      "en": "Hide Chinese punctuation and highlight key terms."
     }
   ],
   "keywords": [

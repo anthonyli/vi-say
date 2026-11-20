@@ -2,6 +2,7 @@
   "background": "studio",
   "captions": {
     "style": "highlight",
+    "bilingual": true,
     "stripPunctuation": true,
     "keywords": [],
     "protectedTerms": []

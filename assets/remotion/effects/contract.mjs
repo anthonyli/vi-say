@@ -46,10 +46,11 @@ export function validateModules(doc) {
   const m=doc.modules;keys(m,['background','captions','character'],'modules');
   if(m.background!==undefined)choice(m.background,['glass','classic','studio'],'background');
   if(m.captions!==undefined){
-    const c=m.captions;keys(c,['style','stripPunctuation','keywords','protectedTerms'],'captions module');
+    const c=m.captions;keys(c,['style','stripPunctuation','keywords','keywordsEn','protectedTerms','bilingual'],'captions module');
     if(c.style!==undefined)choice(c.style,['plain','highlight'],'caption style');
+    if(c.bilingual!==undefined&&typeof c.bilingual!=='boolean')fail('bilingual must be boolean');
     if(c.stripPunctuation!==undefined&&typeof c.stripPunctuation!=='boolean')fail('stripPunctuation must be boolean');
-    for(const name of ['keywords','protectedTerms'])if(c[name]!==undefined){if(!Array.isArray(c[name])||c[name].length>60)fail(`${name} needs at most 60 terms`);for(const t of c[name])text(t,name,80);}
+    for(const name of ['keywords','keywordsEn','protectedTerms'])if(c[name]!==undefined){if(!Array.isArray(c[name])||c[name].length>60)fail(`${name} needs at most 60 terms`);for(const t of c[name])text(t,name,80);}
   }
   if(m.character!==undefined){
     const c=m.character;keys(c,['mode','travelSeconds','arc','tilt'],'character module');

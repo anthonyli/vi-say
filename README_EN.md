@@ -82,6 +82,10 @@ After reviewing a poster or preview, you can ask for a different headline, revis
 
 **Understand the material → find the core idea → preview a poster → write the full script and storyboard → edit original audio or synthesize narration → build the timeline and visuals → preview → review and deliver.**
 
+New full-length videos default to a browser preview before MP4 rendering. Review the visuals in silence first, then play the actual narration when it is ready. To render directly, ask to skip HTML for the episode or set a lasting preference with `html_review`. [HTML review settings](references/workflow.md#html-前审)
+
+Turn long podcasts or interviews into short explainers with full-frame muted footage, new narration, and timed callouts. [Podcast highlights workflow](references/tools/podcast-highlights.md)
+
 | Stage | Expected result |
 |---|---|
 | Understand and distill | Audience, one core problem, concrete benefit, and supporting material |

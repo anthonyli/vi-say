@@ -6,6 +6,10 @@ import {Frame,Bubble,Brick,Dots,RayBurst,COMIC_PALETTE as C} from './comic-kit';
 import {ComicCaptions} from './comic-captions';
 import GLScenePair from './gl-transition';
 
+export function recordedMetadata({duration}) {
+ return {width:1920,height:1200,fps:30,durationInFrames:Math.ceil(duration*30)};
+}
+
 // Recorded footage stays continuous. Title, cues and keywords are episode inputs.
 // Canvas: 1920 x 1200. No implicit speed changes or injected audio gaps.
 export function RecordedComic({title,cover,video,videoFrames,coverFrames,audio,captions,keywords,keywordsEn,steps,duration,captionOptions={}}){

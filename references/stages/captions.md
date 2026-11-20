@@ -66,7 +66,7 @@ python scripts/align_captions.py --alignment work/task/words.json --text work/ta
 
 默认中文主行＋英文译文副行，双语共用真实声音区间，不增加英文配音。中文显示去标点，英文保留自然标点与词间空格。翻译由本期内容编写、核对，不把中文逐词硬译或机器识别误词当译文。品牌和限定条件保留，长句先按意群分条。
 
-自编漫画 JSX 必须调用 `assets/remotion/src/comic-captions.jsx` 的 `ComicCaptions`，不要再次用纯 `{caption.text}` 绕开高亮。传 `caption={text,en,start,end}`，`options={bilingual:true,keywords:[...],keywordsEn:[...]}`；可逐条用 `keywords/keywordsEn` 覆盖。默认双语，缺英文直接报错；明确单语任务传 `bilingual:false`。这是 JSX 接口，不是旧生产 JSON 已支持的新字段。关键词来自当期内容，组件复用已有 `captionSegments` 的长短语优先匹配。
+自编漫画 JSX 必须调用 `assets/remotion/src/comic-captions.jsx` 的 `ComicCaptions`，不要再次用纯 `{caption.text}` 绕开高亮。传 `caption={text,en,start,end}`，`options={bilingual:true,keywords:[...],keywordsEn:[...]}`；可逐条用 `keywords/keywordsEn` 覆盖。默认双语，缺英文直接报错；明确单语任务传 `bilingual:false`。制作时逐条编写译文到项目 captions[].en。新项目预设启用 modules.captions.bilingual；显式设为 false 可输出单语。高亮字幕默认使用深色圆角底、中文白色主行、较小英文副行及黄色关键词。HTML 与 MP4 共用这个组件，SRT 在同一时间段导出两行。关键词来自当期内容，组件复用已有 `captionSegments` 的长短语优先匹配。
 
 SRT 每条按中文、英文两行输出，与渲染共用同一份 cue。SRT 本身无高亮颜色；高亮由画面组件实际绘制。检查最长译文、关键词、两行整体高度、字幕与录屏按钮及片尾的安全区。用户只要求修代码而不重出视频时，修订数据与音轨保存在 work，不能将旧 MP4 描述为已带新字幕。
 
