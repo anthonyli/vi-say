@@ -50,10 +50,12 @@ export function shuffledTransitionPool(seed='dragon-series',pool=TRANSITION_NAME
 }
 
 /** Plan in chronological order once, independent of render-worker/frame order. */
-export function selectSceneTransitions(doc,pool=TRANSITION_NAMES){
+export function selectSceneTransitions(doc,pool=TRANSITION_NAMES,{outro}={}){
   const scenes=doc.cartoonScenes??[];
   const ordered=shuffledTransitionPool(doc.transitionSeed??scenes[0]?.title??'dragon-series',pool);
-  const fresh=()=>new Map(ordered.map(name=>[canonicalTransition(name),name]));
+  // Reserve a theme's outro entrance so it only ever announces the ending.
+  const reserved=outro&&scenes.some(s=>s.outroId&&s.transition===undefined)?canonicalTransition(outro):undefined;
+  const fresh=()=>new Map(ordered.map(name=>[canonicalTransition(name),name]).filter(([name])=>name!==reserved));
   let remaining=fresh(),cycle=1,last;
   return scenes.map((scene,index)=>{
     if(!index)return {name:scene.transition??'converge'};
@@ -62,6 +64,8 @@ export function selectSceneTransitions(doc,pool=TRANSITION_NAMES){
       last=canonicalTransition(scene.transition);remaining.delete(last);
       return {name:scene.transition,...(scene.transitionSelection?{selection:scene.transitionSelection}:{})};
     }
+    // A theme can fix how the shared outro enters, so every episode ends the same way.
+    if(outro&&scene.outroId){last=canonicalTransition(outro);remaining.delete(last);return {name:outro,selection:{source:'theme-outro'}};}
     const intents=sceneTransitionIntents(scenes[index-1],scene);
     const candidates=[...remaining].filter(([name])=>remaining.size===1||name!==last).map(([canonical,name])=>{
       const match=intents.find(({intent})=>SCENE_TRANSITION_GROUPS[intent].includes(canonical));

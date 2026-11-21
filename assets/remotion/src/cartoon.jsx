@@ -8,11 +8,14 @@ import {DragonMouth} from './dragon-mouth';
 import {StudioBackdrop} from './effects/business';
 import {BrightBackdrop} from './effects/glass';
 import {GlassScene} from './effects/glass-scene';
+import {ComicScene} from './effects/comic-scene';
+import {Surface} from './effects/surface';
+import {COMIC_LAYOUT,COMIC_PALETTE} from '../effects/comic-motion.mjs';
 import {SceneEffects,BotActors} from './effects/layer';
 import {MediaFrame} from './effects/operations';
 import GLScenePair from './gl-transition';
 import {isGLTransition} from '../gl-transitions.mjs';
-import {sceneVisibility,characterPose, sideOf, sceneTransition, sceneTransitionSettings, transitionSeconds, transitionStyle, clamp, closedMouthOpacity} from '../cartoon-motion.mjs';
+import {sceneVisibility,characterPose, sideOf, sceneTransition, sceneTransitionSettings, transitionSeconds, transitionStyle, clamp, closedMouthOpacity, isComic} from '../cartoon-motion.mjs';
 const C=style.palette,M=style.motion;
 const ease=x=>1-(1-clamp(x))**3;
 const tint=(color,a)=>`color-mix(in srgb, ${color} ${a}%, ${C.white})`;
@@ -54,7 +57,8 @@ function SceneContent({scene,doc}) {
   const frame=useCurrentFrame(),{fps}=useVideoConfig();
   const duration=Math.round(scene.end*fps)-Math.round(scene.start*fps);
   const time=Math.min(frame,duration-1)/fps;
-  return <Freeze frame={Math.min(frame,duration-1)}>{['glass','studio'].includes(doc.modules?.background)?<GlassScene scene={scene} doc={doc} time={time}/>:<Scene scene={scene}/>}<SceneEffects scene={scene} time={time}/></Freeze>;
+  const body=isComic(doc)?<ComicScene scene={scene} doc={doc} time={time}/>:['glass','studio'].includes(doc.modules?.background)?<GlassScene scene={scene} doc={doc} time={time}/>:<Scene scene={scene}/>;
+  return <Freeze frame={Math.min(frame,duration-1)}>{body}<SceneEffects scene={scene} time={time}/></Freeze>;
 }
 function SceneLayer({scene,index,doc}) {
   const frame=useCurrentFrame(),{fps}=useVideoConfig();
@@ -78,7 +82,10 @@ export function CartoonScenes({doc}) {
   const {fps}=useVideoConfig(),frame=useCurrentFrame();
   const p=spring({frame,fps,config:{damping:M.damping,stiffness:M.stiffness,mass:M.mass},durationInFrames:Math.round(M.enter*fps)});
   const characterSettings=doc.modules?.character??{};
-  const {turn,rotation=0,...box}=characterPose(doc.cartoonScenes,frame/fps,characterSettings.travelSeconds??M.enter,characterSettings);
+  const comic=isComic(doc);
+  const {turn,rotation=0,...box}=characterPose(doc.cartoonScenes,frame/fps,characterSettings.travelSeconds??M.enter,comic?{...characterSettings,defaults:COMIC_LAYOUT.character}:characterSettings);
+  // The comic outro fades to ink in its last third of a second; the dragon leaves with it.
+  const last=doc.cartoonScenes.at(-1),outroFade=comic&&last.outroId?1-clamp((frame/fps-doc.duration+.33)/.33):1;
   const tilt=rotation+Math.sin(frame/fps*1.3)*(characterSettings.tilt??0);
   const energy=doc.speechMotion?.values[frame]??0;
   const fallbackCue=energy<=.12?'X':energy<.28?'B':energy<.6?'C':'D';
@@ -89,10 +96,10 @@ export function CartoonScenes({doc}) {
   const ratio=style.character.imageSize[0]/style.character.imageSize[1],iw=Math.min(box.width,box.height*ratio),ih=iw/ratio;
   const mask=style.character.mouthMask;
   const mouthMask=`radial-gradient(ellipse ${mask.radii[0]*100}% ${mask.radii[1]*100}% at ${mask.center[0]*100}% ${mask.center[1]*100}%, black ${mask.solid*100}%, transparent 100%)`;
-  return <>
-    {doc.modules?.background==='studio'?<StudioBackdrop time={frame/fps}/>:doc.modules?.background==='glass'?<BrightBackdrop time={frame/fps} duration={doc.duration}/>:<AbsoluteFill style={{background:C.white}}/>}
+  return <Surface.Provider value={comic?'comic':'glass'}>
+    {comic?<AbsoluteFill style={{background:COMIC_PALETTE.cream}}/>:doc.modules?.background==='studio'?<StudioBackdrop time={frame/fps}/>:doc.modules?.background==='glass'?<BrightBackdrop time={frame/fps} duration={doc.duration}/>:<AbsoluteFill style={{background:C.white}}/>}
     {doc.cartoonScenes.map((s,i)=>{const next=doc.cartoonScenes[i+1];return <Sequence key={i} from={Math.round(s.start*fps)} durationInFrames={Math.round(s.end*fps)-Math.round(s.start*fps)+(next?Math.ceil(transitionSeconds(next,sceneTransition(next,i+1,doc))*fps):0)}><SceneLayer scene={s} index={i} doc={doc}/></Sequence>;})}
-    {characterSettings.mode!=='none'&&<div style={{position:'absolute',...box,transform:`translateY(${(1-p)*M.travel}px) rotate(${(1-p)*-7+tilt}deg) scale(${.92+.08*p})`,transformOrigin:'50% 90%',opacity:characterSettings.mode==='rounded'?1:clamp(p),pointerEvents:'none'}}>
+    {characterSettings.mode!=='none'&&<div style={{position:'absolute',...box,transform:`translateY(${(1-p)*M.travel}px) rotate(${(1-p)*-7+tilt}deg) scale(${.92+.08*p})`,transformOrigin:'50% 90%',opacity:(characterSettings.mode==='rounded'?1:clamp(p))*outroFade,pointerEvents:'none'}}>
       <div style={{position:'absolute',bottom:15,left:'22%',width:'60%',height:34,borderRadius:'50%',background:`${C.black}22`,filter:'blur(14px)'}}/>
       <div style={{position:'absolute',left:(box.width-iw)/2,top:(box.height-ih)/2,width:iw,height:ih,transform:`perspective(1600px) rotateY(${turn}deg)`}}>
         {characterSettings.mode==='rounded'?<DragonMouth x={0} y={0} w={iw} time={frame/fps} cues={mouthCues} closedFile={doc.characterClosed} neutralFile={doc.characterNeutral}/>:<>        <Img src={staticFile(doc.character)} style={{position:'absolute',width:'100%',height:'100%'}}/>
@@ -101,5 +108,5 @@ export function CartoonScenes({doc}) {
     </div>}
     <BotActors scenes={doc.cartoonScenes} time={frame/fps}/>
     {doc.reviewBadgeVisible===true&&<div style={{position:'absolute',right:28,top:20,padding:'10px 18px',borderRadius:12,background:'#fff3cf',border:'2px solid #b65f00',color:'#713b00',fontSize:26,fontWeight:800,zIndex:100}}>未听审候选 · 声音未验收</div>}
-  </>;
+  </Surface.Provider>;
 }

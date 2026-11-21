@@ -27,7 +27,8 @@ function keyframes(effect,duration) {
   ordered(effect.keyframes,duration,'keyframes');
   for(const frame of effect.keyframes){keys(frame,effect.type==='bot'?['at','position','size','angle','compression']:['at','position','size','angle'],'keyframe');if(frame.at>(effect.endAt??duration))fail('keyframe exceeds effect ending');if(frame.position)position(frame.position);if(frame.size!==undefined)number(frame.size,30,600,'size');if(frame.angle!==undefined)number(frame.angle,-360,360,'angle');if(frame.compression!==undefined)number(frame.compression,0,1,'compression');}
 }
-export const EFFECT_COMMON_FIELDS=['type','id','at','endAt','color','enter','enterSeconds'];
+export const EFFECT_COMMON_FIELDS=['type','id','at','endAt','color','enter','enterSeconds','exit','exitSeconds','breathe'];
+const MOTION_FIELDS=['enter','enterSeconds','exit','exitSeconds','breathe'];
 export const EFFECT_FIELDS=Object.freeze({
   ...BUSINESS_FIELDS,
   bot:['variant','position','size','angle','compression','phase','action','actions','keyframes','travelSeconds','arc','label'],
@@ -38,13 +39,26 @@ export const EFFECT_FIELDS=Object.freeze({
   route:['points','label','labels','seconds','loop'],focus:['events'],pointer:['points','jump'],
   counter:['box','value','from','prefix','suffix','label','seconds'],
   tag:['position','text'],text:['position','text','fontSize','weight'],list:['box','items'],
+  // Comic-brick effects: each owns a fixed pop/drop entrance from comic-motion.mjs.
+  bubble:['position','width','height','text','tail','fontSize'],
+  burst:['position','size','text'],
+  brick:['position','width','height','text','detail','angle'],
+  // Speech-cued effects: every item/event time can come from a spoken cue word.
+  'cue-cards':['box','items','mode'],
+  spotlight:['events','dim'],
+  sketch:['region','shape','label','seconds'],
+  typewriter:['position','width','text','prompt','fontSize','seconds'],
+  stamp:['position','size','text','angle'],
+  checklist:['box','items'],
 });
+export const CUE_EFFECTS=Object.freeze(['cue-cards','spotlight','sketch','typewriter','stamp','checklist']);
+export const COMIC_EFFECTS=Object.freeze(['bubble','burst','brick']);
 export const EFFECT_TYPES=Object.freeze(Object.keys(EFFECT_FIELDS));
 
 export function validateModules(doc) {
   if(doc.modules===undefined){if(doc.mouthCues!==undefined)fail('mouthCues need modules.character');return;}
   const m=doc.modules;keys(m,['background','captions','character'],'modules');
-  if(m.background!==undefined)choice(m.background,['glass','classic','studio'],'background');
+  if(m.background!==undefined)choice(m.background,['comic','glass','classic','studio'],'background');
   if(m.captions!==undefined){
     const c=m.captions;keys(c,['style','stripPunctuation','keywords','keywordsEn','protectedTerms','bilingual'],'captions module');
     if(c.style!==undefined)choice(c.style,['plain','highlight'],'caption style');
@@ -76,16 +90,38 @@ export function validateEffects(scene, cast=new Map()) {
   if(scene.effects.filter(e=>e?.type==='focus').length>1)fail('use one focus module per demo and combine its events');
   const ids=new Set();
   for(const e of scene.effects){
-    if(!object(e))fail('effect must be an object');choice(e.type,EFFECT_TYPES,'effect type');keys(e,[...EFFECT_COMMON_FIELDS.filter(k=>e.type!=='focus'||!['enter','enterSeconds'].includes(k)),...EFFECT_FIELDS[e.type]],e.type);
+    if(!object(e))fail('effect must be an object');choice(e.type,EFFECT_TYPES,'effect type');keys(e,[...EFFECT_COMMON_FIELDS.filter(k=>!(['focus','bot'].includes(e.type)&&MOTION_FIELDS.slice(e.type==='bot'?2:0).includes(k))),...EFFECT_FIELDS[e.type]],e.type);
     const start=e.at??0;at(start,duration);if(e.endAt!==undefined){at(e.endAt,duration,'endAt');if(e.endAt<=start)fail('endAt must follow at');}
-    if(e.enter!==undefined)choice(e.enter,['fade','rise','pop','none'],'entry');if(e.enterSeconds!==undefined)number(e.enterSeconds,.05,2,'enterSeconds');color(e.color);
+    if(e.enter!==undefined)choice(e.enter,['fade','rise','pop','none'],'entry');
+    if(e.exit!==undefined){choice(e.exit,['fade','shrink','collapse','fly','none'],'exit');if(e.endAt===undefined&&e.exit!=='none')fail('exit needs endAt: the time it is fully put away');}
+    if(e.exitSeconds!==undefined){number(e.exitSeconds,.1,1.5,'exitSeconds');if(!e.exit||e.exit==='none')fail('exitSeconds needs an exit');}
+    if(e.exit&&e.exit!=='none'&&e.endAt-start<(e.enter==='none'?0:e.enterSeconds??.65)+(e.exitSeconds??.35))fail('exit must start after the entry has finished');
+    if(e.breathe!==undefined&&typeof e.breathe!=='boolean')fail('breathe must be boolean');if(e.enterSeconds!==undefined)number(e.enterSeconds,.05,2,'enterSeconds');color(e.color);
     if(start+(e.enter==='none'?0:e.enterSeconds??.65)>(e.endAt??duration)||start>=(e.endAt??duration))fail('effect entry must complete before its ending');
     if(e.id!==undefined){text(e.id,'effect id',80);if(ids.has(e.id))fail('duplicate effect id in scene');ids.add(e.id);}
     for(const name of ['label','status','detail','waiting','complete','prefix','suffix'])if(e[name]!==undefined&&(typeof e[name]!=='string'||e[name].length>100))fail(`${name} must be a short string`);
     if(e.angle!==undefined)number(e.angle,-360,360,'angle');
     if(e.position!==undefined)position(e.position);if(e.box!==undefined)pixelBox(e.box);
-    if(['bot','platform','card','connection','tag','text'].includes(e.type)&&!e.position)fail(`${e.type} requires position`);
-    if(['flow','counter','list'].includes(e.type)&&!e.box)fail(`${e.type} requires box`);
+    if(['bot','platform','card','connection','tag','text',...COMIC_EFFECTS].includes(e.type)&&!e.position)fail(`${e.type} requires position`);
+    if(['flow','counter','list','cue-cards','checklist'].includes(e.type)&&!e.box)fail(`${e.type} requires box`);
+    if(['typewriter','stamp'].includes(e.type)&&!e.position)fail(`${e.type} requires position`);
+    const within=(t,name)=>{if(t<start-.001||t>(e.endAt??duration)+.001)fail(`${name} must happen while the effect is shown`);};
+    if(e.type==='cue-cards'){
+      ordered(e.items,duration,'cue-cards items');if(e.items.length>6)fail('cue-cards needs at most six items');
+      if(e.mode!==undefined)choice(e.mode,['focus','stack'],'cue-cards mode');
+      let previous=-1;for(const item of e.items){keys(item,['at','title','detail','icon','color'],'cue card');text(item.title,'cue card title',16);if(item.detail!==undefined)text(item.detail,'cue card detail',30);if(item.icon!==undefined)text(item.icon,'cue card icon',2);color(item.color);within(item.at,'cue card');if(item.at-previous<.6)fail('cue cards need at least .6 seconds each');previous=item.at;}
+      const [,,w,h]=e.box;if(w<520)fail('cue-cards box needs at least 520 px width');
+      const need=e.mode==='stack'?(e.items.at(-1).detail?176:132)+(e.items.length-1)*92:300;if(h<need)fail(`cue-cards box needs ${need} px height`);
+      if(e.mode!=='stack'){const chips=e.items.reduce((sum,i)=>sum+Math.round([...i.title].length*25+78)+14,0);if(chips>w+14)fail('collapsed cue chips do not fit the box width');}
+    }
+    if(e.type==='spotlight'){
+      ordered(e.events,duration,'spotlight events');for(const ev of e.events){keys(ev,['at','region','label'],'spotlight event');pixelBox(ev.region,'spotlight region');if(ev.label!==undefined)text(ev.label,'spotlight label',16);within(ev.at,'spotlight event');}
+      if(e.dim!==undefined)number(e.dim,0,.85,'spotlight dim');
+    }
+    if(e.type==='sketch'){pixelBox(e.region,'sketch region');if(e.shape!==undefined)choice(e.shape,['ellipse','box','underline'],'sketch shape');if(e.label!==undefined)text(e.label,'sketch label',16);if(e.seconds!==undefined)number(e.seconds,.2,2,'sketch seconds');if(start+(e.seconds??.6)>(e.endAt??duration))fail('sketch must finish drawing while shown');}
+    if(e.type==='typewriter'){text(e.text,'typewriter text',80);number(e.width??900,240,1800,'typewriter width');if(e.fontSize!==undefined)number(e.fontSize,20,72,'typewriter fontSize');if(e.prompt!==undefined)text(e.prompt,'typewriter prompt',4);const seconds=e.seconds??Math.max(.4,[...e.text].length/16);number(seconds,.2,20,'typewriter seconds');if(start+seconds>(e.endAt??duration))fail('typing must finish while shown');pixelBox([...e.position,e.width??900,(e.fontSize??34)*1.6+40],'typewriter bounds');}
+    if(e.type==='stamp'){text(e.text,'stamp text',6);const size=e.size??240;number(size,100,600,'stamp size');if(e.angle!==undefined)number(e.angle,-30,30,'stamp angle');pixelBox([...e.position,size,size*.46],'stamp bounds');}
+    if(e.type==='checklist'){ordered(e.items,duration,'checklist items');if(e.items.length>6)fail('checklist needs at most six items');for(const item of e.items){keys(item,['at','text'],'checklist item');text(item.text,'checklist text',24);within(item.at,'checklist item');}if(e.items[0].at<.25)fail('checklist items need .25 seconds to appear');if(e.box[3]<e.items.length*78)fail(`checklist box needs ${e.items.length*78} px height`);}
     if(Object.hasOwn(BUSINESS_FIELDS,e.type))validateBusiness(e,duration,{keys,text,number,color,pixelBox,fail});
     if(e.type==='bot'){
       text(e.id,'bot id');choice(e.variant,Object.keys(botStyles),'bot variant');if(cast.has(e.id)&&cast.get(e.id)!==e.variant)fail('a bot identity must keep its variant across scenes');cast.set(e.id,e.variant);
@@ -121,6 +157,17 @@ export function validateEffects(scene, cast=new Map()) {
     if(e.type==='pointer'){ordered(e.points,duration,'pointer points');for(const p of e.points){keys(p,['at','position','click'],'pointer point');position(p.position);if(p.click!==undefined&&typeof p.click!=='boolean')fail('click must be boolean');}if(e.jump!==undefined&&typeof e.jump!=='boolean')fail('pointer jump must be boolean');}
     if(e.type==='counter'){number(e.value,-1e12,1e12,'counter value');if(e.from!==undefined)number(e.from,-1e12,1e12,'counter from');}
     if(e.type==='text'||e.type==='tag'){text(e.text,e.type,100);if(e.fontSize!==undefined)number(e.fontSize,16,180,'font size');if(e.weight!==undefined)number(e.weight,100,900,'font weight');}
+    if(e.type==='bubble'){
+      text(e.text,'bubble text',40);const w=e.width??460,h=e.height??150;number(w,160,1200,'bubble width');number(h,80,500,'bubble height');
+      if(e.tail!==undefined)choice(e.tail,['left','right'],'bubble tail');if(e.fontSize!==undefined)number(e.fontSize,18,90,'bubble fontSize');
+      pixelBox([...e.position,w,h+40],'bubble bounds');
+    }
+    if(e.type==='burst'){const size=e.size??150;number(size,60,400,'burst size');if(e.text!==undefined)text(e.text,'burst text',6);pixelBox([...e.position,size,size],'burst bounds');}
+    if(e.type==='brick'){
+      text(e.text,'brick text',12);if(e.detail!==undefined)text(e.detail,'brick detail',24);const w=e.width??600,h=e.height??104;
+      number(w,200,1400,'brick width');number(h,60,200,'brick height');if(e.angle!==undefined)number(e.angle,-15,15,'brick angle');
+      pixelBox([...e.position,w+36,h+36],'brick bounds');if(start+.62>(e.endAt??duration))fail('brick needs .62 seconds to land');
+    }
     if(e.type==='list'){ordered(e.items,duration,'list items');if(e.box[3]<e.items.length*90+16*(e.items.length-1))fail('list box is too short for readable items');for(const i of e.items){keys(i,['at','text','detail','color'],'list item');text(i.text,'list text',20);if(i.detail!==undefined)text(i.detail,'list detail',40);color(i.color);}}
   }
 }

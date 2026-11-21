@@ -9,9 +9,14 @@ import {BUSINESS_RENDERERS} from './business';
 import {PlayfulBot} from './bot';
 import {GLASS,GlassPlatform,GlassCard,FlowLines,GlassTag} from './glass';
 import {Connection,ResultFlow,RoutePacket,Pointer,Counter,RevealList} from './operations';
+import {COMIC_EFFECT_RENDERERS} from './comic-scene';
+import {CUE_EFFECT_RENDERERS} from './cue-effects';
+import {breathe,exitProgress,exitStyle} from '../../effects/comic-motion.mjs';
 
 const COMPONENTS={
   ...BUSINESS_RENDERERS,
+  ...COMIC_EFFECT_RENDERERS,
+  ...CUE_EFFECT_RENDERERS,
   platform:(e,t)=><GlassPlatform {...e}/>,
   paths:(e,t)=><FlowLines {...e} time={t}/>,
   tag:(e,t)=><GlassTag {...e}/>,
@@ -36,9 +41,14 @@ export function SceneEffects({scene,time}) {
   return <>{(scene.effects??[]).filter(e=>!['bot','focus'].includes(e.type)).map((e,i)=>{
     if(time<(e.at??0)||(e.endAt!==undefined&&time>=e.endAt))return null;
     const render=COMPONENTS[e.type];if(!render)throw new Error(`No renderer for effect ${e.type}`);
-    const p=e.enter==='none'?1:progress(time,e.at??0,e.enterSeconds??.65),scale=e.enter==='pop'?pop(time,e.at??0,e.enterSeconds??.7):1;
-    const origin=e.position??e.box?.slice(0,2)??[960,540];
-    return <AbsoluteFill key={e.id??i} style={{opacity:p,transform:`translateY(${e.enter==='rise'?(1-p)*32:0}px) scale(${scale})`,transformOrigin:`${origin[0]}px ${origin[1]}px`,pointerEvents:'none'}}>{render(e,time)}</AbsoluteFill>;
+    // Comic effects animate their own pop/drop; a second generic fade would blur the landing.
+    const own=Object.hasOwn(COMIC_EFFECT_RENDERERS,e.type)||Object.hasOwn(CUE_EFFECT_RENDERERS,e.type);
+    const p=own||e.enter==='none'?1:progress(time,e.at??0,e.enterSeconds??.65),scale=!own&&e.enter==='pop'?pop(time,e.at??0,e.enterSeconds??.7):1;
+    // Shared exit ("收起") and breathing hold, available to every scene effect.
+    const out=exitStyle(e.exit,exitProgress(time,e.endAt,e.exitSeconds??.35));
+    const settled=(e.at??0)+(own?.5:e.enterSeconds??.65),pulse=e.breathe?breathe(time,settled):1;
+    const origin=e.position??e.box?.slice(0,2)??e.region?.slice(0,2)??[960,540];
+    return <AbsoluteFill key={e.id??i} style={{opacity:p*out.opacity,transform:`translateY(${(e.enter==='rise'?(1-p)*32:0)+out.y}px) scale(${scale*pulse*out.scaleX},${scale*pulse*out.scaleY})`,transformOrigin:`${origin[0]}px ${origin[1]}px`,pointerEvents:'none'}}>{render(e,time)}</AbsoluteFill>;
   })}</>;
 }
 

@@ -1,0 +1,5 @@
+{
+  "background": "comic",
+  "captions": {"style": "highlight", "bilingual": true, "stripPunctuation": true, "keywords": [], "keywordsEn": [], "protectedTerms": []},
+  "character": {"mode": "rounded", "travelSeconds": 0.75, "arc": 60, "tilt": 0.8}
+}

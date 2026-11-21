@@ -47,8 +47,8 @@ Use $vi-say to turn [project URL / website / article / topic / local video path]
 into an explainer video for [audience], focused on [one problem or benefit].
 Target duration: [duration]. Aspect ratio: [ratio]. Narration language: [language].
 Audio: [preserve the recording / use an authorized local voice].
-Show one representative poster first, then create the script, demonstration,
-and animation. Deliver the video, posters, and publishing copy.
+Show the narrated HTML preview first. After approval, render the full MP4
+and prepare the posters and publishing copy.
 ```
 
 Provide the information you already have. The bundled style supplies defaults, so you do not need to fill in every configuration field manually. To review the direction before production, add: **"Only create the poster and outline first. Wait for my confirmation before making the video."**
@@ -57,11 +57,11 @@ Provide the information you already have. The bundled style supplies defaults, s
 
 | Scenario | Example request |
 |---|---|
-| GitHub / open-source project | Use $vi-say to introduce [repository URL] to developers. Explain the problem it solves, key features, basic usage, and who it is for. Show the poster first. |
+| GitHub / open-source project | Use $vi-say to introduce [repository URL] to developers. Explain the problem it solves, key features, basic usage, and who it is for. |
 | Website / product | Use $vi-say to introduce [product website] through one practical use case, showing the real interface and results. |
 | Article / link | Use $vi-say to explain [article URL]. Extract three key ideas, preserve conditions and sources, and use diagrams where useful. |
 | Recorded-video editing | Use $vi-say to edit [recording path]. Preserve the original audio and full screen content, remove repetition and excess pauses, and add chapters and highlights. |
-| Knowledge explainer | Use $vi-say to explain [topic] to beginners through examples, flowcharts, and state changes. Start with a poster and outline. |
+| Knowledge explainer | Use $vi-say to explain [topic] to beginners through examples, flowcharts, and state changes. |
 | Practical case study | Use $vi-say to explain this project: [goal and material paths]. Show before and after, then the key steps and final result. |
 
 These scenarios can be combined. A GitHub introduction can include a real demonstration and an explanation of the underlying mechanism. Research and source collection use the agent's available browser or connectors; the repository does not provide a universal link-scraping service.
@@ -80,23 +80,22 @@ After reviewing a poster or preview, you can ask for a different headline, revis
 
 ## Shared production workflow
 
-**Understand the material → find the core idea → preview a poster → write the full script and storyboard → edit original audio or synthesize narration → build the timeline and visuals → preview → review and deliver.**
+**Understand the material → write the script and storyboard → edit or generate the audio → build the timeline and visuals → review the HTML preview → render and prepare publishing materials after approval.**
 
-New full-length videos default to a browser preview before MP4 rendering. Review the visuals in silence first, then play the actual narration when it is ready. To render directly, ask to skip HTML for the episode or set a lasting preference with `html_review`. [HTML review settings](references/workflow.md#html-前审)
+New full-length videos default to a browser preview with the video, narration, and captions in sync. After the user approves that version, render the full MP4 and prepare any posters, publishing copy, and release packages in scope. To render directly, ask to skip HTML for the episode or set a lasting preference with `html_review`. [HTML review settings](references/workflow.md#html-前审)
 
 Turn long podcasts or interviews into short explainers with full-frame muted footage, new narration, and timed callouts. [Podcast highlights workflow](references/tools/podcast-highlights.md)
 
 | Stage | Expected result |
 |---|---|
 | Understand and distill | Audience, one core problem, concrete benefit, and supporting material |
-| **Early poster** | One representative poster showing the topic, emphasis, and visual direction |
 | Script and storyboard | Complete narration or original-audio ranges, with the objects, actions, and results to show |
 | Audio | An edited original recording, or local narration checked for terminology and listening quality |
 | Timeline and visuals | Captions, characters, flowcharts, demonstrations, emphasis, and transitions timed to the final audio |
-| Preview | Review of key layouts, motion, joins, and audio/visual correspondence |
+| HTML review | Verify layouts, motion, transitions, and audio against the episode timeline |
 | Delivery | Video, audio, required captions, posters in three aspect ratios, publishing copy, and actual review records |
 
-The poster appears before full script writing and narration. Balance a full composition with comfortable outer margins; distribute 16:9 content across the width. Include the fixed typography/material reference in every image call, and preserve established lettering, sizes, layout, subject proportions, and accents during targeted revisions. By default, make one generation call per required ratio, check and show the result, then reuse it throughout production and delivery. Report issues without automatically generating more images. When the user explicitly requests a change, generate one revision for the specified ratio; see the [poster stopping rules](references/stages/poster.md#生成次数与停止条件). At delivery, check consistency with the video and complete only ratios not previously attempted. The poster helps assess the subject and visual direction; motion, pronunciation, and demonstration accuracy need later review. Wait for poster approval when the user explicitly requests that pause; otherwise continue within the task's existing instructions.
+When HTML review is skipped, a representative poster can help establish the direction early. Explicit requests for a poster first or a standalone poster set their own order. Generate each required ratio once by default, reuse suitable existing posters, and check them against the video before delivery. For targeted revisions, keep the established typography and material references. [Poster guidelines](references/stages/poster.md)
 
 Generated narration uses complete-sentence samples covering every term, then full-track listening for pronunciation, fluency, and voice consistency. Formal audible cartoon output validates that record against the current files; unreviewed audio requires an explicitly named candidate with machine-readable review status. Production and review labels appear in the picture only when explicitly requested with `--show-review-badge`. See the [voice workflow](references/stages/voice.md) and [render gate](references/tools/production.md#底层有声小龙门禁).
 
@@ -109,9 +108,9 @@ Generated narration uses complete-sentence samples covering every term, then ful
 | Captions and timing | Timestamp input, caption alignment, emphasis, SRT, and caption post-processing |
 | Characters and visuals | Dragon artwork, left/right placement, mirroring, audio-volume-driven mouth movement, colors, and fonts |
 | Diagrams and demonstrations | Steps, comparisons, flow relationships, bar charts, screenshots, recordings, and state changes |
-| Animation and transitions | Explicit action durations, character movement, four default transitions, and shared-element tools |
+| Animation and transitions | Default comic-brick theme with fixed layouts, motion and a comic transition pool; breathing cue cards, spotlight, hand-drawn circles, typewriter, stamp and checklist, timed by spoken words |
 | Consistent outro | Comment → follow → like, with the same voice and measured word timings |
-| Posters | Early preview, image-generation guidance, and separate compositions for three aspect ratios |
+| Posters | Image-generation guidance and separate compositions for three aspect ratios |
 | Publishing copy | Episode title, body, relevant links, engagement prompts, and hashtags |
 | Review and delivery | Timing and structure checks, evidence and hashes, visual review, audio revision records, and packaging |
 
@@ -125,7 +124,7 @@ For everyday use, give the agent a task using the examples above. Run these comm
 python scripts/production.py init work/demo --title 'Make ideas move' --subtitle 'Characters, rhythm, and color'
 ```
 
-Create and show a representative poster following the [poster guidelines](references/stages/poster.md). For an optional code-composed cover draft:
+When using HTML review, wait for approval before creating posters. Follow the [poster guidelines](references/stages/poster.md). For an optional code-composed cover draft:
 
 ```sh
 python scripts/production.py covers work/demo/project.json --output-dir outputs/demo-covers
@@ -193,7 +192,8 @@ python -m unittest discover -s scripts/tests -p 'test_*.py'
 | Poster style | [Poster stage](references/stages/poster.md), `style.json.poster`, and reference images |
 | Voice and language | [Local speech](references/tools/local-tts.md) and the production project's private voice configuration |
 | Character and mouth movement | [Character guidance](references/styles/character.md), character artwork, `src/cartoon.jsx` |
-| Motion timing and default transition pool | `style.json.motion` |
+| Comic-theme motion and transition pool | `assets/remotion/effects/comic-motion.mjs` |
+| Other themes' motion timing and transition pool | `style.json.motion` |
 | New or replacement transitions | `cartoon-transitions.mjs`, called through `cartoon-motion.mjs` |
 | New diagrams or scenes | The relevant JSX/Python/SVG implementation and input validation; see [extensions](references/extensions.md) |
 | Outro | `assets/production/outro.json`, retimed to the actual narration in each episode |

@@ -2,7 +2,7 @@
 
 跨场景的固定阶段见 [workflow.md](../workflow.md)，配置和新动画入口见 [extensions.md](../extensions.md)。本页维护默认小龙路线的实际命令与输入格式。
 
-建项目并提炼主题后，先按 [poster.md](../stages/poster.md) 生成并展示一张代表海报，让用户尽早看到内容方向，再展开完整脚本、配音和动画。原声路线先理解录屏内容；成片交付前复核海报并补齐其他比例。
+建项目后先确定 [HTML 前审设置](../workflow.md#html-前审)。默认先准备脚本、声音与画面，使用 `review` 送审。用户确认当前预览后再渲染完整 MP4，并按 [海报](../stages/poster.md) 与 [发布文案](../stages/publishing-copy.md) 节点完成配套产物。
 
 所有命令从技能根目录调用。运行脚本需要 Python/Pillow、Node/npm；若现有 Python 缺少依赖，可用 `uv run --with pillow --with numpy python scripts/production.py ...`。uv 会缓存环境，不给每个项目重新安装。不要修改用户系统 Python。
 
@@ -10,9 +10,9 @@
 
 `production.py init` 建立 `project.json`、`narration.txt`、`lexicon.json`。项目名与输出目录由任务决定；每次选择新的输出目录，脚本拒绝覆盖。
 
-当前小龙系列的默认漫画积木路线见 [漫画积木风](../styles/comic-bricks.md)，复用公共 JSX 组件与现有 GL 转场。本页的旧 JSON 入口仅作兼容工具，尚没有 `comic` 预设，不要省略参数生成玻璃场景后当作当前默认交付。
+小龙系列默认走本入口的 `comic` 预设：`init` 省略 `--preset` 即为漫画积木主题，hero/steps/demo/stage/cta 五种场景由固定版式与动效渲染，HTML 前审和 MP4 共用同一组件。字段、动效与转场见 [漫画积木风](../styles/comic-bricks.md#主入口comic-主题)。讲解类视频不再另写 JSX/HTML 工程；固定版式确实表达不了时，先按 [扩展说明](../extensions.md) 补进公共组件。
 
-基础 `style_id=colorful-dragon-v1`。`init` 的兼容默认参数仍为 `--preset glass`，但新一期必须先确定主题视觉，再显式传入合适预设，不能将省略参数产生的玻璃场景当作系列要求。可用 `--preset classic` 或无角色产品风格 `--preset studio`，也可复用角色组件实现本期场景；预设不足时不要虚构未实现字段。选择保存为项目 `modules`，不按产品写公共分支。基础色板与传统动作参数来自 `assets/production/style.json`，模块预设来自 `assets/production/presets/`，Bot 外观来自 `bot-styles.json`。`dragon.png` 是身份母版，`character.json` 保存素材说明；圆润口型另外保存实际组件、图片和参数。
+基础 `style_id=colorful-dragon-v1`。`init` 默认 `--preset comic`；历史项目可显式选 `--preset glass/classic`，无角色产品片用 `--preset studio`。有角色却不用 comic 时，渲染前检查会拦下，需在 `preflight.allow.series_theme` 写明用户要求。预设不足时不要虚构未实现字段。选择保存为项目 `modules`，不按产品写公共分支。基础色板与传统动作参数来自 `assets/production/style.json`，模块预设来自 `assets/production/presets/`，Bot 外观来自 `bot-styles.json`。`dragon.png` 是身份母版，`character.json` 保存素材说明；圆润口型另外保存实际组件、图片和参数。
 
 `--template effects` 可初始化完整的无声模块示例，`--template business` 提供产品演示动效样例；默认 `--template story` 建立常规分镜。已实现模块、字段与示例命令见 [动画模块接口](animation-modules.md)。新增题材只替换项目文案、对象、词表和实际触发时间，复用组件。
 
@@ -70,13 +70,15 @@ python scripts/local_voice.py --help
 
 每场 `kind/start/end/title/subtitle/label`；`start/end` 是最终音频秒数，必须从 0 无缝覆盖 WAV 的实测时长，每场至少 1.5 秒。小龙、标题和背景使用统一材质语言与色板；角色当前是透明图层动画，不是三维骨骼模型。
 
+comic 主题下各场景的固定版式、可选字段（`tone/highlight/sourceLabel`）和动作见 [漫画积木风](../styles/comic-bricks.md#主入口comic-主题)。
+
 - `hero`：角色和大标题开场。
-- `steps`：2–3 个有语义顺序的步骤；`items` 含 `text/detail/at`。
+- `steps`：2–3 个有语义顺序的步骤；`items` 含 `text/detail/at`，`at` 可改写成 `cue` 词。
 - `demo`：真实截图或录屏展示；素材放在项目内，通过 `image` 或 `video` 指定，二者只选一个。视频可设 `videoStart` 为源视频起点秒数，声音统一来自最终 WAV。
 - `cta`：2–3 个互动提示；`items[].at` 对应实际口播词起点，画面只做示意。
 - `stage`：通过 `effects` 自由组合已实现模块，用于连接、汇聚分发、路径传递等操作解释；接口见 [动画模块](animation-modules.md)。
 
-`items[].at` 是场内秒数。每次动作使用配置中的固定时长；相邻动作不得挤掉前一动作，片尾要留完成和停留时间。只改时间锚点，不把整段按比例缩放。原始录屏声音与画面剪辑要同步；需要全屏操作证据时继续用 [录屏路线](recorded-video.md)，不要挤进不适合的小窗。
+`items[].at` 是场内秒数，推荐写 `cue` 词由编译换算。每次动作使用配置中的固定时长；相邻动作不得挤掉前一动作，片尾要留完成和停留时间。只改时间锚点，不把整段按比例缩放。原始录屏声音与画面剪辑要同步；需要全屏操作证据时继续用 [录屏路线](recorded-video.md)，不要挤进不适合的小窗。
 
 ```sh
 python scripts/production.py render PROJECT/project.json --output-dir OUTPUT/study --preview --stills
@@ -85,15 +87,35 @@ python scripts/production.py render PROJECT/project.json --output-dir OUTPUT/fin
   --audio PROJECT/final.wav --listening PROJECT/REVIEW.json
 ```
 
-前两条用于自动检查画面与运动。先看海报、入场中间帧和完成帧，再以原速观看短片；修复遮挡、溢出、拖沓或生硬接点后再扩展。程序拒绝无声样片被无标识地当成配音成片。正式输出仍需检查 AAC 编码后的音轨、操作真实性及音画对应。
+前两条用于检查画面与运动；送审前的固定自查用下一节的 `review`。修复遮挡、溢出、拖沓或生硬接点后再扩展。程序拒绝无声样片被无标识地当成配音成片。正式输出仍需检查 AAC 编码后的音轨、操作真实性及音画对应。
+
+## 渲染前检查
+
+`compile`、`render` 和 `preview-html` 在生成任何帧之前，都会运行 [preflight.py](../../scripts/preflight.py)，并把结果写入输出目录的 `preflight.json`。检查项全部来自以往成片里出过的问题：
+
+| 检查 | 拦下什么 |
+|---|---|
+| `captions_present` | 有声成片没有字幕 |
+| `caption_keywords` | 高亮字幕没有关键词，或关键词一条也没命中，画面上不会出现高亮 |
+| `outro_voiced` | 片尾场景的字幕没讲到留言、关注、点赞，也就是片尾没有声音 |
+| `leading_silence` / `audio_gaps` | 开头超过 1 秒才出声，或口播中间有超过 1.2 秒的静音 |
+| `caption_coverage` | 有口播的地方超过 1.5 秒没有字幕 |
+| `poster_in_video` | 场景素材名带"海报/封面/poster/cover"，也就是把发布海报放进了视频 |
+| `series_theme` | 有小龙却没用 comic 主题 |
+
+无声预览里的字幕只是草稿，所以无声预览只对关键词、片尾口播和主题给出警告；海报进视频始终会被拦截。带正式 WAV 的 HTML 前审和最终渲染，上表各项都会强制拦截。确实需要例外时，在 `project.json` 写 `"preflight": {"allow": {"audio_gaps": "用户原话……"}}`，原因会记进 `preflight.json`。这一步只做机械检查，不代表画面审美或听感已经通过。
+
+字幕时间用 `align_captions.py --cues` 从最终 WAV 的 ASR 结果生成，输出文件路径直接填进 `project.json` 的 `captions`，同时供 `cue` 词定时；用法见 [字幕节点](../stages/captions.md#取得可靠时间)。
 
 ## 浏览器前审
 
 按[本期设置](../workflow.md#html-前审)决定是否执行前审。用新的预览目录保存每个送审版本。第一条使用项目当前画面时间轴和静音轨，第二条使用正式旁白 WAV 和根据它对齐的场景、字幕、口型。全轨听审记录在正式渲染时验证，HTML 可作为直接听审的播放入口。
 
+送审一律用 `review`：它生成同样的 HTML，并在 `self-check/` 里输出 `scenes.jpg`（每个场景内容最满的一帧）、`transitions.jpg`（每个转场的中间帧）和 `report.json`（画面长时间无变化、字幕闪过或读速过快）。先打开两张总览图逐格检查遮挡、空洞、拥挤、文字可读性和转场是否露黑，处理完报告里的每一项，再把 HTML 交给用户；`preview-html` 只在不需要自查的局部核对时使用。
+
 ```sh
-python scripts/production.py preview-html PROJECT/project.json --output-dir PROJECT/review-v1
-python scripts/production.py preview-html PROJECT/project.json --audio PROJECT/final.wav --output-dir PROJECT/review-v2 --serve
+python scripts/production.py review PROJECT/project.json --output-dir PROJECT/review-v1
+python scripts/production.py review PROJECT/project.json --audio PROJECT/final.wav --output-dir PROJECT/review-v2 --serve
 node assets/remotion/preview-server.mjs PROJECT/review-v2 8765
 ```
 
@@ -117,9 +139,7 @@ node assets/remotion/render.mjs PROJECT/timeline.json OUTPUT/episode-未听审�
 
 `node assets/remotion/runtime.mjs`：首次按锁文件安装，随后报告 `reused:true`。位置为技能根 `.cache/remotion/<锁文件+系统架构+Node主版本哈希>/`。不要移动或改写系统环境变量；可用任务专属 `NARRATED_VIDEO_CACHE` 指定其他目录。多个项目直接调用同一个技能入口，无需项目内 `npm install` 或复制 `node_modules`。并发首次安装通过目录锁协调，失败不会标记为就绪。
 
-默认使用 Remotion 配套固定版本的 Chrome Headless Shell，自动下载到共用依赖目录；Mac 也不自动改用系统桌面 Chrome。桌面 Chrome 在并发截帧时可能偶发整帧平铺、重复或缺字，参见 [上游问题 #9473](https://github.com/remotion-dev/remotion/issues/9473)。`REMOTION_BROWSER_EXECUTABLE` 仅在明确需要自定义浏览器时设置；遇到这类闪帧先取消该覆盖并用配套内核复核。版本相同的依赖复用，不共享项目输入、字幕、截图或输出。素材暂存与输出路径独立。发现可用新版时自主更新并验证；升级时所有 Remotion 包保持同版，并同步 package.json 与 lockfile。新版最小实渲验证通过后，清理无活动任务引用的旧缓存。浏览器操作从共用缓存环境执行，避免在仓库根目录另建 `.remotion/` 下载；中断下载残留确认无活动进程后清除。
-
-根目录 `.remotion/` 是工具运行时缓存，不属于技能源码或交付。每次更新、安装或下载结束后，检查共用浏览器可用且无活动下载，再删除根目录多余的 `.remotion/`；若其中是唯一完整的新浏览器，先迁入当前版本共用缓存并验证。不要删除共用缓存内仍在使用的同名浏览器目录。
+默认使用 Remotion 配套固定版本的 Chrome Headless Shell，自动下载到共用依赖目录；Mac 也不自动改用系统桌面 Chrome。桌面 Chrome 在并发截帧时可能偶发整帧平铺、重复或缺字，参见 [上游问题 #9473](https://github.com/remotion-dev/remotion/issues/9473)。`REMOTION_BROWSER_EXECUTABLE` 仅在明确需要自定义浏览器时设置；遇到这类闪帧先取消该覆盖并用配套内核复核。依赖可以共用，项目输入、字幕、截图和输出各自独立。发现可用新版时自主更新：所有 Remotion 包保持同版，同步 package.json 与锁文件，最小实渲验证通过后清理没有任务引用的旧缓存。根目录 `.remotion/` 只是运行时缓存，不属于技能源码或交付；每次安装或下载后，确认没有活动下载、共用浏览器可用，再删除它。如果里面是唯一完整的新浏览器，先迁入对应版本的共用缓存并验证。
 
 ## 交付完整性
 
@@ -127,15 +147,15 @@ node assets/remotion/render.mjs PROJECT/timeline.json OUTPUT/episode-未听审�
 
 ## 精简分发
 
-本节只在明确需要打包、安装或发布时执行。普通源码修改和验证不生成 `.skill` 交付包，也不递增版本。执行用户要求的代码提交并推送时，为这一批改动统一递增一次版本并随代码提交推送；推送重试不重复递增，提交推送本身不触发打包。打包测试将产物放在临时目录并在测试结束后清理。
+本节只在明确需要打包、安装或发布时执行；版本递增规则见仓库 `AGENTS.md`。
 
-每期交付的发布标题、正文与话题按 [publishing-copy.md](../stages/publishing-copy.md) 生成，独立保存为 `发布文案.txt` 或 `发布文案.md`。该文件统一维护默认口吻与示例。最终 ZIP 中的文案须与最新修订一致。
+每期发布标题、正文与话题按 [发布文案规范](../stages/publishing-copy.md) 生成，独立保存为 UTF-8 纯文本 `发布文案.txt`。最终 ZIP 中的文案须与最新修订一致。
 
 `python scripts/production.py pack outputs/vi-say/vi-say.skill` 打包 `SKILL.md/LICENSE/NOTICE/references/scripts/assets`；若另有 `agents/` 配置也会一并包含。交付包放在对应项目目录中，不散放到 `outputs/` 根目录。`LICENSE` 为 Apache-2.0 全文，`NOTICE` 保留 Anthony Li 的版权与署名声明。排除测试、依赖、缓存、私有声音、模型、产物和历史审计文件。开发测试继续留在源码中。`.skill` 是 ZIP，解压后目录名为 `vi-say`，调用名为 `$vi-say`。
 
 ## 风格与共用能力的接入
 
-- 项目 `characterSide`、`transition` 是场景字段；前者选择左右站位，后者选择已注册效果。默认转场池与动作时长取 `style.json.motion`，扩展见 [extensions.md](../extensions.md)。
+- `transition` 是场景字段，选择已注册效果；comic 主题的转场池与动作时长在 `comic-motion.mjs`，其他主题取 `style.json.motion`，`characterSide` 也只对其他主题生效。扩展见 [extensions.md](../extensions.md)。
 - 正式 compile 从最终 WAV 生成 `speechMotion`，绑定 fps、时长与声音 SHA，拷贝配准的闭嘴素材；换声音需要重算。角色参数与素材替换规范统一在 [character.md](../styles/character.md)。
 - `modules.character.mode=rounded` 同时拷贝无嘴线底板并调用圆润嘴形组件；可用 `mouth_cues` 接入绑定音轨哈希的完整嘴形时间。没有近似音素时间时使用音量开口，无声预览保持闭嘴。普通字幕文件通过项目 `captions` 接入，关键词与显示风格由 `modules.captions` 控制。
 - 配色在 [colors.md](../styles/colors.md)，海报与脚本草稿在 [poster.md](../stages/poster.md)，默认输出的 `covers/` 仍为可选草稿。

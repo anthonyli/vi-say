@@ -9,9 +9,37 @@
 - 真正介绍产品时，界面／录屏是主角。入口 → 点击 → 结果 → 解释结果，至少完整讲清一条操作链。细字局部放大，旁白与界面当前状态一致；角色缩到不会遮挡的位置。
 - 配色起点：墨蓝 `#18233c`、明黄 `#ffdb42`、天蓝 `#72ccf0`、珊瑚红 `#ff775f`、奶白 `#fffbef`、浅紫 `#bda6f4`。按每期主题调整组合、占比和背景道具；不回退为固定玻璃背景。
 
+## 主入口：comic 主题
+
+小龙讲解视频直接用 `production.py init`，默认就是 `--preset comic`。编译、HTML 前审和 MP4 共用 [comic-scene.jsx](../../assets/remotion/src/effects/comic-scene.jsx)，不再每期另写 JSX 或 HTML 工程。版式由 [comic-layout.mjs](../../assets/remotion/comic-layout.mjs) 统一计算。标题和副标题的字数上限与版式容量是对应的，放得下就不会溢出；放不下会在编译时报错，不会出现在成片里。
+
+| 场景 | 固定版式与动作 |
+|---|---|
+| `hero` | 默认黄底，配放射线和网点。大标题先砸入，副标题框随后弹出，小龙在右侧大景 |
+| `demo` | 默认奶白底，左侧是粗描边截图框，没有聚焦时缓慢推近。小龙站在右下，副标题变成它头顶的对话气泡 |
+| `steps` | 默认蓝底，每个 `items[]` 是一块积木，在 `at` 时落下、压扁回弹，整屏轻微震动。2–3 块自下而上叠成塔 |
+| `stage` | 只有标题和背景，内容全部由 `effects` 组合 |
+| `cta` + `outroId` | 共用乐高片尾 [comic-outro.jsx](../../assets/remotion/src/comic-outro.jsx)，三块积木分别落在"留言/关注/点赞"的实测词时间上，最后淡出到墨蓝；录屏路线的片尾用的也是它 |
+
+场景可选字段（仅 comic 主题）：`tone` 改背景色（`yellow/blue/cream/purple/red/white`）；`highlight` 是从标题里原样摘出的一个短语，标题停稳后荧光笔从左到右划过它；`sourceLabel` 是截图左下角的来源标签，默认"界面素材展示"。comic 版式固定把小龙放在右侧，写 `characterSide: "left"` 会报错。`character.mode: "none"` 时截图框自动加宽，副标题改成标题下方的一行字。
+
+可复用效果，在任意场景的 `effects` 里使用，入场动作自带，不叠加通用淡入：
+
+| type | 字段 | 动作 |
+|---|---|---|
+| `bubble` | `position, text`；可选 `width, height, tail, fontSize` | 弹出后轻微摆动，字号按气泡大小自动选择 |
+| `burst` | `position`；可选 `size, text`（不超过 6 字） | 爆炸贴纸弹出，持续轻摆 |
+| `brick` | `position, text`；可选 `width, height, detail, angle` | 重力下落，触地压扁回弹，并带一次撞击星 |
+
+口播驱动的动效：呼吸卡片 `cue-cards`（逐条弹出，讲完收进底栏；也可以用手风琴模式）、聚光灯 `spotlight`、手绘圈注 `sketch`、打字机 `typewriter`、印章 `stamp`、逐条打勾 `checklist`。所有效果都可以加 `exit` 设定讲完怎么收起，加 `breathe` 让停留时轻微呼吸，并且可以用 `"cue": "口播里的词"` 代替手填秒数。字段见 [动画模块](../tools/animation-modules.md#每场通过-effects-组合模块)，可运行样例是 `--template cues`。卡片、台座、连线、列表这些旧效果在 comic 主题下会自动画成漫画样式。
+
+动效词汇集中在 [comic-motion.mjs](../../assets/remotion/effects/comic-motion.mjs)：`slam`（标题砸入）、`popIn`（弹出）、`dropLand`（下落触地）、`shake/shakeAll`（撞击震动）、`markerSweep`（荧光笔）、`push`（截图缓推）、`idle`（轻摆）、`fitFont`（自动字号）。时长统一在 `COMIC_MOTION` 里设定。所有动作都是时间的纯函数，拖动进度、并行渲染和 HTML 预览得到的是同一帧。要调整全系列的节奏，就改这一处，不要在单期里重写动作。
+
+转场只从漫画池里选：`gl:BookFlip`、`gl:GridFlip`、`gl:CrossZoom`、`gl:PolkaDotsCurtain`、`gl:CircleIris`、`gl:StarWipe`、`slide`、`wipe`。shader 的背景色会自动换成主题的墨蓝或明黄。片尾固定用 `gl:GridFlip` 进入，这一种不分给普通场景。单场写了 `transition` 仍然以单场为准。会整屏变黑、带反射地板或故障风的 shader 不进这个池。
+
 ## 可运行组件
 
-`assets/remotion/src/comic-kit.jsx` 导出 `ComicTheme`、`COMIC_PALETTE`、`Frame`、`Bubble`、`Brick`、`Dots`、`RayBurst`、`Burst`、`Dragon`、`BrowserShot` 及确定性缓动。使用共用 Remotion runtime，不逐期安装依赖。
+自定义组合时，`assets/remotion/src/comic-kit.jsx` 导出 `ComicTheme`、`COMIC_PALETTE`、`Frame`、`Bubble`、`Brick`、`Dots`、`RayBurst`、`Burst`、`Dragon`、`BrowserShot` 及确定性缓动。使用共用 Remotion runtime，不逐期安装依赖。
 
 ```jsx
 <ComicTheme.Provider value={{...COMIC_PALETTE, blue:'#72ccf0'}}>

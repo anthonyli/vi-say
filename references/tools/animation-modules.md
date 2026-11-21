@@ -5,11 +5,15 @@
 ## 直接运行
 
 ```sh
-# 已根据本期主题选定玻璃方案时：圆润口型、去标点高亮字幕和一个配角 Bot
-python scripts/production.py init work/new-video --title "本期标题" --subtitle "本期收益" --preset glass
+# 小龙系列默认：漫画积木主题、圆润口型、中英高亮字幕
+python scripts/production.py init work/new-video --title "本期标题" --subtitle "本期收益"
 
-# 模块展示模板：用于检查效果的 29 秒无声样片
-python scripts/production.py init work/effects-demo --title "动画模块" --subtitle "选择需要的效果" --preset glass --template effects
+# 口播驱动动效样例：呼吸卡片、手风琴、聚光灯、手绘圈注、打字机、印章、逐条打勾
+python scripts/production.py init work/cue-demo --title "动效" --subtitle "跟着口播出现" --template cues
+python scripts/production.py render work/cue-demo/project.json --output-dir outputs/cue-demo --preview
+
+# 模块展示模板：用于检查效果的 29 秒无声样片（漫画主题下所有效果自动画成漫画样式）
+python scripts/production.py init work/effects-demo --title "动画模块" --subtitle "选择需要的效果" --template effects
 python scripts/production.py render work/effects-demo/project.json --output-dir outputs/effects-demo --preview
 ```
 
@@ -17,31 +21,22 @@ python scripts/production.py render work/effects-demo/project.json --output-dir 
 
 需要更多场景切换时读 [GL 转场](gl-transitions.md)；`--template transitions` 提供同一制作入口的 35 种转场无声展示。默认轮换已包含 GL，角色、字幕和声音继续沿用原流程。
 
-`--preset classic` 选择原风格；老项目没有 `modules` 字段时继续原行为。示例模板提供画面编排，不是最终旁白时间；正式有声制作仍按最终音轨重新对齐。`--preview` 使用真正的静音 WAV。
+`--template comic` 是漫画场景与气泡、积木、爆炸贴纸的样例。`--preset glass` 和 `--preset classic` 只用于历史项目；老项目没有 `modules` 字段时继续原行为。示例模板提供画面编排，不是最终旁白时间；正式有声制作仍按最终音轨重新对齐。`--preview` 使用真正的静音 WAV。
 
 ## 背景、字幕、角色分别选择
 
-`project.json.modules` 的起点来自 [glass.json](../../assets/production/presets/glass.json) 或 [classic.json](../../assets/production/presets/classic.json)：
+`project.json.modules` 的起点来自 [comic.json](../../assets/production/presets/comic.json)（默认），历史项目来自 [glass.json](../../assets/production/presets/glass.json) 或 [classic.json](../../assets/production/presets/classic.json)：
 
 ```json
 {
-  "background": "glass",
-  "captions": {
-    "style": "highlight",
-    "stripPunctuation": true,
-    "keywords": [],
-    "protectedTerms": []
-  },
-  "character": {
-    "mode": "rounded",
-    "travelSeconds": 0.9,
-    "arc": 70,
-    "tilt": 1.2
-  }
+  "background": "comic",
+  "captions": {"style": "highlight", "bilingual": true, "stripPunctuation": true,
+               "keywords": [], "keywordsEn": [], "protectedTerms": []},
+  "character": {"mode": "rounded", "travelSeconds": 0.75, "arc": 60, "tilt": 0.8}
 }
 ```
 
-- 背景：`glass/classic/studio`。玻璃效果实际包含浅色光场、弧面、地面网格和进度线。
+- 背景：`comic/glass/classic/studio`。`comic` 是小龙系列默认，版式见 [漫画积木风](../styles/comic-bricks.md#主入口comic-主题)。下表的卡片、台座、连线、列表、计数、连接和 Bot 会按主题换外观：漫画主题是粗描边、硬阴影、实色，其他主题是玻璃。同一条视频里不会混用两种外观。
 - 字幕：`highlight/plain`；关键词与需保护完整拼写的术语分别传入数组。`captions` 接受内联字幕数组，或相对项目的 JSON 路径；文件可为数组或 `{"captions": [...]}`。显示去标点同时作用于视频与 SRT，TTS 原稿不变。只有传入真实词时间的普通 token 字幕才做逐词强调。
 - 角色：`rounded/legacy/none`（none 隐藏角色）。每场可用 `characterPose: {left,top,width,height,turn,rotation}` 设置位置与景别；跨场按 `travelSeconds` 和 `arc` 连续迁移，`tilt` 控制轻微身体倾斜。坐标和尺寸单位为设计画布像素。
 
@@ -49,7 +44,7 @@ python scripts/production.py render work/effects-demo/project.json --output-dir 
 
 保留 `hero/steps/demo/cta`，新增 `kind: "stage"` 用于自由编排效果。每场的 `effects` 是数组；数组顺序参与叠放，Bot 在独立持久层绘制，避免跨场同时出现两份。
 
-通用字段：`type` 必填；`id` 为对象身份；`at/endAt` 为**场内秒数**；`enter` 可选 `fade/rise/pop/none`，`enterSeconds` 控制入场时长。`focus` 使用事件自身的 0.35 秒过渡，不接收这两个入场字段。`position: [x,y]`、`box: [x,y,width,height]` 均为画布像素；`color` 为六位十六进制色值。下列字段是各模块实际支持的输入，完整可运行组合见 [effects.json](../../assets/production/examples/effects.json)。
+通用字段：`type` 必填；`id` 为对象身份；`at/endAt` 为**场内秒数**；`enter` 可选 `fade/rise/pop/none`，`enterSeconds` 控制入场时长。`exit` 可选 `fade/shrink/collapse/fly/none`，表示讲完以后怎么收起，需要写 `endAt`，`exitSeconds` 默认 0.35；`breathe: true` 让效果停稳后轻微呼吸。Bot 不接收 exit/breathe，focus 不接收任何入场或出场字段。`focus` 使用事件自身的 0.35 秒过渡，不接收这两个入场字段。`position: [x,y]`、`box: [x,y,width,height]` 均为画布像素；`color` 为六位十六进制色值。下列字段是各模块实际支持的输入，完整可运行组合见 [effects.json](../../assets/production/examples/effects.json)。
 
 | type | 内容与关键字段 | 实际效果 |
 |---|---|---|
@@ -66,6 +61,22 @@ python scripts/production.py render work/effects-demo/project.json --output-dir 
 | `tag` | `position,text` | 胶囊标签与状态点 |
 | `text` | `position,text`；可选 `fontSize,weight` | 标题文字入场，可组合缩放弹出 |
 | `list` | `box,items: [{at,text,detail,color}]` | 按触发时间亮起的条目与完成勾选 |
+| `bubble` / `burst` / `brick` | 见 [漫画积木风](../styles/comic-bricks.md#主入口comic-主题) | 对话气泡弹出、爆炸贴纸、积木下落压扁 |
+| `cue-cards` | `box, items: [{at,title,detail,icon,color}]`（1–6 条，间隔至少 0.6 秒）；可选 `mode: focus/stack` | **呼吸卡片**：`focus` 每条一张大卡片，弹出后呼吸，下一条出现时飞进底栏缩成"✓ 标签"；`stack` 为手风琴，旧条目折叠、当前条目展开 |
+| `spotlight` | `events: [{at,region:[x,y,w,h],label}]`；可选 `dim` | 压暗画面，只留带呼吸虚线框的区域，按事件平滑移动到下一处 |
+| `sketch` | `region`；可选 `shape: ellipse/box/underline, label, seconds` | 手绘圈注一笔画出，画完弹出标签 |
+| `typewriter` | `position, text`；可选 `width, prompt, fontSize, seconds` | 输入框逐字打出，带闪烁光标，默认每秒 16 字 |
+| `stamp` | `position, text`（不超过 6 字）；可选 `size, angle` | 印章砸下并震动 |
+| `checklist` | `box, items: [{at,text}]` | 方框弹出，勾号一笔画出 |
+
+### 跟着口播出现：用词代替秒数
+
+场景 `items[]`、任意效果，以及效果里的 `items[]`、`events[]`、`points[]`，都可以写 `"cue": "关注"` 代替手填的 `at`；效果上的 `"endCue": "下一句的词"` 会换算成 `endAt`，也就是收起的时间；`cueOffset` 可以前后微调几十毫秒。编译时 [speech_cues.py](../../scripts/speech_cues.py) 从 `captions` 指向的 `align_captions.py` 输出里读取最终 WAV 的逐字时间，在该场景时间段内查找这个词。同一列表里的词按出现顺序往后找；找不到会直接报错并给出时间段，不会估算。
+
+```json
+{"type": "cue-cards", "box": [80, 190, 1280, 650], "endCue": "总结", "exit": "shrink",
+ "items": [{"cue": "导入", "title": "一键导入"}, {"cue": "排版", "title": "自动排版"}, {"cue": "发布", "title": "直接发布"}]}
+```
 
 ### Bot 外观与动作分开
 

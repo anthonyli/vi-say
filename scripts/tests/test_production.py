@@ -50,6 +50,8 @@ class Production(unittest.TestCase):
         init(root/'project','演示','副标题','系列')
         base=root/'project'
         doc=json.loads((base/'project.json').read_text())
+        # Synthetic constant WAV without captions: this fixture tests listening records only.
+        doc['preflight']={'allow':{'captions_present':'listening-record fixture','leading_silence':'synthetic constant WAV'}}
         narration=base/'narration.txt'
         narration.write_text('使用 CSS。\n'+narration.read_text())
         lexicon={'CSS':{'spoken':'CSS','notes':'synthetic test term'}}
@@ -145,6 +147,8 @@ class Production(unittest.TestCase):
             doc=json.loads((base/'project.json').read_text())
             doc['captions']=[{'start':0.4,'end':2.2,'text':'先看画面，再听口播。','en':'Watch the visuals and listen to the narration.'}]
             doc['scenes'][1]['transition']='gl:CrossZoom'
+            doc['modules']['captions']['keywords']=['口播']
+            doc['preflight']={'allow':{'outro_voiced':'single-caption playback fixture','leading_silence':'synthetic constant WAV'}}
             (base/'project.json').write_text(json.dumps(doc,ensure_ascii=False))
             frames=round(doc['scenes'][-1]['end']*48000)
             audio=root/'voice.wav'

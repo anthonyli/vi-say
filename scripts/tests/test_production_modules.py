@@ -95,7 +95,8 @@ class ProductionModules(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp)
             init(root/'classic','原风格','可继续选择','系列','classic')
-            init(root/'glass','玻璃风','可独立换造型','系列')
+            init(root/'glass','玻璃风','可独立换造型','系列','glass')
+            init(root/'comic','漫画积木','新项目默认','系列')
             classic=json.loads((root/'classic/project.json').read_text())
             glass=json.loads((root/'glass/project.json').read_text())
             self.assertEqual(classic['modules']['character']['mode'],'legacy')
@@ -103,6 +104,10 @@ class ProductionModules(unittest.TestCase):
             self.assertNotIn('effects',classic['scenes'][0])
             self.assertEqual(glass['scenes'][0]['effects'][0]['variant'],'hexagon')
             self.assertTrue((root/'glass/narration.txt').read_text().startswith('大家好，我是小龙'))
+            comic=json.loads((root/'comic/project.json').read_text())
+            self.assertEqual(comic['modules']['background'],'comic')
+            self.assertEqual(comic['modules']['character']['mode'],'rounded')
+            self.assertNotIn('effects',comic['scenes'][0])
 
     def test_studio_business_template_compiles_without_character_or_episode_assets(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -126,7 +131,7 @@ class ProductionModules(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);init(root/'project','演示','参数检查','系列')
             doc=json.loads((root/'project/project.json').read_text())
-            doc['scenes'][0]['effects'][0]['type']='not-implemented'
+            doc['scenes'][0]['effects']=[{'type':'not-implemented','position':[100,100]}]
             with self.assertRaises(subprocess.CalledProcessError),patch('production.covers'):
                 compile_project(root/'project',doc,root/'bad',preview=True)
             self.assertFalse((root/'bad').exists())

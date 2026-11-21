@@ -6,6 +6,9 @@
 |---|---|---|
 | 效果发现与可运行样例 | `scripts/production.py catalog`、`assets/remotion/effects/catalog.mjs` | 从实际字段表和注册表读取效果，校验所有模板，检查每种效果有示例；打包前自动执行 |
 | 分镜、预设、素材复制 | `production.py init/compile`、`assets/production/presets/`、`examples/` | 按配置选择效果、复制本地媒体、生成统一时间轴，拒绝未知字段和非法时序 |
+| 漫画积木主题与动效 | `presets/comic.json`、`comic-layout.mjs`、`effects/comic-motion.mjs`、`src/effects/comic-scene.jsx`、`cue-effects.jsx` | 固定版式与字号、纯时间函数动效、漫画转场池、呼吸卡片/聚光灯/圈注/打字机/印章/打勾 |
+| 渲染前检查 | `scripts/preflight.py`（compile/preview 自动执行） | 字幕、关键词、片尾口播、静音、字幕覆盖、海报进视频、系列主题；只做机械检查 |
+| 口播词定时 | `scripts/speech_cues.py`、`align_captions.py --cues` | 用 `cue` 词换算动作时间；whisper 词时间直接可用，ASR 差异需记录理由才能放行 |
 | 完整产品界面与字体 | `src/effects/product-shell.jsx`、`node-editor.jsx`、`product-views.jsx`、`assets/production/fonts/` | 保留成熟画面的比例、导航、工具栏、证据与审核布局；文案和数据通过 ui 配置，可变字体保留真实字重 |
 | 动效与转场 | `assets/remotion/effects/`、`src/effects/`、`cartoon-transitions.mjs` | 帧时间驱动动作、对象变化与转场，支持跳帧重现；新增实现须接入校验、绘制、采样和样例 |
 | GL 与原有转场 | `gl-transitions.json/mjs`、`src/gl-transition.jsx`、`cartoon-transitions.mjs`、`transition-selection.mjs` | 30 种上游 shader 与 5 种基础机制全部进入轮换，显式指定优先，其次场景匹配；7 个旧名兼容但不重复计数；保持声音与角色时间不变 |

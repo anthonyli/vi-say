@@ -7,7 +7,8 @@ import {validateModules,validateEffects} from './effects/contract.mjs';
 import {BUSINESS_FIELDS,businessTimes} from './effects/business.mjs';
 import {effectTimes} from './effects/motion.mjs';
 import {isGLTransition} from './gl-transitions.mjs';
-import {sceneTransitionSettings,transitionSeconds,transitionPlan} from './cartoon-motion.mjs';
+import {sceneTransitionSettings,transitionSeconds,transitionPlan,transitionTheme,isComic} from './cartoon-motion.mjs';
+import {validateComicScene} from './comic-layout.mjs';
 export const style = JSON.parse(fs.readFileSync(new URL('../production/style.json', import.meta.url), 'utf8'));
 const finite = x => typeof x === 'number' && Number.isFinite(x);
 const fail = msg => {throw new Error(`cartoon: ${msg}`);};
@@ -15,6 +16,7 @@ const text = (s, max, label) => {if (typeof s !== 'string' || !s.trim() || [...s
 export function validateCartoon(doc) {
   if (!Object.hasOwn(doc, 'cartoonScenes')) return doc;
   validateTransitionPool(style.motion.transitionKinds);
+  validateTransitionPool(transitionTheme(doc).pool);
   if (doc.aspect !== '16:9' || doc.scenes || doc.video || doc.image || doc.overlays?.length || doc.motions?.length) fail('use independent 16:9 cartoon scenes; do not mix legacy layout fields');
   if (doc.styleId !== style.id) fail('unknown styleId');
   text(doc.character, 4096, 'character path');
@@ -48,6 +50,8 @@ export function validateCartoon(doc) {
       if (s.outroId!==outro.id || s.kind!=='cta' || s!==doc.cartoonScenes.at(-1) || JSON.stringify(s.items?.map(x=>x.text))!==JSON.stringify(outro.items.map(x=>x.text))) fail('shared outro must end the video with the canonical actions');
     }
     if (s.subtitle) text(s.subtitle, 38, 'subtitle');
+    if (isComic(doc)) validateComicScene(s, {character: doc.modules?.character?.mode !== 'none'});
+    else for (const key of ['tone','highlight']) if (s[key] !== undefined) fail(`${key} is a comic theme field; set modules.background to comic`);
     if (s.label) text(s.label, 18, 'label');
     if (s.kind === 'demo') {
       if(s.mediaBox!==undefined){const b=s.mediaBox;if(!Array.isArray(b)||b.length!==4||b.some(n=>!finite(n))||b[0]<0||b[1]<0||b[2]<=0||b[3]<=0||b[0]+b[2]>1920||b[1]+b[3]>1080)fail('mediaBox must fit the 1920x1080 canvas');}

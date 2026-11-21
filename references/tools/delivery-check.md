@@ -31,7 +31,7 @@ python scripts/production.py check-delivery work/episode/delivery.json \
 
 漫画完整录屏使用 `recorded_story`（相对清单的时间轴路径）接入 `check_recorded_story.py`，交付检查同时核对封面、字幕高亮输入、完整原片覆盖和实际WAV内部长静音。不能以仅文件齐全代替这些检查；本检查仍不认证视听质量。
 
-发布海报（poster_16x9/poster_4x3/poster_3x4）与视频片头（可选intro_frame）分开登记。片头截图不能冒充三比例海报，海报生成也不授权改视频。发布文案必须有独立文件，不能只用口播稿充数。
+发布海报（poster_16x9/poster_4x3/poster_3x4）与视频片头（可选intro_frame）分开登记。片头截图不能冒充三比例海报，海报生成也不授权改视频。新制发布文案使用独立的 `发布文案.txt`，按 [发布文案节点](../stages/publishing-copy.md) 交付。
 
 ## 局部修订的可执行保护
 

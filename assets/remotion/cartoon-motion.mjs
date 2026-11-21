@@ -5,6 +5,14 @@ import style from '../production/style.json' with {type:'json'};
 import {CARTOON_TRANSITIONS,resolveTransition,sequentialTransition,TRANSITION_ALIASES} from './cartoon-transitions.mjs';
 import {isGLTransition,glTransitionPreset} from './gl-transitions.mjs';
 import {shuffledTransitionPool,selectSceneTransitions} from './transition-selection.mjs';
+import {COMIC_LAYOUT,COMIC_OUTRO_TRANSITION,COMIC_TRANSITION_PARAMS,COMIC_TRANSITION_POOL} from './effects/comic-motion.mjs';
+export const isComic=doc=>doc?.modules?.background==='comic';
+/** The comic theme fixes its pool, shader colours and outro entrance; other themes keep the full rotation. */
+export function transitionTheme(doc){
+  return isComic(doc)?{pool:COMIC_TRANSITION_POOL,params:COMIC_TRANSITION_PARAMS,outro:COMIC_OUTRO_TRANSITION}
+    :{pool:style.motion.transitionKinds,params:{},outro:undefined};
+}
+const themeChoices=doc=>{const theme=transitionTheme(doc);return selectSceneTransitions(doc,theme.pool,{outro:theme.outro});};
 export const clamp = x => Math.max(0, Math.min(1,x));
 // Opaque replacement keeps one mouth visible. Hysteresis avoids rapid swaps
 // around the energy threshold; it is deterministic for out-of-order renders.
@@ -19,7 +27,10 @@ export function closedMouthOpacity(values, frame) {
 export const ease = x => {const p=clamp(x);return p*p*p*(10+p*(-15+6*p));};
 export const sideOf = scene => scene.characterSide ?? (scene.kind==='hero'?'right':'left');
 export function characterPose(scenes, time, enterSeconds=.65,options={}) {
-  const box = s => s.characterPose?{turn:0,rotation:0,...s.characterPose}:s.kind==='hero'
+  const preset=options.defaults;
+  const box = s => s.characterPose?{turn:0,rotation:0,...s.characterPose}:preset
+    ? {...(s.kind==='hero'?preset.hero:preset.side),turn:180,rotation:0}
+    :s.kind==='hero'
     ? {left:sideOf(s)==='right'?1010:80,top:115,width:780,height:810,turn:sideOf(s)==='right'?180:0,rotation:0}
     : {left:sideOf(s)==='right'?1275:75,top:295,width:570,height:650,turn:sideOf(s)==='right'?180:0,rotation:0};
   let index=scenes.findIndex(s=>time>=s.start&&time<s.end);
@@ -36,18 +47,19 @@ export function transitionFor(index, seed='dragon-series') {
   const kinds=shuffledTransitionPool(seed,style.motion.transitionKinds);
   return kinds[Math.max(0,index-1)%kinds.length];
 }
-const settingsFor=(scene,choice)=>({...resolveTransition(choice.name,scene.transitionParams,scene.transitionAlias),
+const settingsFor=(scene,choice,theme={params:{}})=>({...resolveTransition(choice.name,
+  scene.transitionParams??(scene.transitionAlias===undefined?theme.params[choice.name]:undefined)??{},scene.transitionAlias),
   ...(choice.selection?{selection:choice.selection}:{})});
 export const sceneTransitionSettings=(scene,index,doc)=>settingsFor(scene,scene.transition!==undefined
   ?{name:scene.transition,selection:scene.transitionSelection}
-  :selectSceneTransitions(doc,style.motion.transitionKinds)[index]);
+  :themeChoices(doc)[index],transitionTheme(doc));
 export const sceneTransition=(scene,index,doc)=>sceneTransitionSettings(scene,index,doc).name;
 export const transitionSeconds=(scene,kind,alias=scene.transitionAlias??(Object.hasOwn(TRANSITION_ALIASES,scene.transition)?scene.transition:undefined))=>scene.transitionSeconds??(alias?style.motion.transition:glTransitionPreset(kind)?.seconds??style.motion.transition);
 export function resolveCartoonTransitions(doc){
   if(!doc.cartoonScenes)return doc;
-  const choices=selectSceneTransitions(doc,style.motion.transitionKinds);
+  const choices=themeChoices(doc),theme=transitionTheme(doc);
   return {...doc,cartoonScenes:doc.cartoonScenes.map((s,i)=>{
-    if(!i)return {...s};const settings=settingsFor(s,choices[i]);
+    if(!i)return {...s};const settings=settingsFor(s,s.transition!==undefined?{name:s.transition,selection:s.transitionSelection}:choices[i],theme);
     return {...s,transition:settings.name,...(Object.keys(settings.params).length?{transitionParams:settings.params}:{}),...(settings.alias?{transitionAlias:settings.alias}:{}),...(settings.selection?{transitionSelection:settings.selection}:{})};
   })};
 }

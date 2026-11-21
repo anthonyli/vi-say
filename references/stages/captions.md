@@ -17,40 +17,37 @@
 
 按意群分条、按实际字体测宽，最多两行。每期从稿件建立保护词表，将多词产品名、术语和需要完整阅读的短语视作不可拆单元；换行与分条都不能把后半段留到下一条。关键词从本期核心问题、关键动作和可见收益中选取，按长短语优先匹配；词表作为项目输入，不内置某期产品名或主题词。
 
-漫画积木风的 1920×1080 起点如下，其他尺寸重新检查：
+漫画积木风的 1920×1080 默认值如下，由 [comic-captions.jsx](../../assets/remotion/src/comic-captions.jsx) 实际绘制，其他尺寸重新检查：
 
-| 元素 | 起始样式 |
+| 元素 | 默认样式 |
 |---|---|
-| 正文 | 墨蓝中文 38 px，英文 25 px；中文在上，英文在下 |
-| 关键词 | 深红 `#a82920`＋暖黄底 `#ffe18c`，字重 900；只强调核心短语 |
-| 底框 | 奶白底、墨蓝描边、硬阴影；由公共漫画字幕组件绘制 |
-| 安全区 | 居中，左右各留约 100 px，距底约 42 px；按主体和平台遮挡复核 |
+| 正文 | 白色中文 36 px（字重 700），英文 26 px；中文在上，英文在下 |
+| 关键词 | 暖黄 `#ffe18c`，字重 900；只强调核心短语 |
+| 底框 | 深色半透明圆角底 `#050914ed`、细描边与柔和投影 |
+| 安全区 | 左右各留 13.5%，距底 70 px；comic 场景的内容统一停在 y=880 以上，不与字幕重叠 |
 
 高亮可与整条字幕同时出现；需要逐词变色时，另接入当前声音的真实词时间。SRT 保持纯文本，关键词颜色实际渲染进视频。统一小龙入口已支持 `modules.captions`，由 [captions.mjs](../../assets/remotion/effects/captions.mjs) 处理保护词、显示标点与关键词，并保证视频和 SRT 使用同一显示文本；[动画模块接口](../tools/animation-modules.md) 说明如何接入字幕文件。独立的旧后处理脚本仍按其自身能力使用。
 
 ## 取得可靠时间
 
-本地 TTS 不自动返回词时间。选择当前可用的 ASR／对齐工具并适配结果，仓库没有统一的模型安装和转写入口。`align_captions.py` 接受毫秒单位的词区间：
+本地 TTS 不自动返回词时间。用当前可用的 ASR 识别最终 WAV，再交给 `align_captions.py`。它接受两种格式：DashScope 风格的毫秒词区间（`transcriptions[].transcripts[].sentences[].words[]`），以及 whisper / faster-whisper 的 `segments[].words[]`（`word/start/end`，单位为秒）。
 
-```json
-{"transcriptions":[{"transcripts":[{"sentences":[{"words":[
-  {"text":"你好","begin_time":100,"end_time":500}
-]}]}]}]}
-```
-
-实际值必须来自当前声音。若 `audio_timing.py` 处理了静音或速度，使用其时间映射；原声剪辑按最终母版重新对齐或核对剪辑映射，不能沿用原片未转换的时间。
+本期写好的中英字幕用 `--cues` 按顺序传入，每条为 `{text, en, keywords?, keywordsEn?}`。声音没有做过剪辑或变速时，用 `--audio` 传最终 WAV，脚本会自动建立恒等映射；用 `audio_timing.py` 处理过静音或速度的，改用 `--map` 传它输出的时间映射。
 
 ```sh
-python scripts/align_captions.py --alignment work/task/words.json --text work/task/narration.txt --map work/task/timing-map.json --output work/task/captions.json
+python scripts/align_captions.py --alignment work/task/asr.json --cues work/task/cues.json \
+  --audio work/task/narration.wav --output work/task/captions.json
 ```
 
-该脚本要求时间映射；未做声音处理时提供依据实际声音建立的恒等映射（`speed: 1`、`cuts: []`，`output_duration` 为当前 WAV 实测秒数），不为取得映射而改变已认可的声音。字幕文本与识别不一致时先核实声音和识别，不通过改字幕掩盖漏词。
+稿件和识别结果不一致时，脚本会逐处列出差异，包括时间点、稿件写法和识别写法，然后停止。先去听这几处：真是读错了就重新生成声音；只是识别写法不同（数字与汉字、同音字），再加 `--accept-differences "听过：……"` 重新运行。差异区间的逐字时间由两侧插值得出，并标记 `interpolated`；放行理由会写进输出。不要通过改字幕来掩盖漏词。
+
+输出的 `{"captions": [...], "characters": [...]}` 可以直接作为 `project.json` 的 `captions` 文件。字幕按 cue 绑定时间，`characters` 供场景和效果用 `cue` 词定时，见 [动画模块](../tools/animation-modules.md#跟着口播出现用词代替秒数)。只传 `--text` 时，脚本按标点自动分条。
 
 `characters` 是词区间内插值的估算逐字时间，不是逐字强制对齐。强调词优先用真实词边界，不能把按字数均分的时间声称为精确同步。
 
 ## 渲染与检查
 
-- Remotion 时间轴可直接使用 `captions`；旧信息层的 token 拼接必须保留完整字幕文本。参数见 [Remotion](../tools/remotion.md)。默认小龙编译入口不自动填入字幕，需显式接入或后处理。
+- Remotion 时间轴可直接使用 `captions`；旧信息层的 token 拼接必须保留完整字幕文本。参数见 [Remotion](../tools/remotion.md)。默认小龙编译入口不会自己生成字幕，需要接入 `align_captions.py` 的输出；有声成片缺字幕时，渲染前检查会拦下。
 - 后处理：`python scripts/render_captions.py --video VIDEO.mp4 --captions CAPTIONS.json --output SUBTITLED.mp4 --srt CAPTIONS.srt --mode burn`。`sidecar` 保留原视频，单独交 SRT。输出使用新路径。
 - 后处理字幕版式以 1920×1080 设计，其他比例需检查并适配安全区，不默认保证通用排版。它不裁切、缩放或补边，也不改变音轨。
 - 看最长字幕、所有接点、首尾及关键操作处；普通字幕约 10–22 个中文字，最多两行。改稿、换声音或改剪辑后重新对齐并复核。

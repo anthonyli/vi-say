@@ -6,15 +6,15 @@
 
 | 需要改变什么 | 当前入口 | 何时需要代码 |
 |---|---|---|
-| 颜色、固定动作时长 | `assets/production/style.json` 的 `palette/motion` | 现有参数无法描述所需表现时 |
-| 默认转场组合 | `style.json.motion.transitionKinds` | 效果尚未在注册表实现时 |
-| 单场转场／角色站位 | 项目场景的 `transition/characterSide` | 新效果或新布局时 |
+| comic 主题的动效时长、转场池、版式常量 | [comic-motion.mjs](../assets/remotion/effects/comic-motion.mjs)（`COMIC_MOTION/COMIC_TRANSITION_POOL/COMIC_LAYOUT`） | 现有参数无法描述所需表现时 |
+| 其他主题的颜色、动作时长、转场组合 | `assets/production/style.json` 的 `palette/motion` | 效果尚未在注册表实现时 |
+| 单场转场／背景色／标题高亮 | 项目场景的 `transition`、comic 的 `tone/highlight` | 新效果或新布局时 |
 | 角色和嘴部素材 | `style.json.character`、透明素材 | 真实新姿态或更复杂口型时 |
 | 海报风格 | [海报节点](stages/poster.md)、参考图、`style.json.poster` | 选择代码排字且需新布局时 |
 | 语言、参考声音 | 制作项目的私有声音配置、`local_voice.py --language` | 新增推理后端时；语言效果仍须实际短测 |
 | 统一片尾 | `assets/production/outro.json` | 新图标或新的互动布局时 |
 | 发布口吻 | [发布文案](stages/publishing-copy.md) | 通常无需改代码 |
-| Bot、玻璃、连接、汇聚分发、路径、聚焦与高亮 | 项目 `modules` 和场景 `effects`，见 [动画模块接口](tools/animation-modules.md) | 已实现模块直接选择；新类型同时扩展 contract、motion、绘制与实际样片 |
+| 积木、气泡、呼吸卡片、聚光灯、圈注、打字机、印章、打勾、Bot、连接、汇聚分发、路径、聚焦 | 项目 `modules` 和场景 `effects`，见 [动画模块接口](tools/animation-modules.md) | 已实现模块直接选择；新类型同时扩展 contract、motion、漫画与玻璃两种外观、目录样例和测试 |
 | GL shader 与原有转场 | [GL 转场](tools/gl-transitions.md) 的 `transition/transitionSeconds/transitionParams` | 30 种 GL 已接入统一合成与自动轮换；新 shader 核实元数据、参数和样片后加入目录 |
 
 配置只能使用当前实现支持的字段。修改全局默认前先在任务副本验证；单期偏好写入本期记录，不自动变为所有任务的默认。
@@ -36,7 +36,7 @@
 
 1. 在注册表增加一个具名函数，接收已经缓动的 `p`（0 到 1），返回 React/CSS 样式对象。需要多个文件时可从独立模块导入，注册表保留统一入口。
 2. 效果只依赖传入进度，不用实时时钟、无种子随机或跨帧状态。完成时样式由统一调用层归为 `{}`，使后一场完整呈现。需要新素材或参数时必须同时扩展校验与素材映射，不在样式中偷偷引用外部资源。
-3. 指定场景的 `transition` 即可使用已注册效果。当前全部 35 项已在 `style.json.motion.transitionKinds` 中；新增效果验证后同步加入，并在 `transition-selection.mjs` 配置合适的场景分组。注册表与选择池分开维护，未实现的名称会被拒绝。
+3. 指定场景的 `transition` 即可使用已注册效果。当前全部 35 项已在 `style.json.motion.transitionKinds` 中；适合明亮漫画画面的再加入 `COMIC_TRANSITION_POOL` 并在 `COMIC_TRANSITION_PARAMS` 配好背景色。新增效果验证后同步加入，并在 `transition-selection.mjs` 配置合适的场景分组。注册表与选择池分开维护，未实现的名称会被拒绝。
 4. 补充效果的起始、中间和完成状态测试，实渲接点并看连续过程。核对露底、重影、标题叠字、可读落点和真实动作时长，再决定是否加入默认池。
 
 GL shader 走独立双场景合成，不返回 CSS 样式。当前 30 项的名称、默认参数、建议时长、作者、许可与源码哈希在 `assets/remotion/gl-transitions.json`，类型与参数校验在同名 `.mjs`，绘制在 `src/gl-transition.jsx`。新增 GL 项同时补入 `examples/transitions.json` 并实渲；`catalog` 与打包会拒绝没有可运行样例的转场。默认池允许已注册的 CSS 与 GL 名称，自动选择结果会写入编译时间轴，详情见 [GL 转场](tools/gl-transitions.md)。
@@ -51,13 +51,13 @@ node --test assets/remotion/tests/cartoon-contract.test.mjs assets/remotion/test
 
 ## 入场、强调、角色动作与新场景
 
-转场注册表只负责场景切换。元素入场、强调和角色运动仍分别在 `src/cartoon.jsx`、`cartoon-motion.mjs`，时长取 `style.json.motion`；新增这些行为时修改对应实现并检查实际帧。
+转场注册表只负责场景切换。comic 主题的场景版式在 `comic-layout.mjs`（渲染与校验共用），绘制在 `src/effects/comic-scene.jsx`，动作在 `effects/comic-motion.mjs`；其他主题的元素入场与角色运动在 `src/cartoon.jsx`、`cartoon-motion.mjs`，时长取 `style.json.motion`。共用效果通过 `src/effects/surface.jsx` 的主题上下文决定画成漫画还是玻璃样式。新增这些行为时修改对应实现并检查实际帧。
 
 可选模块现通过 `effects/contract.mjs → effects/motion.mjs → src/effects/ → src/cartoon.jsx` 调用。Bot 外观与动作分开；SceneEffects 组合非角色效果，BotActors 保持跨场单一身份；新项目预设由 `assets/production/presets/` 选择。完整接口见 [动画模块](tools/animation-modules.md) 与 [产品演示动效](tools/business-effects.md)，不需要为新题材复制单期工程。
 
 | 新表现 | 应同时更新的代码 |
 |---|---|
-| 小龙新场景类型 | `src/cartoon.jsx` 的画面、`cartoon-contract.mjs` 的类型与字段校验；新增素材需更新 `mapCartoonAssets`，新增状态需更新 `cartoonStillPoints` |
+| 小龙新场景类型 | comic 版式 `comic-layout.mjs` 与 `comic-scene.jsx`、其他主题 `src/cartoon.jsx`；`cartoon-contract.mjs` 的类型与字段校验；新增素材更新 `mapCartoonAssets`，新增状态更新 `cartoonStillPoints` |
 | 编辑式新图解 | `src/editorial.jsx` 和 `editorial-contract.mjs` 的校验、素材映射、关键帧取样 |
 | 实录新信息层 | `src/video.jsx` 的绘制、`render.mjs` 的类型与内容校验 |
 | 共享元素新结构 | 任务 Python 适配器的 `create_scenes(config, config_dir)`，复用 `shared-motion/core.py` 与转场工具 |

@@ -14,7 +14,7 @@ python scripts/check_transition_reel.py outputs/transition-reel/timeline.json ou
 
 `transitions` 样例为 72 秒无声展示，前 30 项是 GL，后 5 项是基础转场。使用两张对比明显的原创示意画面，每项在画面字幕中显示编号、真实名称和中文说明，不依赖旁白。不是产品事实或声音验收样例。
 
-默认 `init → compile/render` 会自动选择转场，35 种全部进入 `style.json.motion.transitionKinds`。编译后的 `timeline.json` 保存实际名称和自动选择依据；旧名称归一化为主名称与参数预设，并保留 `transitionAlias`。`render.mjs --audit-only` 的 `transitions` 输出引擎、时间、帧区间及自动选择记录。
+小龙系列默认的 comic 主题只在 8 种漫画转场里选择，shader 背景色跟主题一致，片尾固定用 `gl:GridFlip`，见 [漫画积木风](../styles/comic-bricks.md#主入口comic-主题)。其他主题仍按下面的规则：默认 `init → compile/render` 会自动选择转场，35 种全部进入 `style.json.motion.transitionKinds`。编译后的 `timeline.json` 保存实际名称和自动选择依据；旧名称归一化为主名称与参数预设，并保留 `transitionAlias`。`render.mjs --audit-only` 的 `transitions` 输出引擎、时间、帧区间及自动选择记录。
 
 ## 自动选择顺序
 
@@ -53,7 +53,7 @@ python scripts/check_transition_reel.py outputs/transition-reel/timeline.json ou
 
 旧 JSON 继续可用。编译后 `transition` 写主名称，`transitionParams` 写参数预设，`transitionAlias` 仅记录旧名称以保持原有 0.6 秒及顺序淡入约定；新项目直接选主入口。兼容别名在 `catalog --json` 的 `transitionAliases` 中单列，不作为七种额外特效计数。`catalog` 统一列出 35 项，并提供中文名称、分类、引擎、建议时长、是否在默认池，以及 GL 的官网预览、参数、作者、许可和源代码哈希。
 
-按信息关系选择；复杂转场不能替代对象操作或过程动画。全部 35 项既可显式指定，也参与默认轮换；短片只使用实际切点需要的数量。场景偏好用于排序，不把不匹配项永久排除。
+按信息关系选择；复杂转场不能替代对象操作或过程动画。全部 35 项都可显式指定；comic 以外的主题还会让它们全部参与默认轮换；短片只使用实际切点需要的数量。场景偏好用于排序，不把不匹配项永久排除。
 
 ## 场景参数
 
@@ -81,7 +81,7 @@ python scripts/check_transition_reel.py outputs/transition-reel/timeline.json ou
 ## 真实合成与验证
 
 ```text
-显式 transition / 场景关系 / 全部 35 种轮换池
+显式 transition / 场景关系 / 主题转场池（comic 8 种，其他 35 种）
   → 编译并保存实际 transition 与自动选择依据
   → contract 校验名称、参数与时长
   → 原有 CSS 合成 / GL 双场景 WebGL 合成

@@ -1,0 +1,35 @@
+{
+  "modules": {"background": "comic"},
+  "keywords": ["依次出现", "收起", "聚光灯", "打勾"],
+  "scenes": [
+    {"kind": "stage", "start": 0, "end": 7, "title": "卖点跟着口播依次出现", "highlight": "依次出现", "tone": "cream",
+     "subtitle": "讲完一条，就收进底栏",
+     "effects": [{"type": "cue-cards", "box": [80, 190, 1280, 650], "at": 0.3, "endAt": 6.6, "exit": "shrink",
+       "items": [{"at": 0.4, "title": "一键导入", "detail": "链接、录屏、文章都能直接读"},
+                 {"at": 2.2, "title": "自动排版", "detail": "画面、字幕、口播同一条时间轴", "color": "#ff775f"},
+                 {"at": 4.0, "title": "直接发布", "detail": "三比例海报和文案一起交付", "color": "#bda6f4"}]}]},
+    {"kind": "stage", "start": 7, "end": 13, "title": "旧的收起，新的展开", "highlight": "收起", "tone": "blue",
+     "effects": [{"type": "cue-cards", "mode": "stack", "box": [90, 190, 1240, 480],
+       "items": [{"at": 0.3, "title": "先写口播", "detail": "完整语义，不按字幕断句"},
+                 {"at": 1.9, "title": "再对齐时间", "detail": "词时间来自最终音轨"},
+                 {"at": 3.5, "title": "最后出画面", "detail": "动作落在说到的那个词上"}]},
+       {"type": "stamp", "position": [880, 700], "size": 250, "text": "搞定", "at": 4.8}]},
+    {"kind": "demo", "start": 13, "end": 20, "title": "聚光灯带着看重点", "highlight": "聚光灯",
+     "subtitle": "暗场只留讲到的区域", "image": "transition-media/scene-a.svg", "sourceLabel": "示意界面",
+     "effects": [{"type": "spotlight", "endAt": 4.4, "exit": "fade",
+       "events": [{"at": 0.4, "region": [150, 260, 520, 260], "label": "先看标题"},
+                  {"at": 2.4, "region": [760, 300, 480, 330], "label": "再看流程"}]},
+       {"type": "sketch", "region": [800, 640, 360, 110], "shape": "ellipse", "label": "就是这里", "at": 4.6}]},
+    {"kind": "stage", "start": 20, "end": 26, "title": "打字和逐条打勾", "highlight": "打勾", "tone": "purple",
+     "effects": [{"type": "typewriter", "position": [100, 210], "width": 1200, "text": "帮我把这期视频做成漫画积木风", "at": 0.3, "breathe": true},
+       {"type": "checklist", "box": [130, 420, 900, 240],
+        "items": [{"at": 2.4, "text": "封面和三比例海报"}, {"at": 3.2, "text": "中英双语高亮字幕"}, {"at": 4.0, "text": "有声片尾"}]},
+       {"type": "sketch", "region": [130, 576, 360, 66], "shape": "underline", "at": 4.5, "seconds": 0.5}]}
+  ],
+  "captions": [
+    {"start": 0, "end": 7, "text": "卖点跟着口播依次出现，讲完一条就收起", "en": "Points appear as they are spoken, then fold away."},
+    {"start": 7, "end": 13, "text": "旧的收起，新的展开，最后盖个章", "en": "Old points fold, new ones open, then a stamp."},
+    {"start": 13, "end": 20, "text": "聚光灯带着看重点，再用笔圈出来", "en": "A spotlight leads the eye, then a pen circles it."},
+    {"start": 20, "end": 26, "text": "打字机打出提示词，清单逐条打勾", "en": "Type the prompt, then tick the checklist."}
+  ]
+}

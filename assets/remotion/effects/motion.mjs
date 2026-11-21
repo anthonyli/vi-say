@@ -84,5 +84,13 @@ export function effectTimes(effect) {
   if (effect.type==='list') return effect.items.map(item=>item.at+.55);
   if (effect.type==='focus') return effect.events.map(e=>e.at+.15);
   if (effect.type==='connection'||effect.type==='counter') return [at,at+(effect.seconds??1.5)/2,at+(effect.seconds??1.5)];
-  return [at+.35,...(effect.actions??[]).map(a=>a.at+Math.min(a.duration/2,.7)),...(effect.keyframes??[]).map(k=>k.at)];
+  // Speech-cued effects: entry peak, settled state, mid-collapse and the exit.
+  const exit=effect.exit&&effect.exit!=='none'&&effect.endAt!==undefined?[effect.endAt-(effect.exitSeconds??.35)/2]:[];
+  if (effect.type==='cue-cards') return [...effect.items.flatMap((item,i)=>[item.at+.2,item.at+.6,...(i?[item.at+.22]:[])]),...exit];
+  if (effect.type==='spotlight') return [...effect.events.flatMap(e=>[e.at+.22,e.at+.6]),...exit];
+  if (effect.type==='checklist') return effect.items.flatMap(item=>[item.at+.17,item.at+.4]);
+  if (effect.type==='sketch') return [at+(effect.seconds??.6)/2,at+(effect.seconds??.6)+.5,...exit];
+  if (effect.type==='typewriter') {const seconds=effect.seconds??Math.max(.4,[...effect.text].length/16);return [at+seconds/2,at+seconds+.2,...exit];}
+  if (effect.type==='stamp') return [at+.16,at+.5,...exit];
+  return [at+.35,...(effect.actions??[]).map(a=>a.at+Math.min(a.duration/2,.7)),...(effect.keyframes??[]).map(k=>k.at),...exit];
 }

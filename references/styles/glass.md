@@ -1,6 +1,6 @@
 # 小龙系列的明亮玻璃科技风
 
-小龙工具介绍片的可选视觉预设；其他品牌、原声录屏或当次参考可独立选择。Bot 造型见 [Bot 样式](bots.md)，小龙与口型见 [角色](character.md)，信息布局见 [画面](../stages/visuals.md)。
+**仅用于历史项目兼容。** 小龙系列默认是 [漫画积木风](comic-bricks.md)；新项目只有用户明确要求玻璃风时才用 `--preset glass`，渲染前检查会要求在 `preflight.allow.series_theme` 记录原因。同一套效果在 comic 主题下会自动画成漫画样式，不需要为效果改用玻璃。Bot 造型见 [Bot 样式](bots.md)，小龙与口型见 [角色](character.md)，信息布局见 [画面](../stages/visuals.md)。
 
 ## 空间与材质
 
@@ -13,9 +13,9 @@
 | 用途 | 起始值 |
 |---|---|
 | 背景光场 | `#FFFFFF → #EDF7FF → #D9EAF8` |
-| 主文字 | `#183A56` |
-| 次文字 | `#5E7D98` |
-| 玻璃表面 | `#FFFFFFC9 → #FFFFFF55 → #BDD8EF66` |
+| 主文字 | `#15324B` |
+| 次文字 | `#45627C` |
+| 玻璃表面 | `#FFFFFFEE → #FFFFFFAA → #D6E7F7CC`，2px 半透明描边 |
 | 辅助色 | 青蓝 `#287FA3`、柔紫 `#8670B9`、珊瑚 `#BC657B`、绿 `#6E963D` |
 | 字幕关键词 | 暖金 `#FFE18C`，完整字幕规格见 [字幕](../stages/captions.md#中文口播的显示标点与关键词) |
 

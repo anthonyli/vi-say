@@ -1,0 +1,28 @@
+{
+  "modules": {"background": "comic"},
+  "keywords": ["积木", "真实界面", "重点"],
+  "scenes": [
+    {"kind": "hero", "start": 0, "end": 4, "title": "把重点搭成积木", "subtitle": "一句话说清这期能帮你省下什么", "highlight": "积木", "label": "小龙带你看"},
+    {"kind": "demo", "start": 4, "end": 9, "title": "先看真实界面", "subtitle": "界面是主角，气泡只做引导", "highlight": "真实界面",
+     "image": "transition-media/scene-a.svg", "sourceLabel": "示意界面",
+     "effects": [{"type": "burst", "position": [1120, 600], "size": 150, "text": "看这里", "at": 1.4}]},
+    {"kind": "steps", "start": 9, "end": 14.5, "title": "一个重点一块积木", "subtitle": "讲到哪块，哪块落下", "highlight": "重点",
+     "items": [{"text": "看问题", "detail": "先说具体卡点", "at": 0.5}, {"text": "做演示", "detail": "展示真实变化", "at": 1.6}, {"text": "看结果", "detail": "用证据说明收益", "at": 2.7}]},
+    {"kind": "stage", "start": 14.5, "end": 19, "title": "效果可以自由组合", "tone": "purple",
+     "effects": [
+       {"type": "bubble", "position": [140, 250], "width": 620, "height": 150, "text": "气泡跟着口播弹出", "at": 0.3},
+       {"type": "brick", "position": [160, 600], "width": 720, "text": "积木效果", "detail": "落地压扁再回弹", "at": 0.9},
+       {"type": "burst", "position": [940, 420], "size": 160, "text": "砰", "at": 1.6}]},
+    {"kind": "cta", "start": 19, "end": 23.5, "outroId": "community-outro-v1", "title": "一起探索更多好工具", "subtitle": "有想法，欢迎交流",
+     "items": [{"text": "留言", "detail": "分享想法与问题", "anchor": "留言", "icon": "comment", "at": 0.5},
+               {"text": "关注", "detail": "下期继续一起探索", "anchor": "关注", "icon": "follow", "at": 1.4},
+               {"text": "点赞", "detail": "觉得有用，点个赞", "anchor": "点赞", "icon": "like", "at": 2.3}]}
+  ],
+  "captions": [
+    {"start": 0, "end": 4, "text": "这期把重点搭成积木，一句话说清收益", "en": "This episode stacks the key points like bricks."},
+    {"start": 4, "end": 9, "text": "先看真实界面，气泡只做引导", "en": "Start with the real interface; bubbles only guide."},
+    {"start": 9, "end": 14.5, "text": "一个重点一块积木，讲到哪块哪块落下", "en": "One point, one brick, landing as it is spoken."},
+    {"start": 14.5, "end": 19, "text": "气泡、积木和爆炸贴纸可以自由组合", "en": "Bubbles, bricks and bursts combine freely."},
+    {"start": 19, "end": 23.5, "text": "有想法欢迎留言，记得关注和点赞", "en": "Comment, follow and like if it helped."}
+  ]
+}

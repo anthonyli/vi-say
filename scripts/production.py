@@ -63,7 +63,7 @@ def project(path):
     return path.parent,doc
 
 
-def init(dest, title, subtitle, label, preset='glass', template='story'):
+def init(dest, title, subtitle, label, preset='comic', template='story'):
     if preset not in PRESETS or template not in TEMPLATES:
         raise ValueError(f'Choose preset {PRESETS} and template {TEMPLATES}')
     dest=Path(dest);dest.mkdir(parents=True,exist_ok=False)
@@ -80,6 +80,8 @@ def init(dest, title, subtitle, label, preset='glass', template='story'):
     if template!='story':
         example=json.loads((ASSETS/'examples'/f'{template}.json').read_text())
         doc['modules']['captions']['keywords']=example.pop('keywords')
+        # A template may require a theme (e.g. comic-only fields); keep the preset's other modules.
+        doc['modules'].update(example.pop('modules',{}))
         doc.update(example)
         for scene in doc['scenes']:
             for key in ['image','video']:
@@ -96,7 +98,7 @@ def init(dest, title, subtitle, label, preset='glass', template='story'):
         for scene,position,action in zip(doc['scenes'],[[830,735],[1780,830],[1720,815]],['peek','hop','celebrate']):
             scene['effects']=[{'type':'bot','id':'helper','variant':'hexagon','position':position,'size':90,'action':action}]
     write_json(dest/'project.json',doc);write_json(dest/'lexicon.json',{})
-    (dest/'narration.txt').write_text(('' if doc['modules'].get('character',{}).get('mode')=='none' else INTRO['narration'])+'\n先看问题，再做演示，最后用证据说明结果。\n\n'+OUTRO['narration']+'\n')
+    (dest/'narration.txt').write_text(('' if doc['modules'].get('character',{}).get('mode')=='none' else INTRO['narration'])+'\n先看问题，再做演示，最后用证据说明结果。\n\n'+OUTRO['closing']+OUTRO['narration']+'\n')
     print(dest/'project.json')
 
 
@@ -141,10 +143,15 @@ def compile_project(base,doc,out,*,audio=None,listening=None,preview=False,html_
         raise ValueError('Scene endpoint must match measured final WAV duration; rebind word anchors, never stretch animation or audio')
     caption_input=doc.get('captions',[])
     if isinstance(caption_input,str):caption_input=json.loads((base/caption_input).read_text())
-    if isinstance(caption_input,dict):caption_input=caption_input.get('captions')
+    characters=None
+    if isinstance(caption_input,dict):
+        # align_captions.py output carries per-character timing of the final WAV for spoken cues.
+        characters=caption_input.get('characters');caption_input=caption_input.get('captions')
+    from speech_cues import resolve_cues
+    scenes=resolve_cues(doc['scenes'],characters)
     timeline={'aspect':'16:9','fps':STYLE['video']['fps'],'duration':duration,
               'audio':'audio.wav','character':'dragon.png','fontFile':'font'+f.suffix,
-              'captions':copy.deepcopy(caption_input),'overlays':[],'styleId':STYLE['id'],'cartoonScenes':copy.deepcopy(doc['scenes']),
+              'captions':copy.deepcopy(caption_input),'overlays':[],'styleId':STYLE['id'],'cartoonScenes':scenes,
               'visualPreview':preview,'bg':STYLE['palette']['white'],'accent':STYLE['palette']['blue']}
     if doc.get('modules') is not None:timeline['modules']=copy.deepcopy(doc['modules'])
     if 'transitionSeed' in doc:timeline['transitionSeed']=doc['transitionSeed']
@@ -172,7 +179,12 @@ def compile_project(base,doc,out,*,audio=None,listening=None,preview=False,html_
          "import {resolveCartoonTransitions} from "+json.dumps((ROOT/'assets/remotion/cartoon-motion.mjs').as_uri())+";"
          "let s='';for await(const c of process.stdin)s+=c;console.log(JSON.stringify(resolveCartoonTransitions(validate(JSON.parse(s)))));"]
     timeline=json.loads(subprocess.run(cmd,input=json.dumps(timeline),text=True,capture_output=True,check=True).stdout)
+    # Mechanical gate before any output is reserved: captions, highlights, voiced outro, gaps, posters, theme.
+    from preflight import run as preflight_run, enforce
+    checked=enforce(preflight_run(doc,timeline,audio,preview=preview,outro=OUTRO))
     out.mkdir(parents=True,exist_ok=False)
+    write_json(out/'preflight.json',checked)
+    for warning in checked['warnings']:print('preflight warning: '+warning,file=sys.stderr)
     shutil.copyfile(ASSETS/STYLE['character']['file'],out/'dragon.png');shutil.copyfile(f,out/timeline['fontFile'])
     if rounded:
         shutil.copyfile(ASSETS/STYLE['character']['closedFile'],out/'dragon-closed.png')
@@ -252,18 +264,20 @@ def main():
         from archive_project import main as archive_main
         return archive_main(sys.argv[2:], prog=f'{Path(sys.argv[0]).name} archive')
     ap=argparse.ArgumentParser(description=__doc__);sub=ap.add_subparsers(dest='command',required=True)
-    a=sub.add_parser('init');a.add_argument('directory',type=Path);a.add_argument('--title',required=True);a.add_argument('--subtitle',required=True);a.add_argument('--series',default='小龙实战');a.add_argument('--preset',choices=PRESETS,default='glass');a.add_argument('--template',choices=TEMPLATES,default='story')
+    a=sub.add_parser('init');a.add_argument('directory',type=Path);a.add_argument('--title',required=True);a.add_argument('--subtitle',required=True);a.add_argument('--series',default='小龙实战');a.add_argument('--preset',choices=PRESETS,default='comic');a.add_argument('--template',choices=TEMPLATES,default='story')
     for name in ['covers','compile','render']:
         a=sub.add_parser(name);a.add_argument('project',type=Path);a.add_argument('--output-dir',required=True,type=Path)
         if name!='covers':
             a.add_argument('--audio',type=Path);a.add_argument('--listening',type=Path);a.add_argument('--preview',action='store_true')
         if name=='render':a.add_argument('--stills',action='store_true')
-    a = sub.add_parser('preview-html', help='Build a playable browser preview without encoding video')
-    a.add_argument('project', type=Path)
-    a.add_argument('--output-dir', required=True, type=Path)
-    a.add_argument('--audio', type=Path, help='Use this narration WAV. By default the preview is silent.')
-    a.add_argument('--serve', action='store_true', help='Keep a local player open on 127.0.0.1 after the preview is written')
-    a.add_argument('--port', type=int, default=8765)
+    for name, text in (('preview-html', 'Build a playable browser preview without encoding video'),
+                       ('review', 'HTML preview plus self-check contact sheets and pacing report; run before showing the user')):
+        a = sub.add_parser(name, help=text)
+        a.add_argument('project', type=Path)
+        a.add_argument('--output-dir', required=True, type=Path)
+        a.add_argument('--audio', type=Path, help='Use this narration WAV. By default the preview is silent.')
+        a.add_argument('--serve', action='store_true', help='Keep a local player open on 127.0.0.1 after the preview is written')
+        a.add_argument('--port', type=int, default=8765)
     a = sub.add_parser('review-mode', help='Resolve the HTML review preference for this production')
     a.add_argument('project', type=Path, nargs='?')
     a.add_argument('--html-review', choices=HTML_REVIEW_MODES, help='Override the preference for this run')
@@ -284,13 +298,20 @@ def main():
         return
     base,doc=project(args.project);out=args.output_dir.resolve()
     if args.command=='covers':covers(base,doc,out);print(out);return
-    if args.command == 'preview-html':
+    if args.command in ('preview-html', 'review'):
         from tempfile import TemporaryDirectory
+        renderer = ROOT/'assets/remotion/render.mjs'
         with TemporaryDirectory(prefix='vi-say-preview-') as temp:
             timeline = compile_project(base, doc, Path(temp) / 'stage',
                                        audio=args.audio, preview=args.audio is None, html_preview=True)
-            subprocess.run(['node', str(ROOT/'assets/remotion/render.mjs'), str(timeline),
-                            str(out), '--html-preview'], check=True)
+            subprocess.run(['node', str(renderer), str(timeline), str(out), '--html-preview'], check=True)
+            if args.command == 'review':
+                from review_pack import build
+                report = build(timeline, out, renderer)
+                for finding in report['findings']:
+                    print(f'self-check [{finding["check"]}] {finding["message"]}', file=sys.stderr)
+                print(out/'self-check/scenes.jpg')
+                print(out/'self-check/transitions.jpg')
         if args.serve:
             if not 0 <= args.port <= 65535:
                 raise ValueError('--port must be 0–65535')
