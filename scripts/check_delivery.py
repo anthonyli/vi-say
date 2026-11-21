@@ -97,6 +97,19 @@ def check(manifest):
         content = path.read_text(encoding='utf-8')
         if not any(x in content for x in choices):
             errors.append(f'{role}: missing required text {requirement.get("id", choices)}')
+    if 'recorded_edit' in doc:
+        from check_recorded_edit import check as check_edit
+        video = items.get('video', {}).get('path')
+        captions = items.get('captions', {}).get('path')
+        if not doc['recorded_edit'] or not video or not captions:
+            errors.append('recorded_edit: needs a plan, rendered MP4 and bilingual SRT')
+        else:
+            try:
+                edit = check_edit(manifest.parent / doc['recorded_edit'],
+                                  manifest.parent / video, manifest.parent / captions)
+                errors.extend(f'recorded_edit: {error}' for error in edit['errors'])
+            except (ValueError, TypeError, KeyError, OSError, wave.Error) as error:
+                errors.append(f'recorded_edit: {error}')
     if doc.get('recorded_story'):
         from check_recorded_story import check as check_story
         from revise_delivery import digest

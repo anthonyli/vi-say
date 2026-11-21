@@ -19,6 +19,7 @@ import json
 import math
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import tempfile
@@ -57,6 +58,10 @@ def validate_captions(document):
     result = []
     previous_end = 0
     duration = document.get('duration')
+    bilingual = document.get('bilingual', any(
+        isinstance(cue, dict) and 'en' in cue for cue in document['captions']))
+    if not isinstance(bilingual, bool):
+        raise ValueError('bilingual must be true or false')
     if duration is not None:
         finite(duration, 'duration')
         if duration <= 0:
@@ -77,6 +82,20 @@ def validate_captions(document):
         lines = value.split('\n')
         if len(lines) > 2 or any(not line.strip() for line in lines) or len(value.replace('\n', '')) > 44:
             raise ValueError('Use at most two nonempty lines and 44 characters')
+        if bilingual:
+            english = cue.get('en')
+            if (len(lines) != 1 or not isinstance(english, str) or not english.strip()
+                    or any(ord(char) < 32 for char in english)):
+                raise ValueError('Bilingual captions need one Chinese line and one English line per cue')
+            normalized = {'start': start, 'end': end, 'text': value, 'en': english}
+            for key in ('keywords', 'keywordsEn'):
+                words = cue.get(key, document.get(key, []))
+                if not isinstance(words, list) or any(not isinstance(w, str) or not w.strip() for w in words):
+                    raise ValueError(f'{key} must be a list of nonempty strings')
+                normalized[key] = words
+            result.append(normalized)
+            previous_end = end
+            continue
         # Keep all authored characters. Automatic wrap is layout, not ASR repair.
         if len(lines) == 1 and len(value) > 22:
             split = min(22, max(1, len(value) // 2))
@@ -94,9 +113,12 @@ def ass_escape(value):
 
 
 def srt_text(captions):
-    return '\n'.join(f'{i}\n{timestamp(cue["start"])} --> {timestamp(cue["end"])}\n'
-                     f'{html.escape(cue["text"], quote=False)}\n'
-                     for i, cue in enumerate(captions, 1))
+    entries = []
+    for i, cue in enumerate(captions, 1):
+        text = cue['text'] + ('\n' + cue['en'] if 'en' in cue else '')
+        entries.append(f'{i}\n{timestamp(cue["start"])} --> {timestamp(cue["end"])}\n'
+                       f'{html.escape(text, quote=False)}\n')
+    return '\n'.join(entries)
 
 
 def text_width(text, font_size, font_file=None):
@@ -138,6 +160,18 @@ def rounded_box(width, height, radius=12):
             f'l 0 {r} b 0 {r-k:.2f} {r-k:.2f} 0 {r} 0')
 
 
+def highlight(text, keywords):
+    if not keywords:
+        return ass_escape(text)
+    pattern = '|'.join(re.escape(word) for word in sorted(keywords, key=len, reverse=True))
+    result, end = [], 0
+    for match in re.finditer(pattern, text, re.IGNORECASE):
+        result.append(ass_escape(text[end:match.start()]))
+        result.append(r'{\1c&H8CE1FF&}' + ass_escape(match[0]) + r'{\1c}')
+        end = match.end()
+    return ''.join(result) + ass_escape(text[end:])
+
+
 def ass_text(captions, font_name='PingFang SC', font_size=40, font_file=None):
     if not isinstance(font_name, str) or not font_name.strip() or any(c in font_name for c in ',\r\n{}\\'):
         raise ValueError('Font name must be plain text without ASS delimiters')
@@ -155,20 +189,30 @@ def ass_text(captions, font_name='PingFang SC', font_size=40, font_file=None):
     events = []
     for cue in captions:
         lines = cue['text'].split('\n')
+        bilingual = 'en' in cue
+        sizes = [font_size] * len(lines)
+        if bilingual:
+            lines.append(cue['en'])
+            sizes.append(round(font_size * .65))
         # Match Captions in assets/remotion/src/video.jsx: 60px line boxes,
         # 14/28px padding, 12px corner radius and 7% (~76px) bottom margin.
-        width = max(text_width(ass_escape(line), font_size, font_file) for line in lines) + 56
+        width = max(text_width(line, size, font_file) for line, size in zip(lines, sizes)) + 56
         if width > 1920 * .86 * .72:
             raise ValueError('Caption is wider than the original skill safe width; split at word timestamps')
-        height = len(lines) * 60 + 28
-        x, y = (1920 - width) / 2, 1080 - 76 - height
+        line_heights = [55, 37] if bilingual else [60] * len(lines)
+        padding = 8 if bilingual else 14
+        height = sum(line_heights) + padding * 2
+        x, y = (1920 - width) / 2, 1080 - (27 if bilingual else 76) - height
         interval = f'{timestamp(cue["start"], ass=True)},{timestamp(cue["end"], ass=True)}'
         background = (rf'{{\an7\pos({x:.1f},{y})\p1\bord0\shad0'
                       r'\1c&H0A1217&\1a&H11&}' + rounded_box(width, height) + r'{\p0}')
         events.append(f'Dialogue: 0,{interval},Default,,0,0,0,,{background}\n')
         for index, line in enumerate(lines):
-            tags = rf'{{\an5\pos(960,{y+14+30+60*index})\b600\bord0\shad0}}'
-            events.append(f'Dialogue: 1,{interval},Default,,0,0,0,,{tags}{ass_escape(line)}\n')
+            center = round(y + padding + sum(line_heights[:index]) + line_heights[index] / 2)
+            size = rf'\fs{sizes[index]}' if bilingual else ''
+            tags = rf'{{\an5\pos(960,{center})\b600\bord0\shad0{size}}}'
+            text = highlight(line, cue['keywords' if index == 0 else 'keywordsEn']) if bilingual else ass_escape(line)
+            events.append(f'Dialogue: 1,{interval},Default,,0,0,0,,{tags}{text}\n')
     return header + ''.join(events)
 
 

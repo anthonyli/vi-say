@@ -35,6 +35,8 @@ python scripts/production.py check-delivery work/episode/delivery.json \
 
 ## 局部修订的可执行保护
 
+真实录屏剪辑在清单中登记 `recorded_edit`，值为[原声录屏计划](recorded-video.md#双语成片与有声片尾)路径。检查读取最终 `video`、`captions`，核对 MP4 的可解码帧数、时间戳和有声区间，同时检查引入与播放的先后、原字幕区间、收束句及有声互动。后续修订继续保留 `recorded_edit`。
+
 在修改产物之前执行 `python scripts/production.py revise-delivery BASELINE.json REVISION.json --change poster_3x4 --change publishing_copy --request '本次用户原话'`。脚本先检查基线，再继承完整交付范围；未列在 `--change` 中的产物用原哈希锁定。`check-delivery REVISION.json` 会拦住改动视频、删除未授权角色、偷换范围或修改基线等情况，即使重新填写了新视频哈希也不能通过。输出清单拒绝覆盖。角色列表和原话是可审查输入，脚本不能认证人是否准确转述用户；基线文件须保留，不能事后改写。
 
 漫画录屏交付检查现会校验真实源视频帧数/时长、时间轴WAV与交付WAV一致，并从最终MP4抽取音轨检查首尾及中间长静音。音轨文字与听感、画面是否实际高亮、海报是否由某工具生成仍需相应证据与目视/听审；不能将元数据检查表述为自动质量认证。原产物发生变化会报哈希错误，先辨明修改来源，不自动重算旧清单来消除错误。

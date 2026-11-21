@@ -33,6 +33,8 @@ def create(baseline, output, roles, request):
             source['path'] = str((baseline.parent / source['path']).resolve())
     if new.get('recorded_story'):
         new['recorded_story'] = str((baseline.parent / new['recorded_story']).resolve())
+    if new.get('recorded_edit'):
+        new['recorded_edit'] = str((baseline.parent / new['recorded_edit']).resolve())
     new['revision'] = {'baseline': str(baseline), 'sha256': digest(baseline),
                        'changed_roles': sorted(set(roles)), 'request': request}
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -58,6 +60,8 @@ def validate(doc, base):
     for key in ('profile', 'required', 'omissions', 'scope_basis'):
         if doc.get(key) != old.get(key):
             errors.append(f'Revision cannot silently change {key}')
+    if old.get('recorded_edit') and not doc.get('recorded_edit'):
+        errors.append('Revision dropped the recorded_edit check')
     for role, item in old['artifacts'].items():
         current = doc['artifacts'].get(role)
         if current is None:

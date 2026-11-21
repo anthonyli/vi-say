@@ -242,6 +242,12 @@ def main():
     if sys.argv[1:2] == ['check-delivery']:
         from check_delivery import main as delivery_main
         raise SystemExit(delivery_main(sys.argv[2:]))
+    if sys.argv[1:2] == ['check-recorded-edit']:
+        from check_recorded_edit import main as edit_main
+        return edit_main(sys.argv[2:])
+    if sys.argv[1:2] == ['render-recorded-edit']:
+        from render_recorded_edit import main as render_edit_main
+        return render_edit_main(sys.argv[2:])
     if sys.argv[1:2] == ['archive']:
         from archive_project import main as archive_main
         return archive_main(sys.argv[2:], prog=f'{Path(sys.argv[0]).name} archive')
@@ -264,6 +270,8 @@ def main():
     a=sub.add_parser('pack');a.add_argument('output',type=Path)
     sub.add_parser('revise-delivery', help='Clone delivery scope and lock unchanged artifacts; see revise-delivery --help')
     sub.add_parser('check-delivery',help='Check exact delivery files, hashes and poster ratios')
+    sub.add_parser('check-recorded-edit', help='Check a recorded edit plan and the actual MP4 and bilingual SRT')
+    sub.add_parser('render-recorded-edit', help='Export a reviewed recording edit with bilingual subtitles and its outro')
     sub.add_parser('archive',help='Archive deliverables from a reusable manifest; see archive --help')
     a=sub.add_parser('catalog',help='List implemented effects, parameters and validated templates');a.add_argument('--json',action='store_true')
     args=ap.parse_args()
