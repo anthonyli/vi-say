@@ -10,12 +10,14 @@ import tempfile
 import wave
 from pathlib import Path
 
+from path_safety import same_path
+
 SELF_MEDIA = ('video', 'audio', 'script', 'captions', 'poster_16x9',
               'poster_4x3', 'poster_3x4', 'publishing_copy', 'delivery_note')
 RATIOS = {'poster_16x9': 16/9, 'poster_4x3': 4/3, 'poster_3x4': 3/4}
 
 
-def check(manifest):
+def check(manifest, *, report_path=None):
     manifest = Path(manifest).resolve()
     doc = json.loads(manifest.read_text(encoding='utf-8'))
     if doc.get('schema_version') != 1:
@@ -39,6 +41,10 @@ def check(manifest):
     if not isinstance(items, dict) or not isinstance(omissions, dict):
         raise ValueError('artifacts and omissions must be objects')
     errors, records, excluded = [], [], []
+    protected_paths = {manifest}
+    revision = doc.get('revision')
+    if isinstance(revision, dict) and revision.get('baseline'):
+        protected_paths.add(manifest.parent / revision['baseline'])
     from revise_delivery import validate as validate_revision
     errors.extend(validate_revision(doc, manifest.parent))
     for role, reason in omissions.items():
@@ -54,6 +60,7 @@ def check(manifest):
         if not isinstance(item, dict) or not item.get('path'):
             errors.append(f'{role}: missing artifact');continue
         path = (manifest.parent / item['path']).resolve()
+        protected_paths.add(path)
         if not path.is_file() or path.stat().st_size == 0:
             errors.append(f'{role}: missing or empty file');continue
         h = hashlib.sha256()
@@ -72,6 +79,8 @@ def check(manifest):
                     errors.append(f'{role}: missing style references')
                 for source in inputs:
                     source_path = manifest.parent / source.get('path', '')
+                    if source.get('path'):
+                        protected_paths.add(source_path)
                     if (not source_path.is_file() or not source.get('sha256') or
                             hashlib.sha256(source_path.read_bytes()).hexdigest() != source['sha256']):
                         errors.append(f'{role}: prompt/reference missing or changed')
@@ -99,6 +108,8 @@ def check(manifest):
             errors.append(f'{role}: missing required text {requirement.get("id", choices)}')
     if 'recorded_edit' in doc:
         from check_recorded_edit import check as check_edit
+        if doc['recorded_edit']:
+            protected_paths.add(manifest.parent / doc['recorded_edit'])
         video = items.get('video', {}).get('path')
         captions = items.get('captions', {}).get('path')
         if not doc['recorded_edit'] or not video or not captions:
@@ -106,7 +117,8 @@ def check(manifest):
         else:
             try:
                 edit = check_edit(manifest.parent / doc['recorded_edit'],
-                                  manifest.parent / video, manifest.parent / captions)
+                                  manifest.parent / video, manifest.parent / captions,
+                                  protected_paths=protected_paths if report_path is not None else None)
                 errors.extend(f'recorded_edit: {error}' for error in edit['errors'])
             except (ValueError, TypeError, KeyError, OSError, wave.Error) as error:
                 errors.append(f'recorded_edit: {error}')
@@ -116,6 +128,8 @@ def check(manifest):
         import imageio_ffmpeg
         timeline_path = manifest.parent / doc['recorded_story']
         timeline = json.loads(timeline_path.read_text())
+        protected_paths.update((timeline_path, timeline_path.parent / timeline['audioFile'],
+                                timeline_path.parent / 'public' / timeline['video']))
         story = check_story(timeline_path, verify_video=True)
         errors.extend(f'recorded_story: {error}' for error in story['errors'])
         if items.get('audio') and digest(timeline_path.parent / timeline['audioFile']) != items['audio']['sha256']:
@@ -134,6 +148,10 @@ def check(manifest):
                 else:
                     exported = check_story(timeline_path, audio_override=wav)
                     errors.extend(f'exported_audio: {error}' for error in exported['errors'])
+    if report_path is not None:
+        for source in protected_paths:
+            if same_path(report_path, source):
+                raise ValueError(f'Report cannot overwrite a delivery input: {source}')
     return {'schema_version': 1, 'manifest': str(manifest), 'profile': profile,
             'complete': not errors, 'quality_assessed': False, 'publication_assessed': False,
             'artifacts': records, 'omissions': excluded, 'errors': errors}
@@ -145,13 +163,8 @@ def main(argv=None):
     ap.add_argument('--output', type=Path)
     args = ap.parse_args(argv)
     try:
-        if args.output and args.output.resolve() == args.manifest.resolve():
-            raise ValueError('Report cannot overwrite manifest')
-        result = check(args.manifest)
+        result = check(args.manifest, report_path=args.output)
         if args.output:
-            raw = json.loads(args.manifest.read_text(encoding='utf-8'))
-            sources = {(args.manifest.resolve().parent / x['path']).resolve() for x in raw['artifacts'].values() if isinstance(x, dict) and x.get('path')}
-            if args.output.resolve() in sources:raise ValueError('Report cannot overwrite artifact')
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2)+'\n')
         print(json.dumps(result, ensure_ascii=False, indent=2))

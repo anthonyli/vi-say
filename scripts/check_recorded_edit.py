@@ -18,6 +18,7 @@ from revise_delivery import digest
 
 ASSETS = Path(__file__).resolve().parents[1] / 'assets'
 OUTRO = ASSETS / 'production/outro.json'
+TRANSITIONS = ASSETS / 'remotion/gl-transitions.json'
 
 
 def interval(data, duration, name):
@@ -78,7 +79,7 @@ def validate_plan(doc):
         enter, finish = interval(transition, duration, 'outro transition')
         if not previous_end <= first < last <= enter < finish:
             raise ValueError('Finish the demo and the closing line before the outro transition')
-        transitions = json.loads((ASSETS/'remotion/gl-transitions.json').read_text())['transitions']
+        transitions = json.loads(TRANSITIONS.read_text())['transitions']
         if transition.get('name') not in {t['name'] for t in transitions}:
             raise ValueError('Outro transition must name an implemented GL effect')
         if any(abs(t*fps - round(t*fps)) > .001 for t in (enter, finish)):
@@ -110,7 +111,7 @@ def validate_plan(doc):
     return cues, audible
 
 
-def verify_voice(doc, base):
+def verify_voice(doc, base, *, protected_paths=None):
     voice = doc.get('voice', {'mode': 'original'})
     mode = voice['mode']
     if mode == 'original':
@@ -120,6 +121,11 @@ def verify_voice(doc, base):
     if mode not in {'current_recording', 'authorized_alternative'}:
         raise ValueError('Unknown recorded edit voice mode')
     reference = base / voice['reference_audio']
+    if protected_paths is not None:
+        protected_paths.add(reference)
+        protected_paths.update(base / report for report in voice['generation_reports'])
+        if mode == 'current_recording':
+            protected_paths.add(base / voice['excerpt']['source'])
     reference_hash = digest(reference)
     reports = voice['generation_reports']
     if not reports:
@@ -185,11 +191,13 @@ def verify_video(movie, doc, intervals):
         return errors
 
 
-def check(path, video=None, srt=None):
+def check(path, video=None, srt=None, *, protected_paths=None):
     path = Path(path).resolve()
     doc = json.loads(path.read_text(encoding='utf-8'))
+    if protected_paths is not None and doc.get('outro') is not None:
+        protected_paths.update((OUTRO, TRANSITIONS))
     cues, audible = validate_plan(doc)
-    verify_voice(doc, path.parent)
+    verify_voice(doc, path.parent, protected_paths=protected_paths)
     errors = []
     if video is not None:
         errors.extend(verify_video(Path(video).resolve(), doc, audible))

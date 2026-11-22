@@ -58,6 +58,8 @@ ASR 可以把问题定位到某个词，但识别拼写相同不证明读得自�
 python scripts/audit_speech_pauses.py work/episode/narration.wav --generation work/episode/narration.generation.json --output work/episode/pause-audit.json
 ```
 
+`--output` 使用独立的报告路径，与输入音频或 `--generation` 指向同一文件时会报错。
+
 报告只是候选，不自动删除所有换气。按上下文选择异常停顿，`repair_selected_pauses(source,destination,report,selections)` 可仅移除选定静音中心：每项提供 `index/keep_seconds/reason`，保留至少0.24秒，两侧语音样本不变，不提速；校验源哈希并拒绝覆盖，返回采样量化的 cuts 时间映射。PCM16以外格式会明确标未检查，不静默当通过。
 
 处理后同步字幕、英文译文、口型、语义锚点和场景起止，转场动作时长保持不变；新 WAV 重新绑定哈希并复核听感。用户指出的停顿记录到本期，不用“未听审”取消问题；技术修复完成与听感确认分开。只修问题、不重出视频时保留现有交付文件，在 work 保存修订音轨和待渲染时间轴。

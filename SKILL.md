@@ -4,7 +4,7 @@ description: 将 GitHub 项目、官网、文章、播客访谈、已录视频�
 license: Apache-2.0
 metadata:
   author: Anthony Li
-  version: "0.0.13"
+  version: "0.0.14"
 ---
 
 # vi-say：把内容讲给你看

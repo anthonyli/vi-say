@@ -6,7 +6,23 @@ import assert from 'node:assert/strict';
 import {validate} from '../render.mjs';
 import {actorPose,trackPose,sampleBotMotion,flowState,routePoint,actionAt,counterValue,pop} from '../effects/motion.mjs';
 import {characterPose} from '../cartoon-motion.mjs';
-import {captionText,captionSegments} from '../effects/captions.mjs';
+import {captionText,captionSegments,captionAtTime,firstCaptionFrame} from '../effects/captions.mjs';
+
+test('subtitle navigation picks the first displayable frame or disables the cue', () => {
+  const captions = [
+    {start: 0, end: 1.01},
+    {start: 1.01, end: 1.9},
+    {start: 1.901, end: 1.91},
+    {start: 2, end: 2.1},
+    {start: 119 / 30, end: 4},
+    {start: 4, end: 4.001},
+  ];
+  const targets = captions.map(caption => firstCaptionFrame(caption, 30, 120));
+  assert.deepEqual(targets, [0, 31, null, 60, 119, null]);
+  for (const [index, frame] of targets.entries()) {
+    if (frame !== null) assert.equal(captionAtTime(captions, frame / 30), captions[index]);
+  }
+});
 
 const fixture=effects=>({aspect:'16:9',fps:30,duration:6,audio:'audio.wav',character:'dragon.png',styleId:'colorful-dragon-v1',captions:[],overlays:[],modules:{background:'glass'},cartoonScenes:[{kind:'stage',start:0,end:6,title:'动画演示',effects}]});
 const bot=()=>({type:'bot',id:'helper',variant:'blob',position:[400,600],size:160,action:'hop'});

@@ -1,4 +1,6 @@
+from contextlib import redirect_stdout
 import hashlib
+import io
 import json
 from pathlib import Path
 import sys
@@ -7,6 +9,7 @@ import unittest
 from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from check_delivery import check, main, SELF_MEDIA
+from revise_delivery import create
 
 class Delivery(unittest.TestCase):
     def setUp(self):
@@ -66,5 +69,22 @@ class Delivery(unittest.TestCase):
         self.assertEqual(main([str(self.manifest),'--output',str(self.manifest)]),2)
         self.assertEqual(self.manifest.read_bytes(),original)
         self.assertEqual(main([str(self.manifest),'--output',str(self.root/'video.txt')]),2)
+
+    def test_revision_report_preserves_baseline_and_poster_sources(self):
+        self.assertTrue(self.run_check()['complete'])
+        revision = self.root / 'revision.json'
+        create(self.manifest, revision, ['publishing_copy'], 'Only revise the copy')
+        baseline_alias = self.root / 'baseline-link.json'
+        baseline_alias.hardlink_to(self.manifest)
+        inputs = [self.manifest, baseline_alias, self.root / 'prompt.txt', self.root / 'reference.png']
+        before = [source.read_bytes() for source in inputs]
+        for source in inputs:
+            with self.subTest(source=source), redirect_stdout(io.StringIO()):
+                self.assertEqual(main([str(revision), '--output', str(source)]), 2)
+                self.assertEqual([path.read_bytes() for path in inputs], before)
+        report = self.root / 'report.json'
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(main([str(revision), '--output', str(report)]), 0)
+        self.assertTrue(json.loads(report.read_text())['complete'])
 
 if __name__=='__main__':unittest.main()

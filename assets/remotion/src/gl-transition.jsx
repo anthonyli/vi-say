@@ -6,8 +6,7 @@ import {glTransition} from '@gl-transitions/remotion';
 import {AbsoluteFill,isHtmlInCanvasSupported,useCurrentFrame,useRemotionEnvironment} from 'remotion';
 import {glOptions} from '../gl-transitions.mjs';
 
-// Preview browsers without Canvas Draw Element cannot sample the two scenes
-// into the shader. A hard cut there hides the timing the review is for.
+// The preview fallback keeps the transition timing visible without the shader.
 function PreviewShaderMotion({before,after,frame,frames}){
   const p=frames<=1?1:frame/Math.max(1,frames-1);
   const eased=p*p*(3-2*p);
@@ -34,13 +33,19 @@ class PreviewShaderBoundary extends React.Component {
   }
 }
 
-let browserShader;
-function browserShaderReady(){
-  if(browserShader!==undefined)return browserShader;
-  if(!isHtmlInCanvasSupported())return browserShader=false;
-  try{browserShader=Boolean(document.createElement('canvas').getContext('webgl2'));}
-  catch{browserShader=false;}
-  return browserShader;
+let unavailableReason;
+export function previewShaderUnavailableReason() {
+  if (unavailableReason !== undefined) return unavailableReason;
+  if (!isHtmlInCanvasSupported()) {
+    unavailableReason = 'Canvas Draw Element';
+  } else {
+    try {
+      unavailableReason = document.createElement('canvas').getContext('webgl2') ? null : 'WebGL 2';
+    } catch {
+      unavailableReason = 'WebGL 2';
+    }
+  }
+  return unavailableReason;
 }
 
 export default function GLScenePair({before,after,name,params,frames}){
@@ -50,7 +55,7 @@ export default function GLScenePair({before,after,name,params,frames}){
   // At completion return the live incoming scene, with no residual canvas.
   if(frame>=frames)return after;
   const motion=<PreviewShaderMotion before={before} after={after} frame={frame} frames={frames}/>;
-  if(!isRendering&&!browserShaderReady())return motion;
+  if(!isRendering&&previewShaderUnavailableReason())return motion;
   if(!isRendering)return <PreviewShaderBoundary before={before} after={after} frame={frame} frames={frames}><RealShader before={before} after={after} name={name} params={params} frames={frames}/></PreviewShaderBoundary>;
   return <RealShader before={before} after={after} name={name} params={params} frames={frames}/>;
 }

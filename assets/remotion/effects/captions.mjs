@@ -2,6 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 const escaped = text => text.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+export function captionAtTime(captions, time) {
+  return captions.find(caption => caption.start <= time && time < caption.end);
+}
+
+export function firstCaptionFrame(caption, fps, durationInFrames) {
+  let frame = Math.max(0, Math.floor(caption.start * fps));
+  // Compare frame time directly to preserve authored boundaries after floating-point rounding.
+  if (frame / fps < caption.start) frame += 1;
+  return frame < durationInFrames && frame / fps < caption.end ? frame : null;
+}
+
 function splitTerms(text, terms) {
   const unique=[...new Set(terms.filter(Boolean))].sort((a,b)=>b.length-a.length);
   return unique.length?text.split(new RegExp(`(${unique.map(escaped).join('|')})`,'gi')):[text];

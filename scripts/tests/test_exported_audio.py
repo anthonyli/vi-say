@@ -10,7 +10,9 @@ import tempfile
 import unittest
 import wave
 import imageio_ffmpeg
-from check_delivery import check
+from contextlib import redirect_stdout
+from io import StringIO
+from check_delivery import check, main
 
 class ExportedAudio(unittest.TestCase):
     def test_good_wav_cannot_hide_silent_export(self):
@@ -38,5 +40,10 @@ class ExportedAudio(unittest.TestCase):
             result=check(p/'delivery.json')
             self.assertIn('exported_audio: Narration contains no audible signal',result['errors'])
             self.assertFalse(any(x.startswith('recorded_story:') for x in result['errors']))
+            for source in (p / 'timeline.json', p / 'public' / 'source.mp4'):
+                with self.subTest(source=source), redirect_stdout(StringIO()):
+                    original = source.read_bytes()
+                    self.assertEqual(main([str(p / 'delivery.json'), '--output', str(source)]), 2)
+                    self.assertEqual(source.read_bytes(), original)
 
 if __name__=='__main__':unittest.main()

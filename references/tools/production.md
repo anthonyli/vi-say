@@ -99,7 +99,7 @@ python scripts/production.py render PROJECT/project.json --output-dir OUTPUT/fin
 | `caption_keywords` | 高亮字幕没有关键词，或关键词一条也没命中，画面上不会出现高亮 |
 | `outro_voiced` | 片尾场景的字幕没讲到留言、关注、点赞，也就是片尾没有声音 |
 | `leading_silence` / `audio_gaps` | 开头超过 1 秒才出声，或口播中间有超过 1.2 秒的静音 |
-| `caption_coverage` | 有口播的地方超过 1.5 秒没有字幕 |
+| `caption_coverage` | 有口播的地方超过 1.5 秒没有字幕，包括最后一条字幕之后到 WAV 结束的区间 |
 | `poster_in_video` | 场景素材名带"海报/封面/poster/cover"，也就是把发布海报放进了视频 |
 | `series_theme` | 有小龙却没用 comic 主题 |
 
@@ -119,7 +119,9 @@ python scripts/production.py review PROJECT/project.json --audio PROJECT/final.w
 node assets/remotion/preview-server.mjs PROJECT/review-v2 8765
 ```
 
-`--serve` 在写完预览后用本机 `http://127.0.0.1:8765/` 继续提供文件，并支持分段请求。不要用 `python -m http.server`，它不响应 Range，Chrome 会无法拖动 WAV，画面和口播就对不齐。也不要直接双击 `index.html`。预览目录里的 `index.html`、播放器和 `media/` 要留在一起。点画面或按空格后，Remotion 画面、烧录字幕和口播从同一帧开始；进度、音量和可展开的字幕导航在画面下方。默认高亮字幕在画面内同时显示中文和英文。浏览器没有 Canvas Draw Element 或 WebGL 2 时，shader 转场改用可见叠化，方便核对时机；Chrome 具备这两项时播放真实 shader。这一步不生成 MP4。已有标准 Remotion 时间轴可直接用 `node assets/remotion/render.mjs TIMELINE.json PREVIEW_DIRECTORY --html-preview`。收到用户确认后，使用已审核的素材和时间轴进行正式渲染。底层 `render` 保持独立，调用方按本期设置选择是否执行前审。
+`--serve` 在写完预览后用本机 `http://127.0.0.1:8765/` 继续提供文件，并支持分段请求。不要用 `python -m http.server`，它不响应 Range，Chrome 会无法拖动 WAV，画面和口播就对不齐。也不要直接双击 `index.html`。预览目录里的 `index.html`、播放器和 `media/` 要留在一起。点画面或按空格后，Remotion 画面、烧录字幕和口播从同一帧开始。默认高亮字幕在画面内同时显示中文和英文。这一步不生成 MP4。已有标准 Remotion 时间轴可直接用 `node assets/remotion/render.mjs TIMELINE.json PREVIEW_DIRECTORY --html-preview`。收到用户确认后，使用已审核的素材和时间轴进行正式渲染。底层 `render` 保持独立，调用方按本期设置选择是否执行前审。
+
+进度、音量和可展开的字幕导航在画面下方。音量调到 0 后，点「打开声音」恢复上一次非零音量。点字幕会跳到该条实际出现的第一帧，区间内没有可显示帧的字幕会标明原因。浏览器缺少 Canvas Draw Element 或 WebGL 2 时，页面提示缺少哪项能力，并用可见叠化代替 shader 转场。Chrome 具备这两项能力时播放真实 shader。
 
 漫画录屏项目可用 `node assets/remotion/render-recorded.mjs TIMELINE.json PREVIEW_DIRECTORY --html-preview`，预览调用录屏路线的同一画面组件、视频与声轨。
 

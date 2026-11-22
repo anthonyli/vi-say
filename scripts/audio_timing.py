@@ -75,11 +75,23 @@ def validate_options(args):
 
 
 def main():
+    if __package__:
+        from .path_safety import same_path
+    else:
+        from path_safety import same_path
+
     args = validate_options(parse_args())
+    source = Path(args.input)
     output = Path(args.output)
-    output.parent.mkdir(parents=True, exist_ok=True)
-    if output.resolve() == Path(args.input).resolve():
+    map_path = Path(args.map)
+    map_conflict = 'Timing map cannot overwrite input or output audio; use a separate --map path.'
+    if same_path(output, source):
         raise ValueError('Keep the raw audio; use a new output path.')
+    if any(same_path(map_path, audio) for audio in (source, output)):
+        raise ValueError(map_conflict)
+    if args.listening_evidence and any(same_path(path, args.listening_evidence) for path in (output, map_path)):
+        raise ValueError('Audio output and timing map cannot overwrite listening evidence.')
+    output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=output.parent) as tmp:
         pcm = Path(tmp) / 'pcm.wav'
         subprocess.run([ffmpeg(), '-y', '-v', 'error', '-i', args.input,
@@ -119,7 +131,9 @@ def main():
     mapping = {'input_duration': duration, 'output_duration': final_duration,
         'speed': args.speed, 'speed_authorization': args.speed_authorization, 'listening_evidence': str(args.listening_evidence) if args.listening_evidence else None, 'cuts': cuts, 'detected_long_pauses': pauses,
         'post_long_pauses': probe(output)}
-    map_path = Path(args.map)
+    # A differently cased alias can resolve to the same file once the WAV exists.
+    if same_path(map_path, output):
+        raise ValueError(map_conflict)
     map_path.parent.mkdir(parents=True, exist_ok=True)
     map_path.write_text(json.dumps(mapping, indent=2))
     print(json.dumps({'before_seconds': duration, 'after_seconds': final_duration,

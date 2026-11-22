@@ -4,9 +4,11 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {Player} from '@remotion/player';
-import {isHtmlInCanvasSupported} from 'remotion';
 import {MotionVideo, videoMetadata} from './video';
 import {RecordedComic, recordedMetadata} from './recorded-comic';
+import {previewShaderUnavailableReason} from './gl-transition';
+import {sceneTransitionSettings} from '../cartoon-motion.mjs';
+import {captionAtTime, firstCaptionFrame} from '../effects/captions.mjs';
 import {isGLTransition} from '../gl-transitions.mjs';
 
 window.remotion_staticBase = new URL('media', window.location.href).pathname.replace(/\/$/, '');
@@ -26,31 +28,37 @@ function secondsLabel(seconds) {
 
 function usesShader(doc, isRecorded) {
   if (isRecorded) return (doc.steps ?? []).some((step, index) => index > 0 && isGLTransition(step.transition ?? 'gl:CrossZoom'));
-  return (doc.cartoonScenes ?? []).some((scene, index) => index > 0 && isGLTransition(scene.transition));
+  return (doc.cartoonScenes ?? []).some((scene, index) => index > 0 &&
+    isGLTransition(sceneTransitionSettings(scene, index, doc).name));
 }
+
+const shaderUnavailable = usesShader(props, recorded) ? previewShaderUnavailableReason() : null;
 
 function ReviewPlayer() {
   const playerRef = useRef(null);
   const frameRef = useRef(0);
+  const lastAudibleVolume = useRef(1);
   const meta = recorded ? recordedMetadata(props) : videoMetadata(props);
   const captions = props.captions ?? [];
   const [frame, setFrame] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
   const [muted, setMuted] = useState(false);
-  const [shaderReady, setShaderReady] = useState(true);
   frameRef.current = frame;
-  const time = frame / meta.fps;
-  const cue = captions.find(item => item.start <= time && time < item.end) ?? null;
+  const cue = captionAtTime(captions, frame / meta.fps);
+  const soundOff = muted || volume === 0;
 
   useEffect(() => {
-    setShaderReady(isHtmlInCanvasSupported());
     const player = playerRef.current;
     if (!player) return undefined;
     const onFrame = event => setFrame(event.detail.frame);
     const onPlay = () => setPlaying(true);
     const onPause = () => setPlaying(false);
-    const onVolume = event => setVolume(event.detail.volume);
+    const onVolume = event => {
+      const next = event.detail.volume;
+      if (next > 0) lastAudibleVolume.current = next;
+      setVolume(next);
+    };
     const onMute = event => setMuted(event.detail.isMuted);
     player.addEventListener('frameupdate', onFrame);
     player.addEventListener('play', onPlay);
@@ -80,6 +88,17 @@ function ReviewPlayer() {
     playerRef.current?.seekTo(target);
   };
 
+  const toggleSound = () => {
+    const player = playerRef.current;
+    if (!player) return;
+    if (soundOff) {
+      if (volume === 0) player.setVolume(lastAudibleVolume.current);
+      player.unmute();
+    } else {
+      player.mute();
+    }
+  };
+
   useEffect(() => {
     const onKey = event => {
       if (event.metaKey || event.ctrlKey || event.altKey) return;
@@ -100,8 +119,8 @@ function ReviewPlayer() {
 
   return <main data-preview="synced-playback">
     <h1>{props.podcast?.title ?? '视频预览'}</h1>
-    {!shaderReady && usesShader(props, recorded)
-      ? <p className="warn">当前浏览器用可见的叠化代替 shader 转场，方便核对时机。要看真实 shader，用开启 Canvas Draw Element 的 Chrome 打开。</p>
+    {shaderUnavailable
+      ? <p className="warn">当前浏览器无法使用 {shaderUnavailable}，前审以叠化代替 shader 转场。</p>
       : null}
     <div className="stage" style={{aspectRatio: `${meta.width} / ${meta.height}`, width: `min(100%, calc((100vh - 280px) * ${meta.width} / ${meta.height}))`}}
       onClick={toggle}>
@@ -124,7 +143,7 @@ function ReviewPlayer() {
       <span className="time">{clock(frame, meta.fps)} / {clock(meta.durationInFrames, meta.fps)}</span>
       <input aria-label="进度" type="range" min={0} max={Math.max(0, meta.durationInFrames - 1)} value={Math.min(frame, Math.max(0, meta.durationInFrames - 1))}
         onChange={event => seekTo(Number(event.target.value))}/>
-      <button type="button" onClick={() => muted ? playerRef.current?.unmute() : playerRef.current?.mute()}>{muted || volume === 0 ? '打开声音' : '静音'}</button>
+      <button type="button" onClick={toggleSound}>{soundOff ? '打开声音' : '静音'}</button>
       <input aria-label="音量" type="range" min={0} max={1} step={0.05} value={muted ? 0 : volume}
         onChange={event => {
           const next = Number(event.target.value);
@@ -135,12 +154,16 @@ function ReviewPlayer() {
       <button type="button" onClick={() => playerRef.current?.requestFullscreen()}>全屏</button>
     </div>
     {captions.length ? <details><summary>字幕导航</summary><ol className="cues">
-      {captions.map((item, index) => <li key={index} className={item === cue ? 'active' : undefined}>
-        <button type="button" onClick={() => seekTo(Math.round(item.start * meta.fps))}>
-          <span>{secondsLabel(item.start)}</span>
-          {item.text}
-        </button>
-      </li>)}
+      {captions.map((item, index) => {
+        const target = firstCaptionFrame(item, meta.fps, meta.durationInFrames);
+        return <li key={index} className={item === cue ? 'active' : undefined}>
+          <button type="button" disabled={target === null} onClick={() => seekTo(target)}>
+            <span>{secondsLabel(item.start)}</span>
+            {item.text}
+            {target === null && <small>无可显示帧</small>}
+          </button>
+        </li>;
+      })}
     </ol></details> : null}
   </main>;
 }

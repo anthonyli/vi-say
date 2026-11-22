@@ -5,6 +5,7 @@ import {AbsoluteFill,Audio,Img,Freeze,OffthreadVideo,Sequence,staticFile,useCurr
 import {Frame,Bubble,Brick,Dots,RayBurst,COMIC_PALETTE as C} from './comic-kit';
 import {ComicCaptions} from './comic-captions';
 import GLScenePair from './gl-transition';
+import {captionAtTime} from '../effects/captions.mjs';
 
 export function recordedMetadata({duration}) {
  return {width:1920,height:1200,fps:30,durationInFrames:Math.ceil(duration*30)};
@@ -19,7 +20,7 @@ export function RecordedComic({title,cover,video,videoFrames,coverFrames,audio,c
  if(["keywords","keywordsEn","bilingual"].some(k=>k in captionOptions))throw new Error("captionOptions only controls appearance");
  if(!cover?.title||!coverFrames)throw new Error('RecordedComic requires an opening cover');
  if(!keywords?.length)throw new Error('RecordedComic requires episode caption keywords');
- const cue=captions.find(c=>t>=c.start&&t<c.end);
+ const cue=captionAtTime(captions,t);
  const active=Math.max(0,steps.findLastIndex(s=>t>=s.start));
  const panel=i=><AbsoluteFill style={{background:C.cream}}><Dots/><Bubble x={18} y={32} w={342} h={220} fontSize={34} fill={[C.yellow,C.blue,C.purple,C.red][i%4]}><span style={{whiteSpace:"pre-line"}}>{steps[i].label}</span></Bubble><div style={{position:'absolute',top:310,left:28,right:24,fontSize:25,fontWeight:800,lineHeight:1.6,whiteSpace:"pre-line"}}>{steps[i].detail}</div></AbsoluteFill>;
  return <AbsoluteFill style={{background:C.cream,color:C.ink,fontFamily:'PingFang SC'}}><Dots/>

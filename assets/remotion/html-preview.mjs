@@ -41,6 +41,7 @@ export async function buildHtmlPreview(doc, assets, target, runtime, {recorded =
   .cues button { display: flex; gap: 12px; width: 100%; text-align: left; border-radius: 10px;
     background: transparent; }
   .cues .active button { background: #2a3140; }
+  .cues button:disabled { opacity: .6; }
   .cues button span { color: #f0d48a; font-variant-numeric: tabular-nums; }
 </style>
 <div id="root">正在打开预览…</div>

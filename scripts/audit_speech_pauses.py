@@ -43,16 +43,29 @@ def audit(path, joins=(), threshold_db=-40, minimum=.30):
 
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('audio',type=Path)
-    p.add_argument('--generation',type=Path);p.add_argument('--output',type=Path,required=True)
-    p.add_argument('--minimum',type=float,default=.30);p.add_argument('--threshold-db',type=float,default=-40)
-    a=p.parse_args();g=json.loads(a.generation.read_text()) if a.generation else {}
-    digest=hashlib.sha256(a.audio.read_bytes()).hexdigest()
-    if g and g.get('audio_sha256')!=digest:raise ValueError('Generation metadata belongs to a different WAV')
-    joins=[s['start'] for s in g.get('segments',[])[1:]]
-    result=audit(a.audio,joins,a.threshold_db,a.minimum)
-    a.output.parent.mkdir(parents=True,exist_ok=True);a.output.write_text(json.dumps(result,ensure_ascii=False,indent=2))
-    print(json.dumps(result,ensure_ascii=False))
+    if __package__:
+        from .path_safety import same_path
+    else:
+        from path_safety import same_path
+
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument('audio', type=Path)
+    p.add_argument('--generation', type=Path)
+    p.add_argument('--output', type=Path, required=True)
+    p.add_argument('--minimum', type=float, default=.30)
+    p.add_argument('--threshold-db', type=float, default=-40)
+    args = p.parse_args()
+    if any(same_path(args.output, source) for source in (args.audio, args.generation) if source is not None):
+        p.error('Report cannot overwrite input audio or generation metadata.')
+    generation = json.loads(args.generation.read_text()) if args.generation else {}
+    digest = hashlib.sha256(args.audio.read_bytes()).hexdigest()
+    if generation and generation.get('audio_sha256') != digest:
+        raise ValueError('Generation metadata belongs to a different WAV')
+    joins = [segment['start'] for segment in generation.get('segments', [])[1:]]
+    result = audit(args.audio, joins, args.threshold_db, args.minimum)
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2))
+    print(json.dumps(result, ensure_ascii=False))
 
 
 

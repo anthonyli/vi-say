@@ -5,6 +5,7 @@ import json
 import math
 from pathlib import Path
 import struct
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -65,6 +66,23 @@ class Preflight(unittest.TestCase):
         result = run({}, timeline(), self.voice, outro=OUTRO)
         self.assertEqual(result['errors'], [])
         self.assertFalse(result['quality_assessed'])
+
+    def test_cli_checks_uncovered_tail_through_the_wav_end(self):
+        project = self.root / 'project.json'
+        project.write_text('{}')
+        captions = timeline()['captions']
+        captions[-1]['end'] = 8.0
+        timeline_file = self.root / 'timeline.json'
+        timeline_file.write_text(json.dumps(timeline(captions=captions)))
+        script = Path(__file__).resolve().parents[1] / 'preflight.py'
+        for voiced, status in ((True, 1), (False, 0)):
+            with self.subTest(voiced=voiced):
+                audio = write_wav(self.root / 'tail.wav', [(8, True), (2, voiced)])
+                result = subprocess.run([sys.executable, str(script), str(project), str(timeline_file),
+                                         '--audio', str(audio)], capture_output=True, text=True)
+                self.assertEqual(result.returncode, status, result.stderr)
+                expected = {'caption_coverage'} if voiced else set()
+                self.assertEqual(self.checks(json.loads(result.stdout)), expected)
 
     def test_each_past_defect_is_caught(self):
         cases = {

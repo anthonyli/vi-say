@@ -111,6 +111,10 @@ def run(project, timeline, audio=None, *, preview=False, outro=None):
                 found['audio_gaps'].append(f'{pause["duration"]:.2f}s silence at {pause["start"]:.2f}–{pause["end"]:.2f}s')
         edges = [(0.0, captions[0]['start'])] if captions else []
         edges += [(a['end'], b['start']) for a, b in zip(captions, captions[1:])]
+        if captions:
+            with wave.open(str(audio)) as wav:
+                audio_duration = wav.getnframes() / wav.getframerate()
+            edges.append((captions[-1]['end'], audio_duration))
         for start, end in edges:
             if end - start > MAX_UNCAPTIONED:
                 voiced = _voiced_seconds(audio, start, end)

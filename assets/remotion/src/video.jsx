@@ -9,6 +9,7 @@ import {CartoonScenes} from './cartoon';
 import {HighlightCaption} from './effects/highlight-caption';
 import {PodcastHighlights} from './podcast';
 import {podcastCaptionOptions} from '../podcast-contract.mjs';
+import {captionAtTime} from '../effects/captions.mjs';
 
 const sizes = {'16:9': [1920, 1080], '4:3': [1440, 1080], '3:4': [1080, 1440]};
 const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'};
@@ -326,7 +327,7 @@ function Captions({captions, accent,options={}}) {
   const frame = useCurrentFrame();
   const {fps, width} = useVideoConfig();
   const time = frame / fps;
-  const cue = captions.find(c => c.start <= time && time < c.end);
+  const cue = captionAtTime(captions, time);
   if (!cue) return null;
   if (options.style === 'highlight' || options.stripPunctuation) {
     return <HighlightCaption cue={cue} options={options}/>;
