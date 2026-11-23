@@ -25,8 +25,12 @@ def check(manifest, *, report_path=None):
     profile = doc.get('profile')
     if profile not in ('self_media_narrated', 'custom'):
         raise ValueError('Unknown delivery profile')
-    required = list(SELF_MEDIA) if profile == 'self_media_narrated' else doc.get('required')
-    if not isinstance(required, list) or not required or not all(isinstance(x, str) and x for x in required):
+    required = doc.get('required', [])
+    if not isinstance(required, list) or not all(isinstance(x, str) and x for x in required):
+        raise ValueError('required must be a list of role names')
+    if profile == 'self_media_narrated':
+        required = list(dict.fromkeys([*SELF_MEDIA, *required]))
+    elif not required:
         raise ValueError('custom requires a nonempty role list')
     if profile == 'custom' and not str(doc.get('scope_reason', '')).strip():
         raise ValueError('custom requires scope_reason from the actual task')

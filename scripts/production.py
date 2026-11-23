@@ -248,9 +248,9 @@ def package_skill(output):
 
 
 def main():
-    if sys.argv[1:2] == ['revise-delivery']:
+    if sys.argv[1:2] in (['revise-delivery'], ['promote-delivery']):
         from revise_delivery import main as revise_main
-        return revise_main(sys.argv[2:])
+        return revise_main(sys.argv[2:], promote=sys.argv[1] == 'promote-delivery')
     if sys.argv[1:2] == ['check-delivery']:
         from check_delivery import main as delivery_main
         raise SystemExit(delivery_main(sys.argv[2:]))
@@ -283,6 +283,7 @@ def main():
     a.add_argument('--html-review', choices=HTML_REVIEW_MODES, help='Override the preference for this run')
     a=sub.add_parser('pack');a.add_argument('output',type=Path)
     sub.add_parser('revise-delivery', help='Clone delivery scope and lock unchanged artifacts; see revise-delivery --help')
+    sub.add_parser('promote-delivery', help='Create a full release manifest from a review; see promote-delivery --help')
     sub.add_parser('check-delivery',help='Check exact delivery files, hashes and poster ratios')
     sub.add_parser('check-recorded-edit', help='Check a recorded edit plan and the actual MP4 and bilingual SRT')
     sub.add_parser('render-recorded-edit', help='Export a reviewed recording edit with bilingual subtitles and its outro')

@@ -4,7 +4,7 @@ description: 将 GitHub 项目、官网、文章、播客访谈、已录视频�
 license: Apache-2.0
 metadata:
   author: Anthony Li
-  version: "0.0.14"
+  version: "0.0.15"
 ---
 
 # vi-say：把内容讲给你看
@@ -39,7 +39,7 @@ metadata:
 | 10. 海报与发布文案 | [poster.md](references/stages/poster.md)、[publishing-copy.md](references/stages/publishing-copy.md) | 海报构图与纯文本 `发布文案.txt` |
 | 11. 检查与交付 | [delivery.md](references/stages/delivery.md) | 交付组合、实际检查记录 |
 
-- 新制完整视频默认先做 [HTML 前审](references/workflow.md#html-前审)。用户确认当前预览后再渲染完整 MP4，并按范围制作海报、发布文案和发布包。明确要求先看海报、仅制作海报或跳过 HTML 时，按对应约定执行。
+- 新制完整视频默认先做 [HTML 前审](references/workflow.md#html-前审)。用户确认预览、进入完整发布交付时，先用 `production.py promote-delivery` 将前审清单转为正式清单，再渲染 MP4、核对三比例发布海报与发布文案，并对正式清单运行 `check-delivery`。已有同范围正式清单的局部修改沿用 `revise-delivery`。明确要求先看海报、仅制作海报或跳过 HTML 时，按对应约定执行。
 - 片尾在最终声音与时间轴里一起编排，不是最后另拼一段声音。
 
 ## 小龙系列的固定做法

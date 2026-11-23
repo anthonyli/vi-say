@@ -9,6 +9,61 @@ from check_delivery import check
 from revise_delivery import create
 
 class RevisionDelivery(unittest.TestCase):
+    def test_review_promotion_adds_social_assets_and_protects_delivered_files(self):
+        from check_delivery import SELF_MEDIA
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            review = root / 'review.json'
+            release = root / 'release' / 'delivery.json'
+            for name in ('film.mp4', 'sources.md'):
+                (root / name).write_text(name)
+            artifacts = {role: {'path': name, 'sha256': hashlib.sha256(name.encode()).hexdigest()}
+                         for role, name in [('video', 'film.mp4'), ('sources', 'sources.md')]}
+            review.write_text(json.dumps({'schema_version': 1, 'profile': 'custom',
+                'required': ['video', 'sources', 'poster_4x3'], 'artifacts': artifacts,
+                'scope_basis': {'kind': 'standalone_artifact', 'request': '仅前审'},
+                'scope_reason': 'HTML 前审', 'omissions': {
+                    'poster_4x3': {'reason': '前审暂缓', 'basis': '海报在正式发布阶段制作'}}}))
+            original = review.read_bytes()
+            create(review, release, [], '确认，生成正式发布包', promote=True)
+            result = json.loads(release.read_text())
+            self.assertEqual(review.read_bytes(), original)
+            self.assertEqual(result['profile'], 'self_media_narrated')
+            self.assertEqual(set(result['required']), set(SELF_MEDIA) | {'sources'})
+            self.assertEqual(result['artifacts']['video']['path'], str((root / 'film.mp4').resolve()))
+            self.assertFalse(result['omissions'])
+            missing = set(check(release)['errors'])
+            self.assertEqual(missing, {f'{role}: missing artifact' for role in SELF_MEDIA if role != 'video'})
+            result['artifacts']['video'] = result['artifacts']['sources']
+            release.write_text(json.dumps(result))
+            self.assertIn('Revision changed protected artifact: video', check(release)['errors'])
+            with self.assertRaises(FileExistsError):
+                create(review, release, [], '重试', promote=True)
+
+    def test_promotion_accepts_pending_roles_and_requires_proxy_replacement(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            proxy = root / 'review.webm'
+            proxy.write_bytes(b'preview')
+            before = root / 'review.json'
+            after = root / 'release.json'
+            before.write_text(json.dumps({'schema_version': 1, 'profile': 'self_media_narrated',
+                'artifacts': {'video': {'path': proxy.name, 'sha256': hashlib.sha256(b'preview').hexdigest()},
+                              'script': {'path': '', 'sha256': ''}}}))
+            create(before, after, [], '生成正式视频', promote=True)
+            self.assertIn('video: missing artifact', check(after)['errors'])
+            doc = json.loads(after.read_text())
+            self.assertEqual(doc['artifacts']['script']['path'], '')
+            doc['profile'] = 'custom'
+            doc['required'] = ['video']
+            doc['scope_basis'] = {'kind': 'standalone_artifact', 'request': 'fixture'}
+            doc['scope_reason'] = 'fixture'
+            after.write_text(json.dumps(doc))
+            self.assertIn('Promoted delivery must retain the full release scope', check(after)['errors'])
+            proxy.write_bytes(b'changed after review')
+            with self.assertRaisesRegex(ValueError, 'Baseline'):
+                create(before, root / 'invalid.json', [], '生成正式视频', promote=True)
+
     def test_poster_revision_locks_video_even_if_new_hash_is_registered(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

@@ -14,6 +14,18 @@
 
 ## 执行
 
+### 将已确认的前审转为正式发布交付
+
+```sh
+python scripts/production.py promote-delivery work/episode/review/delivery.json \
+  work/episode/release/delivery.json --request '用户确认预览并要求生成成片的原话'
+python scripts/production.py check-delivery work/episode/release/delivery.json
+```
+
+`promote-delivery` 创建新清单并保留基线哈希。正式清单采用 `self_media_narrated`，自动列入三张海报与发布文案，同时保留前审的附加交付项。命令只登记范围和已有文件，缺项先留空。制作完成后填写实际路径、哈希和海报生成记录，再检查同一份正式清单。
+
+已有 MP4 默认按哈希复用；如果它只是 MP4 样片，追加 `--change video` 为正式成片留出空位。WebM 等前审代理自动留出正式视频项。其他获准重做的既有交付项也可用 `--change` 指定。已填文件须通过原有校验，仍未填写的制作项可以随清单转入下一阶段。正式交付重新核对前审中暂缓的标准项目，符合当次约定的免责项继续用 `omissions` 记明理由和依据。
+
 ```sh
 python scripts/production.py check-delivery work/episode/delivery.json \
   --output work/episode/delivery-check.json
