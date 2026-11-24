@@ -1,10 +1,10 @@
 ---
 name: vi-say
-description: 将 GitHub 项目、官网、文章、播客访谈、已录视频或知识主题制作成讲解视频、动态演示和三比例海报。支持 HTML 前审、授权本地配音、原声剪辑、角色、图解与动画。
+description: 将城市名、GitHub 项目、官网、文章、播客访谈、已录视频或知识主题制作成视频与三比例海报。城市介绍支持资料核实、城市性格叙事、文化美食与历史发展。支持 HTML 前审、授权本地配音、原声剪辑、图解与动画。
 license: Apache-2.0
 metadata:
   author: Anthony Li
-  version: "0.0.15"
+  version: "0.0.16"
 ---
 
 # vi-say：把内容讲给你看
@@ -17,6 +17,7 @@ metadata:
 
 | 路线 | 固定入口 | 要点 |
 |---|---|---|
+| 城市介绍／城市人文片 | [城市介绍路线](references/routes/city-story.md) | 输入城市名即可启动取材与制作，以真实细节写城市性格，复用声音、前审、渲染与完整发布交付 |
 | 小龙讲解（GitHub、产品、知识） | `production.py init` → `review`（HTML 前审＋自查）→ `render`，见 [production.md](references/tools/production.md) | 默认 comic 漫画积木主题，不另写渲染工程 |
 | 播客／访谈精华 | [播客精华路线](references/tools/podcast-highlights.md) | 静音原画铺满画幅，新旁白讲重点，标签与气泡在讲到时出现 |
 | 真人原声录屏剪辑 | `production.py render-recorded-edit`，见 [原声录屏剪辑](references/tools/recorded-video.md) | 先标口头语和系统播放区间；双语字幕、有声片尾；不加角色 |
