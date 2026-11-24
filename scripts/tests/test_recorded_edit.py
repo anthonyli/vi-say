@@ -14,6 +14,7 @@ from audio_timing import ffmpeg
 from check_recorded_edit import check, validate_plan
 from render_captions import ass_text, srt_text
 from revise_delivery import digest
+from prepare_recording import validate_edit_policy, validate_continuous_ranges
 
 
 class RecordedEditTests(unittest.TestCase):
@@ -67,7 +68,6 @@ class RecordedEditTests(unittest.TestCase):
     def test_wrong_timing_and_incomplete_outro_are_rejected(self):
         mutations = [
             (lambda d: d['captions'][0].pop('en'), 'one English line'),
-            (lambda d: d['playback'][0].pop('intro'), 'intro.start'),
             (lambda d: d['playback'][0].update(start=.8), 'before playback'),
             (lambda d: d['playback'][0].update(end=3.7), 'embedded captions'),
             (lambda d: d['outro']['transition'].update(start=3.8), 'closing line before'),
@@ -80,6 +80,26 @@ class RecordedEditTests(unittest.TestCase):
             mutate(changed)
             with self.subTest(message), self.assertRaisesRegex(ValueError, message):
                 validate_plan(changed)
+
+    def test_original_playback_needs_no_invented_intro_or_outro(self):
+        self.doc.pop('outro')
+        self.doc['playback'][0].pop('intro')
+        for voice in ({}, {'mode': 'original'}, {'mode': 'current_recording'}):
+            self.doc['voice'] = voice
+            cues, audible = validate_plan(self.doc)
+            self.assertTrue(cues)
+            self.assertFalse(any('intro' in item[2] for item in audible))
+        self.doc['playback'][0]['intro'] = {}
+        with self.assertRaisesRegex(ValueError, 'intro.start'):
+            validate_plan(self.doc)
+
+    def test_original_playback_still_rejects_overlapping_windows(self):
+        self.doc['playback'] = [
+            {'start': 1.4, 'end': 3, 'embedded_captions': True},
+            {'start': 2.5, 'end': 3, 'embedded_captions': True},
+        ]
+        with self.assertRaisesRegex(ValueError, 'non-overlapping'):
+            validate_plan(self.doc)
 
     def test_real_export_and_duplicate_srt_check(self):
         self.write_plan()
@@ -111,6 +131,10 @@ class RecordedEditTests(unittest.TestCase):
                              'excerpt':{'source':self.video.name,'start':2.,'end':3.}}
         self.write_plan()
         self.assertTrue(check(self.plan)['complete'])
+        report.write_text(json.dumps({'voice_identity': {'reference_audio_sha256': 'wrong-reference'}}))
+        with self.assertRaisesRegex(ValueError, 'different reference'):
+            check(self.plan)
+        report.write_text(json.dumps({'voice_identity': {'reference_audio_sha256': digest(reference)}}))
         self.doc['voice']['excerpt']['start'] = 1.
         self.write_plan()
         with self.assertRaisesRegex(ValueError, 'current-recording excerpt'):
@@ -118,6 +142,46 @@ class RecordedEditTests(unittest.TestCase):
 
 
 class RecordingMasterTests(unittest.TestCase):
+    def test_continuous_actions_survive_adjacent_segments_but_not_edits_inside(self):
+        windows = [{'in': 1, 'out': 3, 'reason': '点击保存直到结果出现'}]
+        segments = [
+            {'source_in': 0, 'source_out': 2, 'output_in': 0, 'output_out': 2, 'speed': 1},
+            {'source_in': 2, 'source_out': 4, 'output_in': 2, 'output_out': 4, 'speed': 1},
+        ]
+        mapped = validate_continuous_ranges(windows, segments, 30)
+        self.assertEqual((mapped[0]['output_in'], mapped[0]['output_out']), (1, 3))
+        for change in ('gap', 'speed', 'repeat', 'missing', 'inserted'):
+            altered = copy.deepcopy(segments)
+            if change == 'gap':
+                altered[1]['source_in'] = 2.1
+            elif change == 'speed':
+                altered[1]['speed'] = 1.1
+            elif change == 'repeat':
+                altered.append(copy.deepcopy(altered[0]))
+            elif change == 'missing':
+                altered.pop()
+            else:
+                altered[1]['output_in'] = 3
+            with self.subTest(change=change), self.assertRaisesRegex(ValueError, 'Continuous range'):
+                validate_continuous_ranges(windows, altered, 30)
+        for invalid in ({'in': 1, 'out': 3}, {'in': 1, 'out': float('nan'), 'reason': 'demo'}):
+            with self.assertRaises(ValueError):
+                validate_continuous_ranges([invalid], segments, 30)
+
+    def test_source_preserving_policy_and_explicit_editorial_override(self):
+        segments = [{'in': 0, 'out': 1}, {'in': 2, 'out': 3}]
+        self.assertEqual(validate_edit_policy({'segments': segments}), 'source_preserving')
+        for invalid in (list(reversed(segments)), [{'in': 0, 'out': 1}, {'in': .5, 'out': 2}],
+                        [{'in': 0, 'out': 1, 'speed': 1.12}]):
+            with self.subTest(segments=invalid), self.assertRaises(ValueError):
+                validate_edit_policy({'segments': invalid})
+            with self.assertRaisesRegex(ValueError, 'user_request'):
+                validate_edit_policy({'edit_mode': 'editorial', 'segments': invalid})
+            self.assertEqual(validate_edit_policy({'edit_mode': 'editorial', 'segments': invalid,
+                                                   'user_request': '重组素材并适当加速'}), 'editorial')
+        with self.assertRaisesRegex(ValueError, 'edit_mode'):
+            validate_edit_policy({'edit_mode': 'typo', 'segments': segments})
+
     def test_short_cuts_keep_frame_count_and_exact_pcm(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -126,6 +190,7 @@ class RecordingMasterTests(unittest.TestCase):
                             '-f', 'lavfi', '-i', 'sine=d=3:r=44100:f=290',
                             '-c:v', 'libx264', '-c:a', 'aac', str(source)], check=True)
             data = {'source': source.name, 'fps': 30,
+                    'edit_mode': 'editorial', 'user_request': '测试显式变速剪辑',
                     'filler_cuts': [{'in': .4, 'out': .6, 'text': '然后'}],
                     'segments': [{'in': 0, 'out': .4}, {'in': .6, 'out': .8},
                                  {'in': 1.2, 'out': 2, 'speed': 1.12}]}
@@ -142,6 +207,32 @@ class RecordingMasterTests(unittest.TestCase):
             failure = subprocess.run([*command, str(root/'rejected')], capture_output=True, text=True)
             self.assertNotEqual(failure.returncode, 0)
             self.assertIn('overlaps reviewed filler cut', failure.stderr)
+            # Ordinary edits need no mode or authorization fields and preserve source speed.
+            data.pop('edit_mode')
+            data.pop('user_request')
+            data['segments'][0]['out'] = .4
+            edl.write_text(json.dumps(data))
+            failure = subprocess.run([*command, str(root/'retime-rejected')], capture_output=True, text=True)
+            self.assertNotEqual(failure.returncode, 0)
+            self.assertIn('require speed=1', failure.stderr)
+            self.assertFalse((root/'retime-rejected').exists())
+            data['segments'][2]['speed'] = 1
+            data['continuous_ranges'] = [{'in': 1.2, 'out': 2, 'reason': '完整演示操作'}]
+            edl.write_text(json.dumps(data))
+            original = root/'original'
+            subprocess.run([*command, str(original)], check=True, capture_output=True)
+            mapping = json.loads((original/'edit-map.json').read_text())
+            self.assertEqual(mapping['edit_mode'], 'source_preserving')
+            self.assertEqual(sum(x['frames'] for x in mapping['segments']), 42)
+            self.assertEqual(mapping['continuous_ranges'][0]['output_in'], .6)
+            with wave.open(str(original/'narration.wav'), 'rb') as audio:
+                self.assertEqual(audio.getnframes(), 42 * 1600)
+            data['segments'][2]['in'] = 1.3
+            edl.write_text(json.dumps(data))
+            failure = subprocess.run([*command, str(root/'demo-rejected')], capture_output=True, text=True)
+            self.assertNotEqual(failure.returncode, 0)
+            self.assertIn('Continuous range', failure.stderr)
+            self.assertFalse((root/'demo-rejected').exists())
 
 
 if __name__ == '__main__':

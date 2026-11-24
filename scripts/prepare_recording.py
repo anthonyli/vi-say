@@ -19,6 +19,60 @@ from audio_timing import ffmpeg
 SAMPLE_RATE = 48000
 
 
+def validate_edit_policy(doc):
+    """Keep ordinary recording edits in source order and at source speed."""
+    mode = doc.get('edit_mode', 'source_preserving')
+    if mode not in ('source_preserving', 'editorial'):
+        raise ValueError('edit_mode must be source_preserving or editorial')
+    if mode == 'editorial':
+        request = doc.get('user_request')
+        if not isinstance(request, str) or not request.strip():
+            raise ValueError('Editorial reordering or retiming requires the actual user_request')
+        return mode
+    previous_end = 0
+    for segment in doc.get('segments', []):
+        start, end = float(segment['in']), float(segment['out'])
+        if float(segment.get('speed', 1)) != 1:
+            raise ValueError('Source-preserving edits require speed=1')
+        if start < previous_end:
+            raise ValueError('Source-preserving edits require chronological, non-overlapping segments')
+        previous_end = end
+    return mode
+
+
+def validate_continuous_ranges(windows, segments, fps):
+    """Map protected source actions, rejecting gaps, repeats and retiming."""
+    mapped = []
+    for window in windows:
+        start, end = float(window['in']), float(window['out'])
+        reason = window.get('reason')
+        if (not all(math.isfinite(x) for x in (start, end)) or not 0 <= start < end
+                or not isinstance(reason, str) or not reason.strip()):
+            raise ValueError('Continuous range needs a finite source interval and a reason')
+        first, last = round(start * fps), round(end * fps)
+        if first >= last:
+            raise ValueError('Continuous range is shorter than one frame')
+        cursor, output_start, output_end = first, None, None
+        for segment in segments:
+            left = max(first, round(segment['source_in'] * fps))
+            right = min(last, round(segment['source_out'] * fps))
+            if left >= right:
+                continue
+            at = round(segment['output_in'] * fps) + left - round(segment['source_in'] * fps)
+            if (segment['speed'] != 1 or left != cursor
+                    or (output_end is not None and at != output_end)):
+                raise ValueError(f'Continuous range was cut, reordered, repeated or retimed: {reason}')
+            if output_start is None:
+                output_start = at
+            cursor, output_end = right, at + right - left
+        if cursor != last:
+            raise ValueError(f'Continuous range is not fully retained: {reason}')
+        mapped.append({'source_in': first / fps, 'source_out': last / fps,
+                       'output_in': output_start / fps, 'output_out': output_end / fps,
+                       'reason': reason})
+    return mapped
+
+
 def run(args):
     subprocess.run([ffmpeg(), '-hide_banner', '-loglevel', 'error', '-nostdin', *args], check=True)
 
@@ -48,6 +102,7 @@ def main():
     args = parser.parse_args()
     path = Path(args.edl).resolve()
     doc = json.loads(path.read_text())
+    edit_mode = validate_edit_policy(doc)
     source = (path.parent / doc['source']).resolve()
     if not source.is_file():
         raise ValueError(f'Missing source: {source}')
@@ -74,6 +129,7 @@ def main():
                          'output_in': cursor / fps, 'output_out': (cursor + frames) / fps,
                          'frames': frames, 'reason': segment.get('reason', '')})
         cursor += frames
+    continuous = validate_continuous_ranges(doc.get('continuous_ranges', []), resolved, fps)
     for cut in doc.get('filler_cuts', []):
         start, end = float(cut['in']), float(cut['out'])
         if not math.isfinite(start) or not math.isfinite(end) or not 0 <= start < end:
@@ -130,7 +186,8 @@ def main():
         if frames != cursor or round(actual_duration * SAMPLE_RATE) != samples:
             raise ValueError(f'Unexpected duration drift: decoded {frames} of {cursor} expected frames')
         mapping = root / 'edit-map.json'
-        result = {'source': str(source), 'fps': fps, 'segments': resolved,
+        result = {'source': str(source), 'fps': fps, 'edit_mode': edit_mode, 'segments': resolved,
+                  'continuous_ranges': continuous,
                   'expected_video_duration': cursor / fps, 'audio_duration': actual_duration,
                   'timing_note': 'Frame-rounded source intervals. Align captions to the final WAV.'}
         mapping.write_text(json.dumps(result, ensure_ascii=False, indent=2))

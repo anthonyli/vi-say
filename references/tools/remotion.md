@@ -4,6 +4,8 @@
 
 ## 选择路线与时间轴接口
 
+有原始讲解的录屏仅需精剪、字幕与关键词气泡时，先走[原声精剪](recorded-video.md)，连续母版为画面底层，本工具只叠信息层。不要将连续视频转换为 `scenes` 截图序列，不为适应模板比例裁去原片内容；现成布局不支持原画幅时适配叠加层，不改变原片。
+
 - 录屏、真人口播的叠加提示，以及既有 4:3／3:4 布局，使用本文的 `overlays` 接口。
 - 编辑式信息场景可使用 `scenes` 接口，具体字段、可运行示例和检查命令见 [editorial-scenes.md](editorial-scenes.md)。当前实现限 16:9，提供概念、比较、流程、数量图和多状态示意。真实截图、图表或明确标识的示意按解释任务选择；不要求每个场景都套浏览器窗框。不要将旧 `videoBox`、`cardBox` 或非空 `overlays` 混入该接口。
 - 同一对象连续重排、聚焦、变形和跨镜头迁移，采用 [shared-motion.md](shared-motion.md)。它是独立路线，不把其字段直接塞入 Remotion `scenes`。保留已认可的源码、配色和对象身份，按实际实现调整时序。
@@ -119,9 +121,11 @@ API 依据：[Remotion 渲染接口](https://www.remotion.dev/docs/renderer/rend
 
 ## 完整录屏的漫画积木路线
 
+此路线用于已明确选择漫画风的录屏；无声素材需要新配音、普通字幕或关键词气泡，都不能单独作为进入此路线的理由。已有原声精剪继续使用[原声录屏入口](recorded-video.md)；下述固定封面、旁白与静音阈值不适用于保留真实无声操作的精剪任务。
+
 已有系列风格在录屏增强任务中继续生效，不因使用自编工程而回退成普通卡片。使用 `assets/remotion/src/recorded-comic.jsx` 的 `RecordedComic`（1920×1200，30fps）：开头封面页、完整原速视频、漫画气泡、逐块搭建的积木与 `ComicCaptions` 双语高亮均为真实组件。`cover` 包含 title/subtitle/tag/bricks；`coverFrames` 为片头帧数；`videoFrames` 为完整原片帧数；`video/audio` 为 public 素材名。`steps` 使用 start/label/detail/brick，可选 transition/params；`captions` 与 keywords/keywordsEn 沿用漫画字幕接口。这里的 `cover` 仅指视频片头标题页，不能充当发布海报。视频片头可用代码构图；只有用户明确要求将图片用于片头时，才配置 `cover.image` 为 public 图片名。发布海报另外按海报节点生成三比例，并登记交付清单，不因本组件存在片头而省略。
 
-先按完整录屏的实际界面切换写连续口播，必要时修改整段稿件；不要为了等页面切换自行插入长静音。无口播演示窗口需有当次用户要求，不能由制作方自行解释成合理停顿。配音与完整录屏长度不符时重新编排讲解；封面在录屏之前、结尾可留合理停留，不能删掉原片帧来凑时长。
+先按完整录屏的实际界面切换编排口播；演示缺少讲解时适当补充 TTS，使用当前视频中已授权的音色，保持源视频连续播放。文案解释实际目标、动作或结果，不为填满每秒强行加话，也不为等旁白冻结画面。配音与完整录屏长度不符时调整讲解安排；封面在录屏之前、结尾可留合理停留，不能删掉原片帧来凑时长。
 
 时间轴另含 `audioFile`（相对时间轴的 PCM16 WAV 路径）和 duration。执行 `python scripts/check_recorded_story.py <timeline.json>`，检查封面、关键词实际命中、双语字幕、原片覆盖时长和音轨中间超过1.2秒的低能量区间。该阈值用于暴露待处理断声，不代表听感验收。交付清单增加 `recorded_story` 指向该时间轴，`check-delivery` 会重新运行检查；实际转场、字幕高亮、画幅和末帧仍须从输出视频核对。用户明确选择其他风格或无声演示时使用对应路线，不强套此组件。
 
@@ -129,4 +133,4 @@ API 依据：[Remotion 渲染接口](https://www.remotion.dev/docs/renderer/rend
 
 完整录屏工程使用 `node assets/remotion/render-recorded.mjs TIMELINE.json OUTPUT.mp4`，不逐期复制render.mjs。需要已有Python环境（默认仓库.venv，也可设VI_SAY_PYTHON）；素材位于时间轴同级public/。入口先检查实际源帧数、旁白、双语字幕与高亮配置，检查失败不启动浏览器；同时核对检查用WAV与实际播放音频逐字节一致。`--validate-only`仅校验；`--still=FRAME`导出PNG以检查布局。渲染复用共享运行环境并清理临时bundle，不覆盖产物。组件显式限制1920×1200/30fps，不再默默用错误帧率计算时间；字幕外观参数不能覆盖keywords或关闭双语。
 
-断声检查覆盖首尾和中间（包括音轨比片长短造成的尾部静音），默认超过1.2秒报错。用户明确要求无口播演示时，时间轴可声明`silentWindows:[{start,end,user_request}]`，仅豁免落在对应区间的静音。该记录不是额外审批，不能自行编造用户要求。长停顿阈值不替代自然度检查。
+断声检查覆盖首尾和中间，默认超过 1.2 秒报错。只有用户明确要求保留静默时才声明 `silentWindows:[{start,end,user_request,kind:"demo",reason:"实际演示内容"}]`，时间为最终成片时间；`user_request` 记录实际静默要求，`kind/reason` 不能单独豁免缺少讲解。检查器要求窗口有界、按时间排列且不重叠，并完全落在封面后的连续源视频区间；渲染入口同时检查实际源帧数与时长。未被窗口完整覆盖的长静音仍报错。其他用途的静默沿用 `{start,end,user_request}`，不得编造要求。音轨比成片短会单独报错，不能通过静音窗口豁免；需在完整混音里保留实际静音采样。记录与帧数不能证明动作语义完整，连续播放与听审仍须完成。

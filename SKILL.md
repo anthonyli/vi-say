@@ -4,7 +4,7 @@ description: 将城市名、GitHub 项目、官网、文章、播客访谈、已
 license: Apache-2.0
 metadata:
   author: Anthony Li
-  version: "0.0.16"
+  version: "0.0.17"
 ---
 
 # vi-say：把内容讲给你看
@@ -20,11 +20,14 @@ metadata:
 | 城市介绍／城市人文片 | [城市介绍路线](references/routes/city-story.md) | 输入城市名即可启动取材与制作，以真实细节写城市性格，复用声音、前审、渲染与完整发布交付 |
 | 小龙讲解（GitHub、产品、知识） | `production.py init` → `review`（HTML 前审＋自查）→ `render`，见 [production.md](references/tools/production.md) | 默认 comic 漫画积木主题，不另写渲染工程 |
 | 播客／访谈精华 | [播客精华路线](references/tools/podcast-highlights.md) | 静音原画铺满画幅，新旁白讲重点，标签与气泡在讲到时出现 |
-| 真人原声录屏剪辑 | `production.py render-recorded-edit`，见 [原声录屏剪辑](references/tools/recorded-video.md) | 先标口头语和系统播放区间；双语字幕、有声片尾；不加角色 |
-| 录屏漫画增强 | `assets/remotion/render-recorded.mjs`，见 [漫画录屏](references/tools/remotion.md#完整录屏的漫画积木路线) | 保留用户要求的片头与双语高亮；不插长静音等页面切换 |
+| 有原始讲解的录屏精剪 | `prepare_recording.py` → HTML 前审 → `production.py render-recorded-edit`，见 [原声录屏剪辑](references/tools/recorded-video.md) | 原片顺序、原声、原速、原画幅；只剪冗余口头禅等，叠普通字幕和必要关键词气泡，保留真实操作连续性 |
+| 无声录屏素材制作 | [录屏分流](references/tools/recorded-video.md#先区分原声成片与录屏素材) → 脚本、按需配音、视频素材编排 → HTML 前审 | 演示缺少讲解时可适当补 TTS，优先使用当前视频音色；真实操作保持连续 |
+| 录屏漫画增强（明确选择漫画风时） | `assets/remotion/render-recorded.mjs`，见 [漫画录屏](references/tools/remotion.md#完整录屏的漫画积木路线) | 新配音、字幕或关键词气泡本身不代表选择漫画风 |
 | 企业产品片 | `--preset studio`，见 [产品演示动效](references/tools/business-effects.md) | 可隐藏角色；先用 `production.py catalog` 查实际模块 |
 
-单期产品、台词、事实数字、来源和发布状态放项目资料；小龙固定开场与角色素材属于系列配置。GitHub 项目介绍默认核对当期 Star 数，采集真实产品截图用于成片，口播前 3–5 秒先给出具体问题或收益，见 [内容](references/stages/content.md#github-项目介绍默认项)、[脚本](references/stages/script.md) 与 [画面](references/stages/visuals.md#真实产品截图)。其他可执行能力见 [代码复用地图](references/tools/reuse-map.md)。
+先区分有原始讲解的录屏与无声素材。有讲解时精剪优先于题材和系列风格路由：即使内容是 GitHub 项目，或要求字幕、关键词气泡，也不自动转成重新编剧的讲解片。连续视频是画面底层，禁止用抽帧、冻结画面、截图拼接或模拟点击替代实际操作；源画面的人头与光标默认保留。无声录屏可以作为素材写稿、配音、编排，不受原声精剪的“不新增讲解”限制；有声片中的短暂无声操作不算无声素材。录屏默认使用清晰简洁的普通字幕；气泡是提示形式，不代表漫画风，见 [录屏分流与精剪边界](references/tools/recorded-video.md)。
+
+单期产品、台词、事实数字、来源和发布状态放项目资料；小龙固定开场与角色素材属于系列配置。新写脚本的 GitHub 项目介绍默认核对当期 Star 数，采集真实产品截图用于成片，口播前 3–5 秒先给出具体问题或收益；这些要求不强加给已有录屏精剪，见 [内容](references/stages/content.md#github-项目介绍默认项)、[脚本](references/stages/script.md) 与 [画面](references/stages/visuals.md#真实产品截图)。其他可执行能力见 [代码复用地图](references/tools/reuse-map.md)。
 
 | 流程节点 | 独立文档 | 可以调整什么 |
 |---|---|---|
@@ -55,7 +58,7 @@ metadata:
 
 - `compile`、`render` 和 `preview-html` 渲染前自动运行 [检查](references/tools/production.md#渲染前检查)：缺字幕或高亮、片尾没声音、口播长静音、字幕漏句、海报进视频、小龙没用 comic，都会直接报错。例外要在 `project.json` 的 `preflight.allow` 里写明用户原话。字幕时间用 `align_captions.py --cues` 从 ASR 结果生成，不手写对齐脚本。
 - 事实和效果依据本期资料与真实素材；模拟界面、对话和图解明确标示意。
-- 已录视频默认保留原声、原速，剪辑音画同步。新声音使用获授权的当前参考，默认 1.0 速，平稳连贯；术语短测和最终整轨听审分开做，未听审的只交付明确标注的候选，规则见 [声音](references/stages/voice.md)。
+- 有原始讲解的录屏默认保留原声、原速，剪辑音画同步；无声录屏可作为配音制作的素材。新声音使用获授权的当前参考，默认 1.0 速，平稳连贯；术语短测和最终整轨听审分开做，未听审的只交付明确标注的候选，规则见 [声音](references/stages/voice.md)。
 - 字幕、口型与动画都用最终声音的可靠时间；改稿或换音轨后重新对齐，动作时长不随整段等比例拉伸。
 - 静态画面、连续运动、音画语义与听感分别检查；自动校验不等于审美或听感通过，没实际检查就标明未检查。
 - 制作、候选和听审状态写进文件名、交付说明与检查记录，不烧录到画面；只有用户明确要求才显示。

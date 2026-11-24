@@ -53,17 +53,22 @@ def validate_plan(doc):
         raise ValueError('List the actual system playback windows, or use an explicit empty list')
     for index, playback in enumerate(doc['playback'], 1):
         start, end = interval(playback, duration, f'playback {index}')
-        intro = playback.get('intro', {})
-        first, last = interval(intro, duration, f'playback {index} intro')
-        if not previous_end <= first < last <= start:
-            raise ValueError(f'Playback {index} needs a spoken intro before playback starts')
-        if not inside(cues, first, last):
-            raise ValueError(f'Playback {index} intro needs bilingual captions')
+        if start < previous_end:
+            raise ValueError('Playback windows must be chronological and non-overlapping')
+        # Existing footage need not acquire invented narration to pass validation.
+        # Supplementing one gap must not force new intros for every other demo.
+        if 'intro' in playback:
+            intro = playback.get('intro', {})
+            first, last = interval(intro, duration, f'playback {index} intro')
+            if not previous_end <= first < last <= start:
+                raise ValueError(f'Playback {index} needs a spoken intro before playback starts')
+            if not inside(cues, first, last):
+                raise ValueError(f'Playback {index} intro needs bilingual captions')
+            audible.append((first, last, f'playback {index} intro'))
         if type(playback.get('embedded_captions')) is not bool:
             raise ValueError(f'Playback {index} must declare whether it has embedded captions')
         if playback['embedded_captions'] and any(c['start'] < end and c['end'] > start for c in cues):
             raise ValueError(f'Playback {index} overlaps added captions despite embedded captions')
-        audible.append((first, last, f'playback {index} intro'))
         previous_end = end
 
     outro = doc.get('outro')

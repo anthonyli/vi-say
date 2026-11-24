@@ -38,6 +38,32 @@ def audio_gaps(audio, duration):
     return gaps, audible, seconds
 
 
+def validate_silent_windows(doc):
+    """Validate explicitly requested silence, not an exemption for missing narration."""
+    duration = doc['duration']
+    windows = doc.get('silentWindows', [])
+    previous_end = 0
+    for window in windows:
+        start, end = window.get('start'), window.get('end')
+        if (not all(isinstance(x, (int, float)) and not isinstance(x, bool)
+                    and math.isfinite(x) for x in (start, end))
+                or not previous_end <= start < end <= duration):
+            raise ValueError('Silent windows must be bounded, chronological and non-overlapping')
+        previous_end = end
+        if not isinstance(window.get('user_request'), str) or not window['user_request'].strip():
+            raise ValueError('Silent windows require the actual request to retain silence')
+        if window.get('kind') == 'demo':
+            reason = window.get('reason')
+            if not isinstance(reason, str) or not reason.strip():
+                raise ValueError('A silent demo needs its actual purpose in reason')
+            # RecordedComic plays one source continuously after its cover.
+            first = doc.get('coverFrames', 0) / 30
+            last = first + doc.get('videoFrames', 0) / 30
+            if start < first or end > last:
+                raise ValueError('Silent demo must stay within continuous source footage')
+    return windows
+
+
 def check(path, audio_override=None, verify_video=False):
     path = Path(path)
     doc = json.loads(path.read_text())
@@ -82,17 +108,17 @@ def check(path, audio_override=None, verify_video=False):
         errors.append('Narration contains no audible signal')
     if seconds > duration + .1:
         errors.append('Narration is truncated by the timeline')
+    if seconds < duration - .03:
+        errors.append('Audio file ends before the timeline; intentional silence must exist in the mix')
     uncovered = []
-    windows = doc.get('silentWindows', [])
-    for window in windows:
-        if not window.get('user_request', '').strip() or not (0 <= window['start'] < window['end'] <= duration):
-            raise ValueError('Silent window requires its actual user request and bounded interval')
+    windows = validate_silent_windows(doc)
     for start, end in gaps:
         if not any(w['start'] <= start + .03 and w['end'] >= end - .03 for w in windows):
             uncovered.append([start, end])
     if uncovered:
         errors.append(f'Narration silence exceeds 1.2s: {uncovered}')
     return {'complete': not errors, 'errors': errors, 'silences': gaps,
+            'intentional_silence': windows, 'source_media_checked': verify_video,
             'audio_duration': seconds, 'listening_assessed': False}
 
 
