@@ -12,7 +12,7 @@ const brickColors = [colors.blue, colors.purple, colors.red];
  * word of the final narration. Used by the narrated comic theme and by the
  * recorded-video outro so both routes end identically.
  */
-export function ComicOutro({time, duration, enterAt = 0, actions, brand = 'vi-say', character = false,
+export function ComicOutro({time, duration, enterAt = 0, fadeOutDuration = .33, actions, brand = 'vi-say', character = false,
   title = template.title, subtitle = template.subtitle}) {
   if (!Array.isArray(actions) || actions.length !== template.items.length) {
     throw new Error('ComicOutro needs one measured action time per outro item');
@@ -35,6 +35,6 @@ export function ComicOutro({time, duration, enterAt = 0, actions, brand = 'vi-sa
     {template.items.map((item, i) =>
       <Brick key={item.anchor} x={481 + 44*i} y={693 - 118*i} w={905 - 88*i} h={94}
         color={brickColors[i]} text={item.text} sub={item.detail} at={actions[i].at} t={time} angle={i===1?-6:6}/>)}
-    <AbsoluteFill style={{background:colors.ink, opacity:clamp((time-duration+.33)/.33), zIndex:510}}/>
+    <AbsoluteFill style={{background:colors.ink, opacity:clamp((time-duration+fadeOutDuration)/fadeOutDuration), zIndex:510}}/>
   </AbsoluteFill>;
 }
