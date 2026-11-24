@@ -6,7 +6,10 @@ import path from 'node:path';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 
-export async function buildHtmlPreview(doc, assets, target, runtime, {recorded = false} = {}) {
+export async function buildHtmlPreview(doc, assets, target, runtime, {
+  recorded = false,
+  compositionEntry = fileURLToPath(new URL('./src/preview-content.jsx', import.meta.url)),
+} = {}) {
   const require = createRequire(path.join(runtime.dir, 'package.json'));
   const {build} = require('esbuild');
   const {audioReview, reviewBadgeVisible, audioFile, silentWindows, ...props} = doc;
@@ -14,6 +17,7 @@ export async function buildHtmlPreview(doc, assets, target, runtime, {recorded =
 <html lang="zh-CN">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
 <title>vi-say 视频预览</title>
 <style>
   :root { color-scheme: dark; }
@@ -43,6 +47,13 @@ export async function buildHtmlPreview(doc, assets, target, runtime, {recorded =
   .cues .active button { background: #2a3140; }
   .cues button:disabled { opacity: .6; }
   .cues button span { color: #f0d48a; font-variant-numeric: tabular-nums; }
+  @media (max-width: 600px) {
+    main { padding: 16px 12px 32px; }
+    .transport { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; gap: 8px; }
+    .transport input[type="range"] { min-width: 0; width: 100%; margin: 0; }
+    .transport input[aria-label="进度"] { grid-column: 3 / -1; }
+    .transport input[aria-label="音量"] { grid-column: 2 / 4; }
+  }
 </style>
 <div id="root">正在打开预览…</div>
 <script defer src="./timeline.js"></script>
@@ -62,6 +73,7 @@ export async function buildHtmlPreview(doc, assets, target, runtime, {recorded =
     }
     await build({
       entryPoints: [fileURLToPath(new URL('./src/preview.jsx', import.meta.url))],
+      alias: {'vi-say-preview-composition': path.resolve(compositionEntry)},
       outfile: path.join(target, 'player.js'),
       nodePaths: [runtime.nodeModules],
       bundle: true,

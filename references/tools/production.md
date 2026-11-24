@@ -121,7 +121,9 @@ node assets/remotion/preview-server.mjs PROJECT/review-v2 8765
 
 `--serve` 在写完预览后用本机 `http://127.0.0.1:8765/` 继续提供文件，并支持分段请求。不要用 `python -m http.server`，它不响应 Range，Chrome 会无法拖动 WAV，画面和口播就对不齐。也不要直接双击 `index.html`。预览目录里的 `index.html`、播放器和 `media/` 要留在一起。点画面或按空格后，Remotion 画面、烧录字幕和口播从同一帧开始。默认高亮字幕在画面内同时显示中文和英文。这一步不生成 MP4。已有标准 Remotion 时间轴可直接用 `node assets/remotion/render.mjs TIMELINE.json PREVIEW_DIRECTORY --html-preview`。收到用户确认后，使用已审核的素材和时间轴进行正式渲染。底层 `render` 保持独立，调用方按本期设置选择是否执行前审。
 
-进度、音量和可展开的字幕导航在画面下方。音量调到 0 后，点「打开声音」恢复上一次非零音量。点字幕会跳到该条实际出现的第一帧，区间内没有可显示帧的字幕会标明原因。浏览器缺少 Canvas Draw Element 或 WebGL 2 时，页面提示缺少哪项能力，并用可见叠化代替 shader 转场。Chrome 具备这两项能力时播放真实 shader。
+固定使用深色单栏页面。画面按原比例居中，暂停时中央显示播放按钮。画面下方依次为播放、时间、进度、静音、音量和全屏控件，窄屏自动换行。再往下是默认展开的「字幕导航」，每行显示时间和当句字幕，播放时高亮当前句。点字幕会跳到该条实际出现的第一帧，区间内没有可显示帧的字幕会标明原因。音量调到 0 后，点「打开声音」恢复上一次非零音量。浏览器缺少 Canvas Draw Element 或 WebGL 2 时，页面提示缺少哪项能力，并用可见叠化代替 shader 转场。Chrome 具备这两项能力时播放真实 shader。
+
+播放结束时停在末帧，点击「重播」从头开始。自编 Remotion 录屏通过 `buildHtmlPreview(doc, assets, target, runtime, {compositionEntry})` 打包。`compositionEntry` 模块默认导出函数，接收 `{props, recorded}`，返回本期的 `component`、`inputProps`、`meta`（宽、高、帧率和帧数）及逐句 `captions`。可参照 `assets/remotion/src/preview-content.jsx`。所有入口都由公共播放器挂载画面，统一提供样式、控件和字幕导航。
 
 漫画录屏项目可用 `node assets/remotion/render-recorded.mjs TIMELINE.json PREVIEW_DIRECTORY --html-preview`，预览调用录屏路线的同一画面组件、视频与声轨。
 

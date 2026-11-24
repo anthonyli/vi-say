@@ -35,7 +35,7 @@ metadata:
 | 6. 画面与图解 | [visuals.md](references/stages/visuals.md) | 视觉风格、流程图、比较、操作演示 |
 | 7. 动画与样片 | [animation.md](references/stages/animation.md) | 动作、转场组合、新增效果 |
 | 8. 互动片尾 | [outro.md](references/stages/outro.md) | 文案、行动、图标和布局 |
-| 9. HTML 前审 | [workflow.md](references/workflow.md#html-前审) | 视频画面、口播、字幕和动作的同步预览 |
+| 9. HTML 前审 | [workflow.md](references/workflow.md#html-前审) | 统一播放器布局：原画幅居中、下方播放控件、默认展开的逐句字幕导航 |
 | 10. 海报与发布文案 | [poster.md](references/stages/poster.md)、[publishing-copy.md](references/stages/publishing-copy.md) | 海报构图与纯文本 `发布文案.txt` |
 | 11. 检查与交付 | [delivery.md](references/stages/delivery.md) | 交付组合、实际检查记录 |
 
